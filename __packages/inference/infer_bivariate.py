@@ -10,35 +10,14 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # import local libarys
-from whypy import stats
-from whypy import utils
+from whypy.__packages.utils import utils
+from whypy.__packages.utils import stats
 
 from importlib import reload
 utils=reload(utils)
 stats=reload(stats)
 ###############################################################################
-class Inference():
-    """
-    Causal methods... tbd
-    """
-    def __init__(self, xi=None, regmod=None, scaler=None):
-        """
-        Parent class constructor for causal inference methods
-
-        INPUT
-        _xi:        observations
-                    (columns are variables)
-        regmod:    List of regression models.
-                    model[0][3] maps Xi[0] ~ f(Xi[3])
-                    (must be callable with model.fit() and model.predict())
-        scaler:     List of scaler
-                    (structure as _regmod)
-        """
-        self._xi = np.array(xi)
-        self._regmod = regmod
-        self._scaler = scaler
-
-class Bivariate(Inference):
+class Bivariate():
     """
     Causal Inference methods for the two variable case. General SCMs are not
     identifiable in the two variable case. Additional Assumptions are required,
@@ -64,7 +43,6 @@ class Bivariate(Inference):
                     dict_2V[i][j] maps Xi[i] ~ f(Xi[j])
 
         """
-        Inference.__init__(self)
         self._dict2V = list()
         self._figsize = (10, 7.071)
         self._results2V = None
@@ -119,71 +97,6 @@ class Bivariate(Inference):
         for i in range(len(self._scaler)):
             self._scaler[i].fit(self._xi[:, i].reshape(-1, 1))
 
-    def iter_CM(self, tdep, tindep):
-        """
-        Method to return [X, Y and the regarding model], controlled by
-        parameters tdep (dependent variable) and tindep (independent variable)
-        y = Xi[tdep]
-        X = Xi[tindep]
-        Copy values to make original values independent from scaling
-        """
-        assert self._xi is not None, 'Xi is None type'
-        assert self._regmod is not None, 'Regression Model is None type'
-        model = self._regmod[tdep][tindep]
-        Y_data = np.copy(self._xi[:, tdep].reshape(-1, 1))
-        X_data = np.copy(self._xi[:, tindep].reshape(-1, 1))
-        return(model, X_data, Y_data)
-
-    def fit_model2xi(self, tdep, tindep, scale, modelpts):
-        """
-        Method to fit model to Xi in the two variable case
-        """
-        model, X_data, Y_data = self.iter_CM(tdep, tindep)
-        if scale is True:
-            self._scaler[tdep].transform(Y_data)
-            self._scaler[tindep].transform(X_data)
-        # Use gridsearch instead of predict if model is pyGAM
-        if 'pygam' in str(self._regmod[0][1].__class__):
-            model.gridsearch(X_data.reshape(-1, 1), Y_data)
-        else:
-            model.predict(X_data.reshape(-1, 1), Y_data)
-        self.do_dict2V(tdep, tindep, scale, modelpts)
-
-    def do_dict2V(self, tdep, tindep, scale, modelpts):
-        """
-        Method to create further information on a fit. Returns a list for each
-        fit including the following values:
-        X_model:    50 X values in linspace to plot the fitted model
-        Y_model:    50 Y values in linspace to plot the fitted model
-        Y_predict:  predicted values of y given x
-        Residuals:  Y_data - Y_predict
-        """
-        model, X_data, Y_data = self.iter_CM(tdep, tindep)
-        # Scale data for predict()
-        if scale is True:
-            self._scaler[tdep].transform(Y_data)
-            self._scaler[tindep].transform(X_data)
-        X_range = np.max(X_data) - np.min(X_data)
-        # Get model data and y_prediction
-        X_model = np.linspace(np.min(X_data) - (X_range * 0.05),
-                              np.max(X_data) + (X_range * 0.05),
-                              num=modelpts)
-        X_model = X_model.reshape(-1, 1)
-        Y_model = model.predict(X_model).reshape(-1, 1)
-        Y_predict = model.predict(X_data).reshape(-1, 1)
-        # Scale data back
-        if scale is True:
-            self._scaler[tindep].inverse_transform(X_model)
-            self._scaler[tdep].inverse_transform(Y_data)
-            self._scaler[tdep].inverse_transform(Y_model)
-            self._scaler[tdep].inverse_transform(Y_predict)
-        # Scale data back
-        Residuals = Y_data - Y_predict
-        self._dict2V[tdep][tindep] = {'X_model': X_model,
-                                      'Y_model': Y_model,
-                                      'Y_predict': Y_predict,
-                                      'Residuals': Residuals}
-
     def do_normality(self, tdep, tindep):
         """
         Method to perform normality test on Xi independent and the
@@ -224,18 +137,6 @@ class Bivariate(Inference):
         # Write in _dict2V
         self._dict2V[tdep][tindep]['X-Residuals_Names'] = tn
         self._dict2V[tdep][tindep]['X-Residuals_Results'] = tr
-
-    def get_model_stats(self, tdep, tindep):
-        """
-        Method to get the model statistics. TBD for other models.
-        """
-        model, X_data, Y_data = self.iter_CM(tdep, tindep)
-        # Differentiate between different models
-        if 'pygam' in str(self._regmod[0][1].__class__):
-            stat = model.statistics_['p_values']
-            self._dict2V[tdep][tindep]['Model_Statistics'] = stat
-        else:
-            self._dict2V[tdep][tindep]['Model_Statistics'] = 'NaN'
 
     def get_testnames(self):
         """
@@ -726,8 +627,6 @@ class Bivariate(Inference):
                     # do calculate the likelihood
                     if 'likelihood' in do:
                         self.do_likelihood(tdep, tindep)
-                    if 'modelstatistics' in do:
-                        self.get_model_stats(tdep, tindep)
                     # print header for 2V
                     if ((('out_Regr_Model' in do) or
                          ('out_Regr_Model_info' in do) or
@@ -756,85 +655,5 @@ class Bivariate(Inference):
                     # print the independence log
                     if 'out_X_vs_Residuals_info' in do:
                         self.print_log_st(tdep, tindep, 'independence')
-
-    def regress(self, scale, testvariant, modelpts):
-        """
-        Method to do the math. Run trough all possible 2V combinations of
-        observations and calculate the inference.
-        """
-        # Fit Scaler
-        if scale is True:
-            self.fit_scaler()
-        # Initialize empty dictionary to be filled
-        self._dict2V = utils.init_2V_list(self.get_no_obs())
-        # Fit (scaled) models and do statistical tests
-        self.loop_and_do(do=('fit', 'normality', testvariant,
-                             'modelstatistics'),
-                         scale=scale, modelpts=modelpts)
-        # Get results from independence test
-        self.restructure_results(testvariant)
-        # PairGrid of all Observations
-        self.plt_PairGrid()
-
-    def run(self, testvariant,
-                             infer='all',
-                             scale=True,
-                             modelpts=50,
-                             out_Regr_Model=True,
-                             out_Regr_Model_info=True,
-                             out_X_Residuals_NormalityTest=True,
-                             out_X_vs_Residuals=True,
-                             out_X_vs_Residuals_info=True,
-                             out_Results_Testvariant=True,
-                             out_CausalGraph=True,
-                             CGmetric='Combined'):
-        """
-        Method to test independence of residuals.
-        Theorem: In causal direction, the noise is independent of the input
-        Valid for Additive Noise Models e.g. LiNGAM, NonLinear GaussianAM
-        """
-        assert testvariant in ('independence', 'likelihood'), 'TestVariant must be either "independence" or "likelihood"'
-        # Global translater
-        dic = {'independence': 'p-value',
-               'likelihood': 'likelihood'}
-        namecode = dic[testvariant]
-        # Do the math
-        if infer is 'all':
-            self.regress(scale, testvariant, modelpts)
-        else:
-            print('tbd')
-        # Loop trough possible combinations of tdep and tindep for plots/logs
-        # Define a list of do's (dolist) for plots sorted by tdep/tindep
-        # combinations. Start dolist:
-        dolist = []
-        if out_Regr_Model is True:
-            dolist.append('out_Regr_Model')
-        if out_Regr_Model_info is True:
-            dolist.append('out_Regr_Model_info')
-        if out_X_Residuals_NormalityTest is True:
-            dolist.append('out_X_Residuals_NormalityTest')
-        if out_X_vs_Residuals_info is True:
-            if 'p-value' in namecode:
-                dolist.append('out_X_vs_Residuals_info')
-            else:
-                print('X vs Residual log only available for independence test')
-        if len(dolist) != 0:
-            self.loop_and_do(do=dolist)
-        # end dolist
-        utils.print_in_console(what='result header')
-        # Plot independence/likelihood tests results
-        if out_X_vs_Residuals is True:
-            if 'p-value' in namecode:
-                self.plt_2metrics_groupedby(namecode)
-            self.plt_1metric_groupedby(namecode)
-        # Print independence/likelihood tests results
-        if out_Results_Testvariant is True:
-            rs = self._results2V
-            print(rs[['TestType', '2V-case', 'pval/likel',
-                      'rank pval/likel', '2V-direction']].to_string())
-        # plot the Causal Graph
-        if out_CausalGraph is True:
-            utils.print_in_console(what='CG Warning')
-            self.predict_CG(testvariant, CGmetric=CGmetric)
 
 ###############################################################################

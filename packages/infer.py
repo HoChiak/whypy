@@ -10,8 +10,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # import local libarys
-from whypy import stats
-from whypy import utils
+from packages import stats
+from packages import utils
 
 from importlib import reload
 utils=reload(utils)

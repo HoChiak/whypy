@@ -10,7 +10,7 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from pygam import LinearGAM, s, f, l
 
 # import local libarys
-from whypy import utils
+from packages import utils
 
 
 ###############################################################################
