@@ -10,9 +10,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # import local libarys
-from whypy.__packages.inference.infer_obs import Inference as parent1
-from whypy.__packages.inference.infer_bivariate import Bivariate as parent2
-from whypy.__packages.inference.infer_anm import ANM as parent3
+from whypy.__packages.inference.module_steadystate import SteadyState as parent1
+from whypy.__packages.inference.module_bivariate import Bivariate as parent2
+from whypy.__packages.inference.module_anm import ANM as parent3
 
 
 ###############################################################################
