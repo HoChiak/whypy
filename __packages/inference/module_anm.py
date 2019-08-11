@@ -111,7 +111,7 @@ class ANM():
         if scale is True:
             self.fit_scaler()
         # Initialize empty dictionary to be filled
-        self._dict2V = utils.init_2V_list(self.get_no_obs())
+        self._dict2V = utils.init_2V_list(self._xi.shape[1])
         # Fit (scaled) models and do statistical tests
         self.loop_and_do(do=('fit', 'normality', testvariant),
                          scale=scale, modelpts=modelpts)

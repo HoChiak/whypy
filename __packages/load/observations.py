@@ -48,7 +48,7 @@ SCM -> \tX0 ~ [U(0.4)]
         X0 = X0.reshape(-1, 1)
         X1 = X1.reshape(-1, 1)
         xi = np.concatenate([X0, X1], axis=1)
-        no_obs = xi.shape[1]
+        no_var = xi.shape[1]
     # model class 2
     elif modelclass == '2VNLiGAM':
         desc = """
@@ -64,7 +64,7 @@ SCM -> \tX0 ~ [5 + G(0, 2.25)]
         X0 = X0.reshape(-1, 1)
         X1 = X1.reshape(-1, 1)
         xi = np.concatenate([X0, X1], axis=1)
-        no_obs = xi.shape[1]
+        no_var = xi.shape[1]
     # model class 3
     elif modelclass == '3VLiNGAM':
         desc = """
@@ -83,7 +83,7 @@ SCM -> \tX0 ~ [5 + U(0.4)]
         X1 = X1.reshape(-1, 1)
         X2 = X2.reshape(-1, 1)
         xi = np.concatenate([X0, X1, X2], axis=1)
-        no_obs = xi.shape[1]
+        no_var = xi.shape[1]
     # model class 4
     elif modelclass == '3VLiGAM':
         desc = """
@@ -102,7 +102,7 @@ SCM -> \tX0 ~ [G(5, 0.25)]
         X1 = X1.reshape(-1, 1)
         X2 = X2.reshape(-1, 1)
         xi = np.concatenate([X0, X1, X2], axis=1)
-        no_obs = xi.shape[1]
+        no_var = xi.shape[1]
     # model class 5.0
     elif modelclass == '3VNLiGAM-collider':
         desc = """
@@ -123,7 +123,7 @@ SCM -> \tX0 ~ [G(1, 2.25)]
         X1 = X1.reshape(-1, 1)
         X2 = X2.reshape(-1, 1)
         xi = np.concatenate([X0, X1, X2], axis=1)
-        no_obs = xi.shape[1]
+        no_var = xi.shape[1]
     # model class 5.1
     elif modelclass == '3VNLiGAM-rev-collider':
         desc = """
@@ -144,7 +144,7 @@ SCM -> \tX0 ~ [G(1, 2.25)]
         X1 = X1.reshape(-1, 1)
         X2 = X2.reshape(-1, 1)
         xi = np.concatenate([X0, X1, X2], axis=1)
-        no_obs = xi.shape[1]
+        no_var = xi.shape[1]
     # model class 5.2
     elif modelclass == '3VNLiGAM-confounded':
         desc = """
@@ -166,7 +166,7 @@ SCM -> \tX0 ~ [G(1, 2.25)]
         X1 = X1.reshape(-1, 1)
         X2 = X2.reshape(-1, 1)
         xi = np.concatenate([X0, X1, X2], axis=1)
-        no_obs = xi.shape[1]
+        no_var = xi.shape[1]
     # model class 5.3
     elif modelclass == '3VNLiGAM-series':
         desc = """
@@ -187,7 +187,7 @@ SCM -> \tX0 ~ [G(1, 2.25)]
         X1 = X1.reshape(-1, 1)
         X2 = X2.reshape(-1, 1)
         xi = np.concatenate([X0, X1, X2], axis=1)
-        no_obs = xi.shape[1]
+        no_var = xi.shape[1]
     # model class 5.4
     elif modelclass == '3VNLiGAM-none':
         desc = """
@@ -207,7 +207,7 @@ SCM -> \tX0 ~ [G(1, 2.25)]
         X1 = X1.reshape(-1, 1)
         X2 = X2.reshape(-1, 1)
         xi = np.concatenate([X0, X1, X2], axis=1)
-        no_obs = xi.shape[1]
+        no_var = xi.shape[1]
     # model class 6
     elif modelclass == '4VNLiGAM':
         desc = """
@@ -229,14 +229,14 @@ SCM -> \tX0 ~ [G(1, 2.25)]
         X2 = X2.reshape(-1, 1)
         X3 = X3.reshape(-1, 1)
         xi = np.concatenate([X0, X1, X2, X3], axis=1)
-        no_obs = xi.shape[1]
+        no_var = xi.shape[1]
     else:
         raise ValueError('Modelclass unknown')
     # Extract Node_list by total number of observations
-    Node_list = np.arange(0, no_obs, 1)
+    Node_list = np.arange(0, no_var, 1)
     Node_list = [r'X_%i' % (t) for t in Node_list]
     # Plot correct Causal Graph
     print('CAUSAL GRAPH:')
     utils.plot_DAG(Edge_list, Node_list)
     print(desc)
-    return(xi, no_obs)
+    return(xi)

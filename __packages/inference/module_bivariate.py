@@ -13,9 +13,7 @@ import seaborn as sns
 from whypy.__packages.utils import utils
 from whypy.__packages.utils import stats
 
-from importlib import reload
-utils=reload(utils)
-stats=reload(stats)
+
 ###############################################################################
 class Bivariate():
     """
@@ -23,36 +21,23 @@ class Bivariate():
     identifiable in the two variable case. Additional Assumptions are required,
     given by the modelclass restrictions. Only acyclic graphs are considered.
     """
+    attr_variate = 'bivariate'
+
     def __init__(self):
         """
-        Child class constructor for causal inference methods in the 2 variable
-        case. Xi may consist of an abritary number of variables, but only one
-        variable is mapped to one other
-
-        INPUT (Inherent from parent):
-        Xi:         observations (data)
-                    (columns are variables)
-        model:      List of regression models.
-                    model[i][j] maps Xi[i] ~ f(Xi[j])
-                    while i is the dependent and j is the independent variable
-                    (must be callable with model.fit() and model.predict())
-        scaler:     List of scaler.
-
-        INPUT (Child specific):
-        dict_2V:    needed to store additional information for each mapping
-                    dict_2V[i][j] maps Xi[i] ~ f(Xi[j])
-
+        Class Constructor for the Bivariate Case. Assigns Bivariate specific
+        Methods to the Inference Model. Instance Attributes are assigned in
+        the inference Class.
         """
-        self._dict2V = list()
-        self._figsize = (10, 7.071)
-        self._results2V = None
 
-    def get_no_obs(self):
+    def get_combinations(self):
         """
-        Method returns the number of variables --> _xi must be defined
+        Method to get a list of combinations for the Bivariate Case.
         """
-        assert self._xi is not None, 'Xi is None type'
-        return(self._xi.shape[1])
+        print("tbd")
+
+
+
 
     def get_std_txt(self, what, **kwargs):
         """

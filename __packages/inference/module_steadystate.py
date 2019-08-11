@@ -17,24 +17,17 @@ utils=reload(utils)
 ###############################################################################
 class SteadyState():
     """
-    Causal methods... tbd
+    Causal methods for the Steady State Case (independence of time).
     """
-    def __init__(self, xi=None, regmod=None, scaler=None):
-        """
-        Parent class constructor for causal inference methods
+    attr_time = 'steadystate'
 
-        INPUT
-        _xi:        observations
-                    (columns are variables)
-        regmod:    List of regression models.
-                    model[0][3] maps Xi[0] ~ f(Xi[3])
-                    (must be callable with model.fit() and model.predict())
-        scaler:     List of scaler
-                    (structure as _regmod)
+    def __init__(self):
         """
-        self._xi = np.array(xi)
-        self._regmod = regmod
-        self._scaler = scaler
+        Class Constructor for the Steady State Case (observations are
+        independent of time). Assigns Steady State specific Methods to the
+        Inference Model. Instance Attributes are assigned in the inference
+        Class.
+        """
 
     def predict(self, testvariant,
                 scale=True,
@@ -52,6 +45,9 @@ class SteadyState():
         Theorem: In causal direction, the noise is independent of the input
         Valid for Additive Noise Models e.g. LiNGAM, NonLinear GaussianAM
         """
+        # Do Checks TBD
+        assert self._xi is not None, 'Xi is None type'
+
         assert testvariant in ('independence', 'likelihood'), 'TestVariant must be either "independence" or "likelihood"'
         # Global translater
         dic = {'independence': 'p-value',
@@ -92,5 +88,3 @@ class SteadyState():
         if out_CausalGraph is True:
             utils.print_in_console(what='CG Warning')
             self.predict_CG(testvariant, CGmetric=CGmetric)
-
-###############################################################################
