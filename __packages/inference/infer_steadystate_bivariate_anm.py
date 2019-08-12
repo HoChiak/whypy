@@ -23,7 +23,7 @@ class Model(parent0, parent1, parent2, parent3):
     identifiable in the two variable case. Additional Assumptions are required,
     given by the modelclass restrictions. Only acyclic graphs are considered.
     """
-    def __init__(self, xi=None, combinations=None, regmod=None, scaler=None):
+    def __init__(self, xi=None, combinations='all', regmod=None, scaler=None):
         """
         Child class constructor for causal inference methods in the 2 variable
         case. Xi may consist of an abritary number of variables, but only one
@@ -58,7 +58,7 @@ class Model(parent0, parent1, parent2, parent3):
 
     # New version of predict, TBD
     def run(self,
-            testvariant, #independence, likelihood
+            testvariant='likelihood', #independence, likelihood
             scale=True,
             modelpts=50,
             out_Regr_Model=True,
@@ -76,7 +76,7 @@ class Model(parent0, parent1, parent2, parent3):
         """
         # Do Checks on global attributes
         self.check_instance_attr(scale)
-        if self._combinations is None:
+        if self._combinations is 'all':
             self._combinations = self.get_combinations()
         # TBD go on here (assign testvariant as atttribute?)
         # only run for one testvariant (kolmogorov or the other or likelihoodration)

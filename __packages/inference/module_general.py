@@ -30,7 +30,7 @@ class General():
         Method to check the instance attributes
         """
         assert self._xi is not None, 'Observations are None type'
-        assert not(any(np.isnan(self._xi))), 'Observations contain np.nan'
-        assert not(any(np.isinf(self._xi))), 'Observations contain np.inf'
+        assert not(np.isnan(self._xi).any()), 'Observations contain np.nan'
+        assert not(np.isinf(self._xi).any()), 'Observations contain np.inf'
         assert self._regmod is not None, 'Regression Model is None type'
         assert ((scale is False) or ((scale is True) and (self._scaler is not None))), 'If scale is True, a scaler must be assigned'

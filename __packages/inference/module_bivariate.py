@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 # import built in libarys
-
+from itertools import permutations
 
 # import 3rd party libarys
 import numpy as np
@@ -34,10 +34,10 @@ class Bivariate():
         """
         Method to get a list of combinations for the Bivariate Case.
         """
-        print("tbd")
-
-
-
+        variable_names = np.arange(self._xi.shape[1])
+        combinations = [x for x in permutations(variable_names, 2)]
+        combinations = np.array(combinations)
+        self._combinations = combinations
 
     def get_std_txt(self, what, **kwargs):
         """
