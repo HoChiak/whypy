@@ -95,6 +95,8 @@ class General():
         if array.size == 1:
             scalar = array.item()
             return(scalar)
+        else:
+            return(array)
 
     def get_Xmodel(self, X_data, modelpts):
         """
@@ -122,6 +124,7 @@ class General():
                                   kwargs['scale'],
                                   kwargs['modelpts'])
             # do normality test
+            tindep = self.array_to_scalar(tindep)
             if 'normality' in do:
                 self.do_normality(i, tdep, tindep)
             # do independence test

@@ -15,6 +15,9 @@ from whypy.__packages.inference.module_steadystate import SteadyState as parent1
 from whypy.__packages.inference.module_bivariate import Bivariate as parent2
 from whypy.__packages.inference.module_anm import ANM as parent3
 
+from whypy.__packages.utils import utils
+
+
 
 ###############################################################################
 class Model(parent0, parent1, parent2, parent3):

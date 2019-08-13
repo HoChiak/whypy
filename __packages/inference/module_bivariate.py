@@ -121,9 +121,10 @@ class Bivariate():
             # Create a placeholder for each TestType
             temp = list()
             # Loop trough all possible combinations of tdep and tindep
-            for i in range(self._combinations.shape[0]):
-                tdep, tindep = self.get_tINdep(i)
-                test = self._results[i]
+            for ti in range(self._combinations.shape[0]):
+                tdep, tindep = self.get_tINdep(ti)
+                tindep = self.array_to_scalar(tindep)
+                test = self._results[ti]
                 txt = self.get_std_txt(what='std-Y~f(X)',
                                        tdep=tdep,
                                        tindep=tindep)
