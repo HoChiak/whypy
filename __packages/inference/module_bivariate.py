@@ -99,7 +99,7 @@ class Bivariate():
         Method to get and return all testnames for X vs Residuals tests
         """
         # Get a list of all test names
-        testn = self._results[0][1]['X-Residuals_Names']
+        testn = self._results[0]['X-Residuals_Names']
         # check if testn is list (its no list if only one stat test performed)
         if not isinstance(testn, list):
             # convert type to list
@@ -121,24 +121,23 @@ class Bivariate():
             # Create a placeholder for each TestType
             temp = list()
             # Loop trough all possible combinations of tdep and tindep
-            for tdep in range(self._xi.shape[1]):
-                for tindep in range(self._xi.shape[1]):
-                    if tdep != tindep:  # no diagonal values
-                        test = self._results[i]
-                        txt = self.get_std_txt(what='std-Y~f(X)',
-                                               tdep=tdep,
-                                               tindep=tindep)
-                        if 'independence' in testvariant:
-                            temp.append((tp, (tdep+1) * (tindep+1), txt,
-                                         test['X-Residuals_Results'][(i*2)+1],
-                                         test['X-Residuals_Results'][i*2],
-                                         np.array(test['Model_Statistics']),
-                                         i, tdep, tindep))
-                        if 'likelihood' in testvariant:
-                            temp.append((tp, (tdep+1) * (tindep+1), txt,
-                                         test['X-Residuals_Results'],
-                                         np.array(test['Model_Statistics']),
-                                         i, tdep, tindep))
+            for i in range(self._combinations.shape[0]):
+                tdep, tindep = self.get_tINdep(i)
+                test = self._results[i]
+                txt = self.get_std_txt(what='std-Y~f(X)',
+                                       tdep=tdep,
+                                       tindep=tindep)
+                if 'independence' in testvariant:
+                    temp.append((tp, (tdep+1) * (tindep+1), txt,
+                                 test['X-Residuals_Results'][(i*2)+1],
+                                 test['X-Residuals_Results'][i*2],
+                                 np.array(test['Model_Statistics']),
+                                 tdep, tindep))
+                if 'likelihood' in testvariant:
+                    temp.append((tp, (tdep+1) * (tindep+1), txt,
+                                 test['X-Residuals_Results'],
+                                 np.array(test['Model_Statistics']),
+                                 tdep, tindep))
             # Create DataFrame for single TestType and add extra information
             temp = pd.DataFrame(temp)
             # assign names to columns of DF
