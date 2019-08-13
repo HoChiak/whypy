@@ -37,7 +37,7 @@ class Bivariate():
         variable_names = np.arange(self._xi.shape[1])
         combinations = [x for x in permutations(variable_names, 2)]
         combinations = np.array(combinations)
-        self._combinations = combinations
+        return(combinations)
 
     def get_std_txt(self, what, **kwargs):
         """
@@ -53,82 +53,53 @@ class Bivariate():
             txt = r'X_%i ~ f(X_%i)' % (t1, t2)
         return(txt)
 
-    def assign_model2regrmodel(self, no_obs, model):
-        """
-        Method to assign the given model to a list
-
-        INPUT:
-        no_obs: Number of variables (rows in xi)
-        model:        Regression models to be assigned
-                      (must be callable with model.fit() and model.predict())
-        RETURN:
-        [[model, ...] ... ]
-        """
-        # Create empty list size Xi times Xi
-        self._regmod = utils.init_2V_list(no_obs)
-        # Assign model to empty list
-        # Loop trough all possible combinations of tdep and tindep
-        for tdep in range(no_obs):
-            for tindep in range(no_obs):
-                if tdep != tindep:  # no diagonal values
-                    self._regmod[tdep][tindep] = model
-
-    def fit_scaler(self):
-        """
-        Method to fit a choosen list of scalers to all Xi
-        """
-        assert self._scaler is not None, 'Scaler is None type'
-        assert self._xi is not None, 'Xi is None type'
-        for i in range(len(self._scaler)):
-            self._scaler[i].fit(self._xi[:, i].reshape(-1, 1))
-
-    def do_normality(self, tdep, tindep):
+    def do_normality(self, i, tdep, tindep):
         """
         Method to perform normality test on Xi independent and the
         corresponding Residuals
         """
-        ob1 = self._dict2V[tdep][tindep]['Residuals']
+        ob1 = self._results[i]['Residuals']
         ob2 = self._xi[:, tindep]
         # normality test on Xi
         tn, tr = stats.test_normality(ob1)
-        self._dict2V[tdep][tindep]['X_Names'] = tn
-        self._dict2V[tdep][tindep]['X_Results'] = tr
+        self._results[i]['X_Names'] = tn
+        self._results[i]['X_Results'] = tr
         # normality test on Residuals
         tn, tr = stats.test_normality(ob2)
-        self._dict2V[tdep][tindep]['Residuals_Names'] = tn
-        self._dict2V[tdep][tindep]['Residuals_Results'] = tr
+        self._results[i]['Residuals_Names'] = tn
+        self._results[i]['Residuals_Results'] = tr
 
-    def do_independence(self, tdep, tindep):
+    def do_independence(self, i, tdep, tindep):
         """
         Method to perform independence test on Xi independent and the
         corresponding Residuals
         """
-        ob1 = self._dict2V[tdep][tindep]['Residuals']
+        ob1 = self._results[i]['Residuals']
         ob2 = self._xi[:, tindep]
         # independence test on Xi and Residuals
         tn, tr = stats.test_independence(ob1, ob2)
-        self._dict2V[tdep][tindep]['X-Residuals_Names'] = tn
-        self._dict2V[tdep][tindep]['X-Residuals_Results'] = tr
+        self._results[i]['X-Residuals_Names'] = tn
+        self._results[i]['X-Residuals_Results'] = tr
 
-    def do_likelihood(self, tdep, tindep):
+    def do_likelihood(self, i, tdep, tindep):
         """
         Method to perform
         a) Calculate the likelihood based on variance (only valid for Gaussian)
         """
-        ob1 = self._dict2V[tdep][tindep]['Residuals']
+        ob1 = self._results[i]['Residuals']
         ob2 = self._xi[:, tindep]
         # Get likelihood based on variance
         tn, tr = stats.MLikelihood(ob1, ob2)
         # Write in _dict2V
-        self._dict2V[tdep][tindep]['X-Residuals_Names'] = tn
-        self._dict2V[tdep][tindep]['X-Residuals_Results'] = tr
+        self._results[i]['X-Residuals_Names'] = tn
+        self._results[i]['X-Residuals_Results'] = tr
 
     def get_testnames(self):
         """
         Method to get and return all testnames for X vs Residuals tests
         """
         # Get a list of all test names
-        testn = self._dict2V[0][1]['X-Residuals_Names']
+        testn = self._results[0][1]['X-Residuals_Names']
         # check if testn is list (its no list if only one stat test performed)
         if not isinstance(testn, list):
             # convert type to list
@@ -153,7 +124,7 @@ class Bivariate():
             for tdep in range(self._xi.shape[1]):
                 for tindep in range(self._xi.shape[1]):
                     if tdep != tindep:  # no diagonal values
-                        test = self._dict2V[tdep][tindep]
+                        test = self._results[i]
                         txt = self.get_std_txt(what='std-Y~f(X)',
                                                tdep=tdep,
                                                tindep=tindep)
@@ -162,12 +133,12 @@ class Bivariate():
                                          test['X-Residuals_Results'][(i*2)+1],
                                          test['X-Residuals_Results'][i*2],
                                          np.array(test['Model_Statistics']),
-                                         tdep, tindep))
+                                         i, tdep, tindep))
                         if 'likelihood' in testvariant:
                             temp.append((tp, (tdep+1) * (tindep+1), txt,
                                          test['X-Residuals_Results'],
                                          np.array(test['Model_Statistics']),
-                                         tdep, tindep))
+                                         i, tdep, tindep))
             # Create DataFrame for single TestType and add extra information
             temp = pd.DataFrame(temp)
             # assign names to columns of DF
@@ -380,7 +351,7 @@ class Bivariate():
         g = g.map(plt.scatter)
         plt.show()
 
-    def plt_1model_adv(self, tdep, tindep):
+    def plt_1model_adv(self, i, tdep, tindep):
         """
         Method to plot a scatter of the samples, the fitted model and the
         residuals. Plot joint distribution and marginals.
@@ -393,11 +364,11 @@ class Bivariate():
                           # ratio=int(5)
                           )
         g.plot_joint(plt.scatter)
-        plt.plot(self._dict2V[tdep][tindep]['X_model'],
-                 self._dict2V[tdep][tindep]['Y_model'],
+        plt.plot(self._results[i]['X_model'],
+                 self._results[i]['Y_model'],
                  c='r')
         plt.scatter(self._xi[:, tindep],
-                    self._dict2V[tdep][tindep]['Residuals'])
+                    self._results[i]['Residuals'])
         plt.legend([r'$Model\ %s$' % (txt),
                     r'$Observations$',
                     r'$Residuals\ (X_{%i}-\hatX_{%i})$' % (tdep, tdep)])
@@ -406,7 +377,7 @@ class Bivariate():
         g.plot_marginals(sns.distplot, kde=True)
         plt.show()
 
-    def plt_1hist(self, tdep, tindep):
+    def plt_1hist(self, i, tdep, tindep):
         """
         Method to plot a histogramm of both the independent sample and the
         Residuals
@@ -419,7 +390,7 @@ class Bivariate():
         sns.distplot(self._xi[:, tindep],
                      norm_hist=True
                      )
-        sns.distplot(self._dict2V[tdep][tindep]['Residuals'],
+        sns.distplot(self._results[i]['Residuals'],
                      norm_hist=True
                      )
         plt.legend([r'$X_{%i}$' % (tindep),
@@ -437,9 +408,9 @@ class Bivariate():
         """
         Method to plot the results of the independence test.
         Show p-value and statistic results grouped by TestType.
-        Testnames:   source: self._dict2V[.][.]['X-Residuals_Names']
+        Testnames:   source: self._results[.][.]['X-Residuals_Names']
                      shape:  n
-        Testresults: source: self._dict2V[.][.]['X-Residuals_Results']
+        Testresults: source: self._results[.][.]['X-Residuals_Results']
                      shape:  2n (Value 0,1 -> Test 1 | Value 2,3 -> Test 2 ...)
         """
         # Get result array
@@ -543,15 +514,15 @@ class Bivariate():
         plt.ylabel(lbl)
         plt.show()
 
-    def plt_GAMlog(self, tdep, tindep):
+    def plt_GAMlog(self, i, tdep, tindep):
         """
         Method to plot the logs (callbacks) of pyGAM
         """
         # fetch not empty data
-        listlog = [self._regmod[tdep][tindep].logs_['deviance'],
-                   self._regmod[tdep][tindep].logs_['diffs'],
-                   self._regmod[tdep][tindep].logs_['accuracy'],
-                   self._regmod[tdep][tindep].logs_['coef']]
+        listlog = [self._regmod[i].logs_['deviance'],
+                   self._regmod[i].logs_['diffs'],
+                   self._regmod[i].logs_['accuracy'],
+                   self._regmod[i].logs_['coef']]
         listnames = ['Deviance', 'Diffs', 'Accuracy', 'Coef']
         listlog = [(i, x) for i, x in enumerate(listlog) if len(x) != 0]
         # start plot
@@ -569,7 +540,7 @@ class Bivariate():
         plt.suptitle(r'$GAMlog:\ %s$' % (txt))
         plt.show()
 
-    def print_log_st(self, tdep, tindep, testtype):
+    def print_log_st(self, i, tdep, tindep, testtype):
         """
         Method to 'plot' a txt log-file regarding the results of the
         statistical tests on normality/independence.
@@ -578,67 +549,15 @@ class Bivariate():
         nm1 = 'X_%i' % (tindep)
         nm2 = 'Residuals'
         if 'normality' in testtype:
-            testn = self._dict2V[tdep][tindep]['X_Names']
-            testr = self._dict2V[tdep][tindep]['X_Results']
+            testn = self._results[i]['X_Names']
+            testr = self._results[i]['X_Results']
             print(stats.log_st('normality', testn, testr, nm1))
-            testn = self._dict2V[tdep][tindep]['Residuals_Names']
-            testr = self._dict2V[tdep][tindep]['Residuals_Results']
+            testn = self._results[i]['Residuals_Names']
+            testr = self._results[i]['Residuals_Results']
             print(stats.log_st('normality', testn, testr, nm2))
         elif 'independence' in testtype:
-            testn = self._dict2V[tdep][tindep]['X-Residuals_Names']
-            testr = self._dict2V[tdep][tindep]['X-Residuals_Results']
+            testn = self._results[i]['X-Residuals_Names']
+            testr = self._results[i]['X-Residuals_Results']
             print(stats.log_st('independence', testn, testr, nm1, nm2))
-
-    def loop_and_do(self, do, **kwargs):
-        """
-        Method to scale (if scale==True) and loop trough possible combinations
-        of tdep and tindep for modelfit of residuals. Save result in _dict2V.
-        """
-        # Loop trough possible combinations of tdep and tindep for modelfit
-        for tdep in range(self._xi.shape[1]):
-            for tindep in range(self._xi.shape[1]):
-                if tdep != tindep:  # no diagonal values
-                    # fit regmod on observations
-                    if 'fit' in do:
-                        self.fit_model2xi(tdep, tindep,
-                                          kwargs['scale'],
-                                          kwargs['modelpts'])
-                    # do normality test
-                    if 'normality' in do:
-                        self.do_normality(tdep, tindep)
-                    # do independence test
-                    if 'independence' in do:
-                        self.do_independence(tdep, tindep)
-                    # do calculate the likelihood
-                    if 'likelihood' in do:
-                        self.do_likelihood(tdep, tindep)
-                    # print header for 2V
-                    if ((('out_Regr_Model' in do) or
-                         ('out_Regr_Model_info' in do) or
-                         ('out_X_Residuals_NormalityTest' in do) or
-                         ('out_X_vs_Residuals_info' in do))):
-                        utils.print_in_console(what='regmod header',
-                                               tdep=tdep, tindep=tindep)
-                    # plot joint and marginal together with model and hist
-                    if 'out_Regr_Model' in do:
-                        self.plt_1model_adv(tdep, tindep)
-                        self.plt_1hist(tdep, tindep)
-                    # print/plot model informations
-                    if 'out_Regr_Model_info' in do:
-                        try:
-                            self.plt_GAMlog(tdep, tindep)
-                        except:
-                            print('An exception occurred using -plt_GAMlog()-')
-                        try:
-                            utils.print_in_console(what='model summary')
-                            self._regmod[tdep][tindep].summary()
-                        except:
-                            print('An exception occurred using -summary()-')
-                    # print the normality log
-                    if 'out_X_Residuals_NormalityTest' in do:
-                        self.print_log_st(tdep, tindep, 'normality')
-                    # print the independence log
-                    if 'out_X_vs_Residuals_info' in do:
-                        self.print_log_st(tdep, tindep, 'independence')
 
 ###############################################################################

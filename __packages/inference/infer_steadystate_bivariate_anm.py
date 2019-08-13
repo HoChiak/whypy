@@ -51,7 +51,7 @@ class Model(parent0, parent1, parent2, parent3):
         self._combinations = combinations
         self._regmod = regmod
         self._scaler = scaler
-        self._dict2V = list()
+        self._results = list()
         self._figsize = (10, 7.071)
         self._results2V = None
 
@@ -76,8 +76,15 @@ class Model(parent0, parent1, parent2, parent3):
         """
         # Do Checks on global attributes
         self.check_instance_attr(scale)
+        # Get Combinations of dependent and independent variable if not given
         if self._combinations is 'all':
             self._combinations = self.get_combinations()
+        # Initiate a regmod for each combination
+        no_combinations = self._combinations.shape[0]
+        self._regmod = self.object_to_list(self._regmod, no_combinations)
+        # Initiate a scaler for each variable
+        no_variables = self._xi.shape[1]
+        self._scaler = self.object_to_list(self._scaler, no_variables)
         # TBD go on here (assign testvariant as atttribute?)
         # only run for one testvariant (kolmogorov or the other or likelihoodration)
         # placeholder for bootstrape, time, holdout set
@@ -87,7 +94,7 @@ class Model(parent0, parent1, parent2, parent3):
                'likelihood': 'likelihood'}
         namecode = dic[testvariant]
         # Do the math
-        self.regress(scale, testvariant, modelpts)
+        self.run_inference(scale, testvariant, modelpts)
         # Loop trough possible combinations of tdep and tindep for plots/logs
         # Define a list of do's (dolist) for plots sorted by tdep/tindep
         # combinations. Start dolist:
