@@ -51,7 +51,7 @@ class ANM():
             X_data = self.transform_with_scaler(X_data, tindep)
             Y_data = self.transform_with_scaler(Y_data, tdep)
         # Get independent model data
-        X_model = self.get_Xmodel(X_data)
+        X_model = self.get_Xmodel(X_data, modelpts)
         # Do Prediction
         Y_model = model.predict(X_model).reshape(-1, 1)
         Y_predict = model.predict(X_data).reshape(-1, 1)
