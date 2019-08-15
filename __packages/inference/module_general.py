@@ -2,7 +2,6 @@
 
 # import built in libarys
 
-
 # import 3rd party libarys
 import numpy as np
 import pandas as pd
@@ -24,6 +23,26 @@ class General():
         """
         Class Constructor for General CI Methods
         """
+        self._figsize = (10, 7.071)
+        self._numberrun = 0
+        self._config = {}
+
+    def check_and_init_attr(self, scale):
+        """
+        Method to check correctness of instance attributes as well as init
+        missing attributs.
+        """
+        # Do Checks on global attributes
+        self.check_instance_attr(scale)
+        # Get Combinations of dependent and independent variable if not given
+        if self._combinations is 'all':
+            self.get_combinations()
+        # Initiate a regmod for each combination
+        no_combinations = len(self._combinations)
+        self._regmod = utils.trans_object_to_list(self._regmod, no_combinations, dcopy=True)
+        # Initiate a scaler for each variable
+        no_variables = self._xi.shape[1]
+        self._scaler = utils.trans_object_to_list(self._scaler, no_variables, dcopy=True)
 
     def check_instance_attr(self, scale):
         """
@@ -33,50 +52,36 @@ class General():
         assert not(np.isnan(self._xi).any()), 'Observations contain np.nan'
         assert not(np.isinf(self._xi).any()), 'Observations contain np.inf'
         assert self._regmod is not None, 'Regression Model is None type'
+        assert hasattr(self._regmod, 'fit'), 'Regression Model has no attribute "fit"'
+        assert hasattr(self._regmod, 'predict'), 'Regression Model has no attribute "predict"'
         assert not(hasattr(type(self._regmod), '__iter__')), 'Regression Model should be passed as single object. Attribute __iter__ detected.'
         assert not(hasattr(type(self._scaler), '__iter__')), 'Scaler Model should be passed as single object. Attribute __iter__ detected.'
         assert ((scale is False) or ((scale is True) and (self._scaler is not None))), 'If scale is True, a scaler must be assigned'
 
-    def object_to_list(self, object1, n):
-        """
-        Method to expand one object to a list of length n from this object.
-        """
-        objectn = [object1 for i in range(n)]
-        return(objectn)
-
-    def fit_scaler(self):
+    def scaler_fit(self):
         """
         Method to fit a choosen list of scalers to all Xi
         """
         for i in range(len(self._scaler)):
             self._scaler[i].fit(self._xi[:, i].reshape(-1, 1))
 
-    def transform_with_scaler(self, data, idx):
+    def scaler_transform(self, data, idx):
         """
         Method to fit a choosen list of scalers to all Xi
+        idx must be in tuple.
         """
-        # Univariate Case
-        if idx.size == 1:
-            idx = self.array_to_scalar(idx)
-            self._scaler[idx].transform(data)
-        else:
-        # Multivariate Case
-            for temp_id, temp_val in enumerate(idx):
-                self._scaler[temp_val].transform(data[:, temp_id])
+        for temp_id, temp_val in enumerate(idx):
+            self._scaler[temp_val].transform(data[:, temp_id].reshape(-1, 1))
         return(data)
 
-    def inverse_transform_with_scaler(self, data, idx):
+    def scaler_inverse_transform(self, data, idx):
         """
         Method to fit a choosen list of scalers to all Xi
+        idx must be in tuple.
         """
         # Univariate Case
-        if idx.size == 1:
-            idx = self.array_to_scalar(idx)
-            self._scaler[idx].inverse_transform(data)
-        # Multivariate Case
-        else:
-            for temp_id, temp_val in enumerate(idx):
-                self._scaler[temp_val].inverse_transform(data[:, temp_id])
+        for temp_id, temp_val in enumerate(idx):
+            self._scaler[temp_val].inverse_transform(data[:, temp_id].reshape(-1, 1))
         return(data)
 
     def get_tINdep(self, i):
@@ -84,19 +89,9 @@ class General():
         Method to get the index of the dependent (tdep) and the independent
         (tindep) variable by index i from combinations.
         """
-        tdep = self._combinations[i][0]
+        tdep = tuple([self._combinations[i][0],])
         tindep = self._combinations[i][1:]
         return(tdep, tindep)
-
-    def array_to_scalar(self, array):
-        """
-        Method to turn a np.array([scalar]) into scalar.
-        """
-        if array.size == 1:
-            scalar = array.item()
-            return(scalar)
-        else:
-            return(array)
 
     def get_Xmodel(self, X_data, modelpts):
         """
@@ -116,23 +111,9 @@ class General():
         of tdep and tindep for modelfit of residuals. Save result in _dict2V.
         """
         # Loop trough possible combinations of tdep and tindep for modelfit
-        for i in range(self._combinations.shape[0]):
+        for i in range(len(self._combinations)):
             tdep, tindep = self.get_tINdep(i)
-            # fit regmod on observations
-            if 'fit' in do:
-                self.fit_model2xi(i, tdep, tindep,
-                                  kwargs['scale'],
-                                  kwargs['modelpts'])
-            # do normality test
-            tindep = self.array_to_scalar(tindep)
-            if 'normality' in do:
-                self.do_normality(i, tdep, tindep)
-            # do independence test
-            if 'independence' in do:
-                self.do_independence(i, tdep, tindep)
-            # do calculate the likelihood
-            if 'likelihood' in do:
-                self.do_likelihood(i, tdep, tindep)
+
             # print header for 2V
             if ((('out_Regr_Model' in do) or
                  ('out_Regr_Model_info' in do) or

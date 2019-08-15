@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 # import built in libarys
+from copy import deepcopy
 
 
 # import 3rd party libarys
@@ -14,9 +15,40 @@ from IPython.display import display, HTML
 
 
 ###############################################################################
+def trans_nestedlist_to_tuple(nestedlist):
+    """
+    Function to transform nested list to a tuple of tuple.
+    """
+    tupletuple = [tuple(x) for x in nestedlist]
+    tupletuple = tuple(tupletuple)
+    return(tupletuple)
+
+
+def trans_object_to_list(object1, n, dcopy=False):
+    """
+    Fuunction to expand one object to a list of length n from this object.
+    """
+    if dcopy is False:
+        objectn = [object1 for i in range(n)]
+    elif dcopy is True:
+        objectn = [deepcopy(object1) for i in range(n)]
+    return(objectn)
+
+
+def trans_tuple_to_scalar(array):
+    """
+    Function to turn a np.array([scalar]) into scalar, if possible.
+    """
+    if array.size == 1:
+        scalar = array.item()
+        return(scalar)
+    else:
+        return(array)
+
+
 def init_2V_list(no_obs):
     """
-    Method returns an empty list of list shape=(no_obs, no_obs)
+    Function returns an empty list of list shape=(no_obs, no_obs)
     """
     list_inner = list()
     list_outer = list()
@@ -29,7 +61,7 @@ def init_2V_list(no_obs):
 
 def init_comp_matrix_2V(no_obs):
     """
-    Method returns an empty list of list shape=(no_obs, no_obs)
+    Function returns an empty list of list shape=(no_obs, no_obs)
     """
     matrix = np.eye(no_obs, M=None, k=0, dtype=int)
     matrix -= 1
@@ -45,7 +77,7 @@ def random_environments(obs, ration=0.9, method='Uniform'):
 
 def plot_DAG(Edge_list, Node_list=None):
     """
-    Method to plot a directed acyclic graph (DAG)
+    Function to plot a directed acyclic graph (DAG)
     Edge_list = [[Node1, Node2, EdgeLabel],
                  [Node1, Node2, EdgeLabel],
                  ...                      ]
@@ -110,7 +142,7 @@ def plot_DAG(Edge_list, Node_list=None):
 
 def print_DF(df, fontsize='6pt'):
     """
-    Method to output DataFrame in IPhython formatted as HTML.
+    Function to output DataFrame in IPhython formatted as HTML.
     Adjust how df is displayed in width and fontsize TBD.
     """
     # df.style.set_properties(**{'font-size': fontsize})
@@ -120,7 +152,7 @@ def print_DF(df, fontsize='6pt'):
 
 def print_in_console(what, **kwargs):
     """
-    Method to print text in python console
+    Fucntion to print text in python console
     """
     if 'regmod header' in what:
         text = r"""

@@ -14,7 +14,7 @@ from scipy.stats import mannwhitneyu, combine_pvalues
 
 
 ###############################################################################
-def MLikelihood(sample1, sample2):
+def likelihood(sample1, sample2):
     """
     Method to calculate the Likelihood based on the variance (only Valid
     for Gaussian samples) and based on differential entropy of the error term
@@ -30,7 +30,7 @@ def MLikelihood(sample1, sample2):
     return(testnames, testresults)
 
 
-def test_normality(sample):
+def normality(sample):
     """
     Method to evaluate normality of the given sample by
     Anderson-Darling-, Shapiro-Wilk and D’Agostino-Test.
@@ -52,7 +52,7 @@ def test_normality(sample):
     return(testnames, testresults)
 
 
-def test_independence(sample1, sample2):
+def independence(sample1, sample2):
     """
     Method to perform independence test between sample1 and sample2 by
     t-test (Gaussian only) and Kolmogroff-Smirnoff, Mann-Whitney and

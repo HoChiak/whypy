@@ -17,8 +17,6 @@ from whypy.__packages.inference.module_anm import ANM as parent3
 
 from whypy.__packages.utils import utils
 
-
-
 ###############################################################################
 class Model(parent0, parent1, parent2, parent3):
     """
@@ -26,6 +24,10 @@ class Model(parent0, parent1, parent2, parent3):
     identifiable in the two variable case. Additional Assumptions are required,
     given by the modelclass restrictions. Only acyclic graphs are considered.
     """
+    attr_dict = {'independence': 'p-value',
+                 'likelihood': 'likelihood'}
+
+
     def __init__(self, xi=None, combinations='all', regmod=None, scaler=None):
         """
         Child class constructor for causal inference methods in the 2 variable
@@ -54,14 +56,12 @@ class Model(parent0, parent1, parent2, parent3):
         self._combinations = combinations
         self._regmod = regmod
         self._scaler = scaler
-        self._results = list()
-        self._figsize = (10, 7.071)
-        self._results2V = None
+        self._results = {}
+        self._results2V = {}
 
 
-    # New version of predict, TBD
     def run(self,
-            testvariant='likelihood', #independence, likelihood
+            testtype='likelihood', #independence, likelihood
             scale=True,
             modelpts=50,
             out_Regr_Model=True,
@@ -69,7 +69,7 @@ class Model(parent0, parent1, parent2, parent3):
             out_X_Residuals_NormalityTest=True,
             out_X_vs_Residuals=True,
             out_X_vs_Residuals_info=True,
-            out_Results_Testvariant=True,
+            out_Results_testtype=True,
             out_CausalGraph=True,
             CGmetric='Combined'):
         """
@@ -77,27 +77,30 @@ class Model(parent0, parent1, parent2, parent3):
         Theorem: In causal direction, the noise is independent of the input
         Valid for Additive Noise Models e.g. LiNGAM, NonLinear GaussianAM
         """
-        # Do Checks on global attributes
-        self.check_instance_attr(scale)
-        # Get Combinations of dependent and independent variable if not given
-        if self._combinations is 'all':
-            self._combinations = self.get_combinations()
-        # Initiate a regmod for each combination
-        no_combinations = self._combinations.shape[0]
-        self._regmod = self.object_to_list(self._regmod, no_combinations)
-        # Initiate a scaler for each variable
-        no_variables = self._xi.shape[1]
-        self._scaler = self.object_to_list(self._scaler, no_variables)
-        # TBD go on here (assign testvariant as atttribute?)
-        # only run for one testvariant (kolmogorov or the other or likelihoodration)
-        # placeholder for bootstrape, time, holdout set
-        assert testvariant in ('independence', 'likelihood'), 'TestVariant must be either "independence" or "likelihood"'
+        # Check and Initialisation of Attributes
+        if self._numberrun == 0:
+            self.check_and_init_attr(scale)
+        self.check_combinations()
+        # Check Function Arguments
+        ### TBD go on here (assign testtype as atttribute?)
+        ### only run for one testtype (kolmogorov or the other or likelihoodration)
+        ### placeholder for bootstrape, time, holdout set
+        assert testtype in ('independence', 'likelihood'), 'testtype must be either "independence" or "likelihood"'
+        # Add information to config
+        self._config['%i' % (self._numberrun)] = {'testtype': testtype,
+                                                  'scale': scale,
+                                                  'modelpts': modelpts,
+                                                  'shape_observations': self._xi.shape,
+                                                  'shape_combinations': np.array(self._combinations).shape,
+                                                  'regression_model:': str(self._regmod[0]),
+                                                  'scaler_model:': str(self._scaler[0]),
+                                                  }
         # Global translater
-        dic = {'independence': 'p-value',
-               'likelihood': 'likelihood'}
-        namecode = dic[testvariant]
+        ### Remove this TBD when attr_dict is ready
+        dic = {'independence': 'p-value', 'likelihood': 'likelihood'}
+        namecode = dic[testtype]
         # Do the math
-        self.run_inference(scale, testvariant, modelpts)
+        self.run_inference()
         # Loop trough possible combinations of tdep and tindep for plots/logs
         # Define a list of do's (dolist) for plots sorted by tdep/tindep
         # combinations. Start dolist:
@@ -123,12 +126,14 @@ class Model(parent0, parent1, parent2, parent3):
                 self.plt_2metrics_groupedby(namecode)
             self.plt_1metric_groupedby(namecode)
         # Print independence/likelihood tests results
-        if out_Results_Testvariant is True:
-            rs = self._results2V
+        if out_Results_testtype is True:
+            rs = self._results2V['%i' % (self._numberrun)]
             print(rs[['TestType', '2V-case', 'pval/likel',
                       'rank pval/likel', '2V-direction']].to_string())
         # plot the Causal Graph
         if out_CausalGraph is True:
             utils.print_in_console(what='CG Warning')
-            self.predict_CG(testvariant, CGmetric=CGmetric)
+            self.predict_CG(testtype, CGmetric=CGmetric)
+        self._numberrun += 1
+
 ###############################################################################
