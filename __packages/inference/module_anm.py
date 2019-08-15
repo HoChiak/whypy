@@ -39,17 +39,17 @@ class ANM():
         X_data = np.copy(self._xi[:, tindep].reshape(-1, len(tindep)))
         return(model, X_data, Y_data)
 
-    def get_model_stats(self, i, tdep, tindep, model, X_data, Y_data):
-        """
-        Method to get the statistics of the regression model.
-        TBD for other models than GAM.
-        """
-        # Differentiate between different models
-        if 'pygam' in str(self._regmod[0].__class__):
-            stat = model.statistics_['p_values']
-            self._results['%i' % (self._numberrun)][i]['Model_Statistics'] = stat
-        else:
-            self._results['%i' % (self._numberrun)][i]['Model_Statistics'] = 'NaN'
+#    def get_model_stats(self, i, tdep, tindep, model, X_data, Y_data):
+#        """
+#        Method to get the statistics of the regression model.
+#        TBD for other models than GAM.
+#        """
+#        # Differentiate between different models
+#        if 'pygam' in str(self._regmod[0].__class__):
+#            stat = model.statistics_['p_values']
+#            self._results['%i' % (self._numberrun)][i]['Model_Statistics'] = stat
+#        else:
+#            self._results['%i' % (self._numberrun)][i]['Model_Statistics'] = 'NaN'
 
     def fit_model2xi(self, i, tdep, tindep, model, X_data, Y_data):
         """
@@ -77,7 +77,8 @@ class ANM():
             X_data = self.scaler_transform(X_data, tindep)
             #Y_data = self.scaler_transform(Y_data, tdep)
         # Get independent model data
-        X_model = self.get_Xmodel(X_data, self._config['%i' % (self._numberrun)]['modelpts'])
+        modelpts = self._config['%i' % (self._numberrun)]['modelpts']
+        X_model = self.get_Xmodel(X_data, modelpts)
         # Do Prediction
         Y_model = model.predict(X_model).reshape(-1, 1)
         Y_predict = model.predict(X_data).reshape(-1, 1)
@@ -93,6 +94,49 @@ class ANM():
                                                       'Y_model': Y_model,
                                                       'Y_predict': Y_predict,
                                                       'Residuals': Residuals}
+
+    def do_statistics(self, obs_name, test_stat,
+                      obs_valu1, obs_valu2=None):
+        """
+        Method to comprehense statistical tests
+        """
+        if test_stat is 'Normality':
+            tr = stats.normality(obs_valu1)
+        elif test_stat is 'Likelihood':
+            tr = stats.likelihood(obs_valu1, obs_valu2)
+        elif test_stat is 'KolmogorovSmirnoff':
+            tr = stats.kolmogorov(obs_valu1, obs_valu2)
+        elif test_stat is 'MannWhitney':
+            tr = stats.mannwhitneyu(obs_valu1, obs_valu2)
+        else:
+            print('Given test_stat argument is not defined.')
+        self._results['%i' % (self._numberrun)][i]['%s_%s_%i' % (test_stat, obs_name)] = tr
+
+
+    def test_statistics(self, i, tdep, tindep, model, X_data, Y_data):
+        """
+        Method to perform statistical tests on the given and predicted data.
+        """
+        for temp_i, temp_tindep in enumerate(tindep):
+            # Normality Test on X_data
+            self.do_statistics('X_data_%i' % (temp_tindep), 'Normality',
+                               obs_valu1=X_data[:, temp_tindep], obs_valu2=None)
+            # Test Independence of Residuals
+            self.do_statistics('IndepResiduals_%i' % (temp_tindep),
+                               self._config['%i' % (self._numberrun)]['testtype'],
+                               obs_valu1=self._results['%i' % (self._numberrun)][i]['Residuals'],
+                               obs_valu2=X_data[:, temp_tindep])
+        # Normality Test on Residuals
+        self.do_statistics('X_data_%i' % (temp_tindep), 'Normality',
+                           obs_valu1=self._results['%i' % (self._numberrun)][i]['Residuals'],
+                           obs_valu2=None)
+        # Test Goodness of Fit
+        self.do_statistics('GoodnessFit_%i' % (temp_tindep),
+                           self._config['%i' % (self._numberrun)]['testtype'],
+                           obs_valu1=self._results['%i' % (self._numberrun)][i]['Residuals'],
+                           obs_valu2=Y_data)
+       #TBD Check Functions (combine pvalue?) correct naming convention, adjust functions in stats
+
 
     def test_normality(self, i, tdep, tindep):
         """

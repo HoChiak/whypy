@@ -41,21 +41,21 @@ def normality(sample):
     """
     # sample = np.array(5 + 1.5 * np.random.randn(100)) # test sample
     sample = sample.reshape(-1)
-    a_stat, a_cv, a_sl = anderson(sample, dist='norm')
-    s_stat, s_pv = shapiro(sample)
-    d_stat, d_pv = normaltest(sample)
-    cp_stat, cp_pv = combine_pvalues([s_pv, d_pv])
-    testnames = ['Anderson-Darling', 'Shapiro-Wilk', 'D’Agostino',
-                 'Combined p-values']
-    testresults = [a_stat, a_sl, s_stat, s_pv, d_stat, d_pv,
-                   cp_stat, cp_pv]
-    return(testnames, testresults)
+    #a_stat, a_cv, a_sl = anderson(sample, dist='norm')
+    _, s_pv = shapiro(sample)
+    _, d_pv = normaltest(sample)
+    _, cp_pv = combine_pvalues([s_pv, d_pv])
+    test_results = {'SW_pvalue': s_pv,
+                    'Pearson_pvalue': d_pv,
+                    'Combined_pvalue': cp_pv,
+                    }
+    return(test_results)
 
 
 def independence(sample1, sample2):
     """
     Method to perform independence test between sample1 and sample2 by
-    t-test (Gaussian only) and Kolmogroff-Smirnoff, Mann-Whitney and
+    t-test (Gaussian only) and Kolmogorov-Smirnoff, Mann-Whitney and
     Anderson-Darling.
     (HSIC  and Cramer-von Mises test is to be done)
 
@@ -75,7 +75,7 @@ def independence(sample1, sample2):
     mw_stat, mw_pv = mannwhitneyu(sample1, sample2)
     # ad_stat, ad_cv, ad_sl = anderson_ksamp([sample1, sample2])
     # cp_stat, cp_pv = combine_pvalues([ks_pv, mw_pv, ad_sl])
-    testnames = ['Kolmogroff-Smirnoff', 'Mann-Whitney']
+    testnames = ['Kolmogorov-Smirnoff', 'Mann-Whitney']
     testresults = [ks_stat, ks_pv, mw_stat, mw_pv]
     testresults = np.array(testresults)
     testresults[np.isinf(testresults)] = 8.888
@@ -152,7 +152,7 @@ Combination of SW and Ag p-values by Fishers method.
 %s
 t-Test:
 (2-sided test; Gaussian; 2 independent samples; H0: identical average (expected) values); (p-value < alpha: H0 can be rejected)
-Kolmogroff-Smirnoff:
+Kolmogorov-Smirnoff:
 (2-sided test; distribution free; 2 independent samples; H0: drawn from the same continuous distribution); (p-value < alpha | statistic is high: H0 can be rejected)
 Mann-Whitney:
 (2-sided test; distribution free; 2 independent samples; H0: drawn from the same continuous distribution); (p-value < alpha: H0 can be rejected)
