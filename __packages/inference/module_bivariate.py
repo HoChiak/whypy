@@ -305,29 +305,7 @@ class CurrentlyExcluded1():
             utils.plot_DAG(El, Nl)
 
 
-    def plt_1hist(self, i, tdep, tindep):
-        """
-        Method to plot a histogramm of both the independent sample and the
-        Residuals
-        """
-        txt = self.get_std_txt(what='math-Y~f(X)',
-                               tdep=tdep,
-                               tindep=tindep)
-        plt.figure(r'Histogramm: %s' % (txt),
-                   figsize=self._figsize)
-        sns.distplot(self._xi[:, tindep],
-                     norm_hist=True
-                     )
-        sns.distplot(self._results['%i' % (self._numberrun)][i]['Residuals'],
-                     norm_hist=True
-                     )
-        plt.legend([r'$X_{%i}$' % (tindep),
-                    r'$Residuals\ (X_{%i}-\hatX_{%i})$' % (tdep, tdep)])
-        plt.title(r'$Histogramm:\ %s$' % (txt),
-                  fontweight='bold')
-        plt.xlabel(r'$X_{i}$')
-        plt.ylabel(r'$f\left(X_{i}\right)$')
-        plt.show()
+
 
     def plt_2metrics_groupedby(self, namecode,
                                metric1='statistics',

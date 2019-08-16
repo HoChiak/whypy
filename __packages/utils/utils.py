@@ -57,6 +57,63 @@ def check_inf_nan(value):
         print('WARNING: a passed value is nan and set to 123.456')
     return(value)
 
+def print_in_console(what, **kwargs):
+    """
+    Fucntion to print text in python console
+    """
+    if 'pairgrid header' in what:
+        text = r"""
+
+############################################################################
+############################################################################
+----------------------------------------------------------------------------
+--------                  PAIRGRID   ALL VARIABLES                  --------
+----------------------------------------------------------------------------
+                """
+    elif 'combination major header' in what:
+        text = r"""
+
+############################################################################
+############################################################################
+----------------------------------------------------------------------------
+--------                  INFERENCE  VISUALIZATION                  --------
+----------------------------------------------------------------------------
+Fitted Combination: X_%i ~ f(X_%s)
+                """ % (kwargs['tdep'], str(kwargs['tindep']))
+    elif 'combination minor header' in what:
+        text = r"""
+----------------------------------------------------------------------------
+2D Visualisation for: X_%i ~ f(X_%s)
+----------------------------------------------------------------------------
+                """ % (kwargs['tdep'], kwargs['tindep'])
+#     elif 'model summary' in what:
+#         text = r"""
+# ----------------------------------------------------------------------------
+# MODEL SUMMARY  RESULTS
+# ----------------------------------------------------------------------------
+#                 """
+#     elif 'result header' in what:
+#         text = r"""
+# ############################################################################
+# ############################################################################
+# ----------------------------------------------------------------------------
+# --------                      OVERALL  RESULTS                      --------
+# ----------------------------------------------------------------------------
+#                 """
+#     elif 'CG Warning' in what:
+#         text = r"""
+# ----------------------------------------------------------------------------
+# CAUSAL GRAPH PREDICTION
+# ----------------------------------------------------------------------------
+# WARNING: This graph is predicted under the underlying assumptions and
+#          only valid under these assumptions. Please check verbose for
+#          more information.
+#                 """
+#     elif 'CG Info' in what:
+#         text = r"""
+# Testtype: %s | Testmetric: %s
+#                 """ % (kwargs['testname'], kwargs['testmetric'])
+    print(text)
 
 
 
@@ -172,46 +229,3 @@ def print_DF(df, fontsize='6pt'):
     # df.style.set_properties(**{'font-size': fontsize})
     # display(HTML("<style>.container { width:100% !important; }</style>"))
     display(HTML(df.to_html()))
-
-
-def print_in_console(what, **kwargs):
-    """
-    Fucntion to print text in python console
-    """
-    if 'regmod header' in what:
-        text = r"""
-
-############################################################################
-############################################################################
-----------------------------------------------------------------------------
---------                        X_%i ~ f(X_%i)                        --------
-----------------------------------------------------------------------------
-                """ % (kwargs['tdep'], kwargs['tindep'])
-    if 'model summary' in what:
-        text = r"""
-----------------------------------------------------------------------------
-MODEL SUMMARY  RESULTS
-----------------------------------------------------------------------------
-                """
-    if 'result header' in what:
-        text = r"""
-############################################################################
-############################################################################
-----------------------------------------------------------------------------
---------                      OVERALL  RESULTS                      --------
-----------------------------------------------------------------------------
-                """
-    if 'CG Warning' in what:
-        text = r"""
-----------------------------------------------------------------------------
-CAUSAL GRAPH PREDICTION
-----------------------------------------------------------------------------
-WARNING: This graph is predicted under the underlying assumptions and
-         only valid under these assumptions. Please check verbose for
-         more information.
-                """
-    if 'CG Info' in what:
-        text = r"""
-Testtype: %s | Testmetric: %s
-                """ % (kwargs['testname'], kwargs['testmetric'])
-    print(text)

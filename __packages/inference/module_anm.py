@@ -133,7 +133,7 @@ class RunANM():
         # Test Goodness of Fit
         self.do_statistics(combno, 'GoodnessFit',
                            self._config['%i' % (self._numberrun)]['testtype'],
-                           obs_valu1=self._results['%i' % (self._numberrun)][combno]['Residuals'],
+                           obs_valu1=self._results['%i' % (self._numberrun)][combno]['Y_predict'],
                            obs_valu2=Y_data)
 
     def run_inference(self):
@@ -193,7 +193,7 @@ class PlotANM():
         df.columns = [r'$X_%i$' % (i) for i in range(self._xi.shape[1])]
         g = sns.PairGrid(df)
         g = g.map(plt.scatter)
-        plt.show()
+        plt.show();
 
     def plt_1model_adv(self, combno, tdep, temp_i, tindep):
         """
@@ -217,6 +217,46 @@ class PlotANM():
         plt.xlabel(r'$X_{%i}$' % (tindep))
         plt.ylabel(r'$X_{%i}$' % (tdep))
         g.plot_marginals(sns.distplot, kde=True)
+        plt.show();
+
+    def plt_hist_IndepResiduals(self, combno, tdep, temp_i, tindep):
+        """
+        Method to plot a histogramm of both the independent sample and the
+        Residuals
+        """
+        txt = self.get_math_txt(combno, tdep, tindep)
+        plt.figure(r'Independence of Residuals: %s' % (txt),
+                   figsize=self._figsize)
+        sns.distplot(self._xi[:, tindep],
+                     norm_hist=True)
+        sns.distplot(self._results['%i' % (self._numberrun)][combno]['Residuals'],
+                     norm_hist=True)
+        plt.legend([r'$X_{%i}$' % (tindep),
+                    r'$Residuals\ (X_{%i}-\hatX_{%i})$' % (tdep, tdep)])
+        plt.title(r'$Independence\ of\ Residuals:\ %s$' % (txt),
+                  fontweight='bold')
+        plt.xlabel(r'$X_{i}$')
+        plt.ylabel(r'$f\left(X_{i}\right)$')
+        plt.show()
+
+    def plt_hist_GoodnessFit(self, combno, tdep, temp_i, tindep):
+        """
+        Method to plot a histogramm of both the independent sample and the
+        Residuals
+        """
+        txt = self.get_math_txt(combno, tdep, tindep)
+        plt.figure(r'Goodness of Fit: %s' % (txt),
+                   figsize=self._figsize)
+        sns.distplot(self._xi[:, tdep],
+                     norm_hist=True)
+        sns.distplot(self._results['%i' % (self._numberrun)][combno]['Y_predict'],
+                     norm_hist=True)
+        plt.legend([r'$X_{%i}$' % (tdep),
+                    r'$\hatX_{%i}$' % (tdep)])
+        plt.title(r'$Goodness\ of\ Fit:\ %s$' % (txt),
+                  fontweight='bold')
+        plt.xlabel(r'$X_{%i}$' % (tdep))
+        plt.ylabel(r'$f\left(X_{i}\right)$')
         plt.show()
 
     def plot_inference(self):
@@ -224,16 +264,23 @@ class PlotANM():
         Method to visualize the interference
         """
         # Pairgrid Plot of Observations
+        utils.print_in_console(what='pairgrid header')
         self.plt_PairGrid()
         # Iterate over combinations
         for combno in range(len(self._combinations)):
             tdep, tindep = self.get_tINdep(combno)
             tdep = tdep[0]
-            # Iterate over independent variables
+            utils.print_in_console(what='combination major header',
+                                   tdep=tdep, tindep=tindep)
+           # Iterate over independent variables
             for temp_i, temp_tindep in enumerate(tindep):
                 # Plot Tindep vs Tdep
+                if self.attr_variate is 'mvariate':
+                    utils.print_in_console(what='combination minor header',
+                                           tdep=tdep, tindep=temp_tindep)
                 self.plt_1model_adv(combno, tdep, temp_i, temp_tindep)
-        #self.plt_1hist(combno, tdep, tindep)
+                self.plt_hist_IndepResiduals(combno, tdep, temp_i, temp_tindep)
+            self.plt_hist_GoodnessFit(combno, tdep, temp_i, temp_tindep)
 
 
     def loop_and_do(self, do, **kwargs):
@@ -244,17 +291,6 @@ class PlotANM():
         # Loop trough possible combinations of tdep and tindep for modelfit
         for i in range(len(self._combinations)):
             tdep, tindep = self.get_tINdep(combno)
-
-            # print header for 2V
-            if ((('out_Regr_Model' in do) or
-                 ('out_Regr_Model_info' in do) or
-                 ('out_X_Residuals_NormalityTest' in do) or
-                 ('out_X_vs_Residuals_info' in do))):
-                utils.print_in_console(what='regmod header',
-                                       tdep=tdep, tindep=tindep)
-            # plot joint and marginal together with model and hist
-            if 'out_Regr_Model' in do:
-                print('test')
             # print/plot model informations
             if 'out_Regr_Model_info' in do:
                 try:
