@@ -11,25 +11,10 @@ from scipy.stats import mannwhitneyu, combine_pvalues
 
 
 # import local libarys
+from whypy.__packages.utils import utils
 
 
 ###############################################################################
-def likelihood(sample1, sample2):
-    """
-    Method to calculate the Likelihood based on the variance (only Valid
-    for Gaussian samples) and based on differential entropy of the error term
-    """
-    testnames = ['Likelihood']
-    sample1 = np.array(sample1)
-    sample2 = np.array(sample2)
-    # calculate likelihood based on variance (only Gaussian)
-    log1 = np.log(np.var(sample1.reshape(-1)))
-    log2 = np.log(np.var(sample2.reshape(-1)))
-    testresults = - log1 - log2
-    # calculate likelihood based on entropy (also non Gaussian)
-    return(testnames, testresults)
-
-
 def normality(sample):
     """
     Method to evaluate normality of the given sample by
@@ -52,7 +37,23 @@ def normality(sample):
     return(test_results)
 
 
-def independence(sample1, sample2):
+def likelihood(sample1, sample2):
+    """
+    Method to calculate the Likelihood based on the variance (only Valid
+    for Gaussian samples) and based on differential entropy of the error term
+    """
+    sample1 = np.array(sample1).reshape(-1)
+    sample2 = np.array(sample2).reshape(-1)
+    # calculate likelihood based on variance (only Gaussian)
+    log1 = np.log(np.var(sample1))
+    log2 = np.log(np.var(sample2))
+    likeratio = - log1 - log2
+    # TBD calculate likelihood based on entropy (also non Gaussian)
+    test_results = {'Likelihood': likeratio}
+    return(test_results)
+
+
+def kolmogorov(sample1, sample2):
     """
     Method to perform independence test between sample1 and sample2 by
     t-test (Gaussian only) and Kolmogorov-Smirnoff, Mann-Whitney and
@@ -63,24 +64,44 @@ def independence(sample1, sample2):
 
     RETURN: Test Statistic
     """
-    sample1 = sample1.reshape(-1)
-    sample2 = sample2.reshape(-1)
-    # if yj_transform is True:
-    #    sample1, lambda1 = yeojohnson(sample1)
-    #    sample2, lambda2 = yeojohnson(sample2)
-    #    sample1 = np.array(sample1).reshape(-1)
-    #    sample2 = np.array(sample2).reshape(-1)
-    # tt_stat, tt_pv = ttest_ind(sample1, sample2)
-    ks_stat, ks_pv = ks_2samp(sample1, sample2)
-    mw_stat, mw_pv = mannwhitneyu(sample1, sample2)
-    # ad_stat, ad_cv, ad_sl = anderson_ksamp([sample1, sample2])
-    # cp_stat, cp_pv = combine_pvalues([ks_pv, mw_pv, ad_sl])
-    testnames = ['Kolmogorov-Smirnoff', 'Mann-Whitney']
-    testresults = [ks_stat, ks_pv, mw_stat, mw_pv]
-    testresults = np.array(testresults)
-    testresults[np.isinf(testresults)] = 8.888
-    testresults[np.isnan(testresults)] = 8.888
-    return(testnames, testresults)
+    sample1 = np.array(sample1).reshape(-1)
+    sample2 = np.array(sample2).reshape(-1)
+    # calculate KolmogorovSmirnoff
+    _, id_pv = ks_2samp(sample1, sample2)
+    # process value
+    id_pv = utils.check_inf_nan(id_pv)
+    test_results = {'KolmogorovSmirnoff': id_pv}
+    return(test_results)
+
+
+def mannwhitneyu(sample1, sample2):
+    """
+    Method to perform independence test between sample1 and sample2 by
+    t-test (Gaussian only) and Kolmogorov-Smirnoff, Mann-Whitney and
+    Anderson-Darling.
+    (HSIC  and Cramer-von Mises test is to be done)
+
+    INPUT:  Samples to be tested
+
+    RETURN: Test Statistic
+    """
+    sample1 = np.array(sample1).reshape(-1)
+    sample2 = np.array(sample2).reshape(-1)
+    # calculate MannWhitney
+    _, id_pv = mannwhitneyu(sample1, sample2)
+    # process value
+    id_pv = utils.check_inf_nan(id_pv)
+    test_results = {'MannWhitney': id_pv}
+    return(test_results)
+
+
+
+
+
+
+
+
+
 
 
 def log_st(testtype, testnames, testresults, name1='NA', name2='NA'):

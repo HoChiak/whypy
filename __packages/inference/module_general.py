@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 # import built in libarys
+from copy import deepcopy
+
 
 # import 3rd party libarys
 import numpy as np
@@ -34,29 +36,33 @@ class General():
         """
         # Do Checks on global attributes
         self.check_instance_attr(scale)
+        # Init Observations
+        self._xi = deepcopy(self.xi)
         # Get Combinations of dependent and independent variable if not given
-        if self._combinations is 'all':
+        if self.combinations is 'all':
             self.get_combinations()
+        else:
+            self._combinations = deepcopy(self.combinations)
         # Initiate a regmod for each combination
         no_combinations = len(self._combinations)
-        self._regmod = utils.trans_object_to_list(self._regmod, no_combinations, dcopy=True)
+        self._regmod = utils.trans_object_to_list(self.regmod, no_combinations, dcopy=True)
         # Initiate a scaler for each variable
         no_variables = self._xi.shape[1]
-        self._scaler = utils.trans_object_to_list(self._scaler, no_variables, dcopy=True)
+        self._scaler = utils.trans_object_to_list(self.scaler, no_variables, dcopy=True)
 
     def check_instance_attr(self, scale):
         """
         Method to check the instance attributes
         """
-        assert self._xi is not None, 'Observations are None type'
-        assert not(np.isnan(self._xi).any()), 'Observations contain np.nan'
-        assert not(np.isinf(self._xi).any()), 'Observations contain np.inf'
-        assert self._regmod is not None, 'Regression Model is None type'
-        assert hasattr(self._regmod, 'fit'), 'Regression Model has no attribute "fit"'
-        assert hasattr(self._regmod, 'predict'), 'Regression Model has no attribute "predict"'
-        assert not(hasattr(type(self._regmod), '__iter__')), 'Regression Model should be passed as single object. Attribute __iter__ detected.'
-        assert not(hasattr(type(self._scaler), '__iter__')), 'Scaler Model should be passed as single object. Attribute __iter__ detected.'
-        assert ((scale is False) or ((scale is True) and (self._scaler is not None))), 'If scale is True, a scaler must be assigned'
+        assert self.xi is not None, 'Observations are None type'
+        assert not(np.isnan(self.xi).any()), 'Observations contain np.nan'
+        assert not(np.isinf(self.xi).any()), 'Observations contain np.inf'
+        assert self.regmod is not None, 'Regression Model is None type'
+        assert hasattr(self.regmod, 'fit'), 'Regression Model has no attribute "fit"'
+        assert hasattr(self.regmod, 'predict'), 'Regression Model has no attribute "predict"'
+        assert not(hasattr(type(self.regmod), '__iter__')), 'Regression Model should be passed as single object. Attribute __iter__ detected.'
+        assert not(hasattr(type(self.scaler), '__iter__')), 'Scaler Model should be passed as single object. Attribute __iter__ detected.'
+        assert ((scale is False) or ((scale is True) and (self.scaler is not None))), 'If scale is True, a scaler must be assigned'
 
     def scaler_fit(self):
         """
@@ -104,41 +110,3 @@ class General():
                               num=modelpts)
         X_model = X_model.reshape(-1, 1)
         return(X_model)
-
-    def loop_and_do(self, do, **kwargs):
-        """
-        Method to scale (if scale==True) and loop trough possible combinations
-        of tdep and tindep for modelfit of residuals. Save result in _dict2V.
-        """
-        # Loop trough possible combinations of tdep and tindep for modelfit
-        for i in range(len(self._combinations)):
-            tdep, tindep = self.get_tINdep(i)
-
-            # print header for 2V
-            if ((('out_Regr_Model' in do) or
-                 ('out_Regr_Model_info' in do) or
-                 ('out_X_Residuals_NormalityTest' in do) or
-                 ('out_X_vs_Residuals_info' in do))):
-                utils.print_in_console(what='regmod header',
-                                       tdep=tdep, tindep=tindep)
-            # plot joint and marginal together with model and hist
-            if 'out_Regr_Model' in do:
-                self.plt_1model_adv(i, tdep, tindep)
-                self.plt_1hist(i, tdep, tindep)
-            # print/plot model informations
-            if 'out_Regr_Model_info' in do:
-                try:
-                    self.plt_GAMlog(i, tdep, tindep)
-                except:
-                    print('An exception occurred using -plt_GAMlog()-')
-                try:
-                    utils.print_in_console(what='model summary')
-                    self._regmod[i].summary()
-                except:
-                    print('An exception occurred using -summary()-')
-            # print the normality log
-            if 'out_X_Residuals_NormalityTest' in do:
-                self.print_log_st(i, tdep, tindep, 'normality')
-            # print the independence log
-            if 'out_X_vs_Residuals_info' in do:
-                self.print_log_st(i, tdep, tindep, 'independence')

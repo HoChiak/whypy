@@ -13,19 +13,24 @@ import seaborn as sns
 from whypy.__packages.inference.module_general import General as parent0
 from whypy.__packages.inference.module_steadystate import SteadyState as parent1
 from whypy.__packages.inference.module_bivariate import Bivariate as parent2
-from whypy.__packages.inference.module_anm import ANM as parent3
+from whypy.__packages.inference.module_anm import RunANM as parent3
+from whypy.__packages.inference.module_anm import PlotANM as parent4
+from whypy.__packages.inference.module_anm import ResultsANM as parent5
 
 from whypy.__packages.utils import utils
 
 ###############################################################################
-class Model(parent0, parent1, parent2, parent3):
+class Model(parent0, parent1, parent2, parent3, parent4, parent5):
     """
     Causal Inference methods for the two variable case. General SCMs are not
     identifiable in the two variable case. Additional Assumptions are required,
     given by the modelclass restrictions. Only acyclic graphs are considered.
     """
-    attr_dict = {'independence': 'p-value',
-                 'likelihood': 'likelihood'}
+    attr_dict = {'Likelihood': 'likelihood-ratio',
+                 'KolmogorovSmirnoff': 'p-value',
+                 'MannWhitney': 'p-value',
+                 'HSIC': 'unknown'
+                 }
 
 
     def __init__(self, xi=None, combinations='all', regmod=None, scaler=None):
@@ -52,16 +57,24 @@ class Model(parent0, parent1, parent2, parent3):
         parent1.__init__(self)
         parent2.__init__(self)
         parent3.__init__(self)
-        self._xi = np.array(xi)
-        self._combinations = combinations
-        self._regmod = regmod
-        self._scaler = scaler
+        parent4.__init__(self)
+        parent5.__init__(self)
+        self.xi = np.array(xi)
+        self.combinations = combinations
+        self.regmod = regmod
+        self.scaler = scaler
+        self._xi = None
+        self._combinations = None
+        self._regmod = None
+        self._scaler = None
         self._results = {}
         self._results2V = {}
 
 
+
+
     def run(self,
-            testtype='likelihood', #independence, likelihood
+            testtype='Likelihood',# Likelihood KolmogorovSmirnoff MannWhitney HSIC
             scale=True,
             modelpts=50,
             out_Regr_Model=True,
@@ -77,15 +90,17 @@ class Model(parent0, parent1, parent2, parent3):
         Theorem: In causal direction, the noise is independent of the input
         Valid for Additive Noise Models e.g. LiNGAM, NonLinear GaussianAM
         """
+        # Count Number of runs +1
+        self._numberrun += 1
         # Check and Initialisation of Attributes
-        if self._numberrun == 0:
+        if self._numberrun == 1:
             self.check_and_init_attr(scale)
         self.check_combinations()
         # Check Function Arguments
         ### TBD go on here (assign testtype as atttribute?)
         ### only run for one testtype (kolmogorov or the other or likelihoodration)
-        ### placeholder for bootstrape, time, holdout set
-        assert testtype in ('independence', 'likelihood'), 'testtype must be either "independence" or "likelihood"'
+        ### placeholder for bootstrape, time, holdout set, different environments
+        assert testtype in ('Likelihood', 'KolmogorovSmirnoff', 'MannWhitney', 'HSIC'), 'Wrong Argument given for TestType'
         # Add information to config
         self._config['%i' % (self._numberrun)] = {'testtype': testtype,
                                                   'scale': scale,
@@ -95,45 +110,12 @@ class Model(parent0, parent1, parent2, parent3):
                                                   'regression_model:': str(self._regmod[0]),
                                                   'scaler_model:': str(self._scaler[0]),
                                                   }
-        # Global translater
-        ### Remove this TBD when attr_dict is ready
-        dic = {'independence': 'p-value', 'likelihood': 'likelihood'}
-        namecode = dic[testtype]
         # Do the math
         self.run_inference()
-        # Loop trough possible combinations of tdep and tindep for plots/logs
-        # Define a list of do's (dolist) for plots sorted by tdep/tindep
-        # combinations. Start dolist:
-        dolist = []
-        if out_Regr_Model is True:
-            dolist.append('out_Regr_Model')
-        if out_Regr_Model_info is True:
-            dolist.append('out_Regr_Model_info')
-        if out_X_Residuals_NormalityTest is True:
-            dolist.append('out_X_Residuals_NormalityTest')
-        if out_X_vs_Residuals_info is True:
-            if 'p-value' in namecode:
-                dolist.append('out_X_vs_Residuals_info')
-            else:
-                print('X vs Residual log only available for independence test')
-        if len(dolist) != 0:
-            self.loop_and_do(do=dolist)
-        # end dolist
-        utils.print_in_console(what='result header')
-        # Plot independence/likelihood tests results
-        if out_X_vs_Residuals is True:
-            if 'p-value' in namecode:
-                self.plt_2metrics_groupedby(namecode)
-            self.plt_1metric_groupedby(namecode)
-        # Print independence/likelihood tests results
-        if out_Results_testtype is True:
-            rs = self._results2V['%i' % (self._numberrun)]
-            print(rs[['TestType', '2V-case', 'pval/likel',
-                      'rank pval/likel', '2V-direction']].to_string())
-        # plot the Causal Graph
-        if out_CausalGraph is True:
-            utils.print_in_console(what='CG Warning')
-            self.predict_CG(testtype, CGmetric=CGmetric)
-        self._numberrun += 1
+        # Plot the math of inference
+        self.plot_inference()
+        # Plot results
+        #self.plot_results()
+
 
 ###############################################################################

@@ -46,19 +46,18 @@ class Bivariate():
         assert np.array(self._combinations).shape[1] == 2, 'Shape of combinations must be (m, 2)'
         self._combinations = utils.trans_nestedlist_to_tuple(self._combinations)
 
-    def get_std_txt(self, what, **kwargs):
+class CurrentlyExcluded1():
+    """
+    Class for "Additive Noise Model" Methods.
+    Please be aware of the assumptions for models of these categorie.
+    """
+
+    def __init__(self):
         """
-        Libary of some standard text phrases
+        Class constructor.
         """
-        if 'math-Y~f(X)' in what:
-            t1 = kwargs['tdep']
-            t2 = kwargs['tindep']
-            txt = r'X_{%i} \approx f\left( X_{%i} \right)' % (t1, t2)
-        if 'std-Y~f(X)' in what:
-            t1 = kwargs['tdep']
-            t2 = kwargs['tindep']
-            txt = r'X_%i ~ f(X_%i)' % (t1, t2)
-        return(txt)
+
+
 
     def get_testnames(self):
         """
@@ -305,43 +304,6 @@ class Bivariate():
             utils.print_DF(metricdf)
             utils.plot_DAG(El, Nl)
 
-    def plt_PairGrid(self):
-        """
-        Method to plot a PairGrid scatter of the observations.
-        """
-        plt.figure(r'PairGrid',
-                   figsize=self._figsize)
-        df = pd.DataFrame(self._xi)
-        df.columns = [r'$X_%i$' % (i) for i in range(df.shape[1])]
-        g = sns.PairGrid(df)
-        g = g.map(plt.scatter)
-        plt.show()
-
-    def plt_1model_adv(self, i, tdep, tindep):
-        """
-        Method to plot a scatter of the samples, the fitted model and the
-        residuals. Plot joint distribution and marginals.
-        """
-        txt = self.get_std_txt(what='math-Y~f(X)',
-                               tdep=tdep,
-                               tindep=tindep)
-        g = sns.JointGrid(self._xi[:, tindep], self._xi[:, tdep],
-                          size=self._figsize[0]/6*5,
-                          # ratio=int(5)
-                          )
-        g.plot_joint(plt.scatter)
-        plt.plot(self._results['%i' % (self._numberrun)][i]['X_model'],
-                 self._results['%i' % (self._numberrun)][i]['Y_model'],
-                 c='r')
-        plt.scatter(self._xi[:, tindep],
-                    self._results['%i' % (self._numberrun)][i]['Residuals'])
-        plt.legend([r'$Model\ %s$' % (txt),
-                    r'$Observations$',
-                    r'$Residuals\ (X_{%i}-\hatX_{%i})$' % (tdep, tdep)])
-        plt.xlabel(r'$X_{%i}$' % (tindep))
-        plt.ylabel(r'$X_{%i}$' % (tdep))
-        g.plot_marginals(sns.distplot, kde=True)
-        plt.show()
 
     def plt_1hist(self, i, tdep, tindep):
         """

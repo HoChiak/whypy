@@ -5,15 +5,16 @@
 
 # import 3rd party libarys
 import numpy as np
+from matplotlib import pyplot as plt
+import pandas as pd
+import seaborn as sns
 
 # import local libarys
 from whypy.__packages.utils import utils
 from whypy.__packages.utils import stats
 
-from importlib import reload
-utils=reload(utils)
 ###############################################################################
-class ANM():
+class RunANM():
     """
     Class for "Additive Noise Model" Methods.
     Please be aware of the assumptions for models of these categorie.
@@ -25,33 +26,21 @@ class ANM():
         Class constructor.
         """
 
-    def get_combination_objects(self, i, tdep, tindep):
+    def get_combination_objects(self, combno, tdep, tindep):
         """
-        Method to return [X, Y and the regarding model], controlled by index i,
+        Method to return [X, Y and the regarding model], controlled by index combno,
         where i is in (0, number_of_combinations, 1).
         In Combinations, the first value of the nested list is always the
         dependent variable whereas the other values are the independent
         variables. Copy values to make original values independent from
         scaling.
         """
-        model = self._regmod[i]
+        model = self._regmod[combno]
         Y_data = np.copy(self._xi[:, tdep].reshape(-1, 1))
         X_data = np.copy(self._xi[:, tindep].reshape(-1, len(tindep)))
         return(model, X_data, Y_data)
 
-#    def get_model_stats(self, i, tdep, tindep, model, X_data, Y_data):
-#        """
-#        Method to get the statistics of the regression model.
-#        TBD for other models than GAM.
-#        """
-#        # Differentiate between different models
-#        if 'pygam' in str(self._regmod[0].__class__):
-#            stat = model.statistics_['p_values']
-#            self._results['%i' % (self._numberrun)][i]['Model_Statistics'] = stat
-#        else:
-#            self._results['%i' % (self._numberrun)][i]['Model_Statistics'] = 'NaN'
-
-    def fit_model2xi(self, i, tdep, tindep, model, X_data, Y_data):
+    def fit_model2xi(self, combno, tdep, tindep, model, X_data, Y_data):
         """
         Method to fit model to Xi in the two variable case
         """
@@ -64,7 +53,7 @@ class ANM():
         else:
             model.fit(X_data.reshape(-1, len(tindep)), Y_data)
 
-    def predict_results(self, i, tdep, tindep, model, X_data, Y_data):
+    def predict_results(self, combno, tdep, tindep, model, X_data, Y_data):
         """
         Method to create further information on a fit. Returns a list for each
         fit including the following values:
@@ -90,12 +79,12 @@ class ANM():
             Y_predict = self.scaler_inverse_transform(Y_predict, tdep)
         # Scale data back
         Residuals = Y_data - Y_predict
-        self._results['%i' % (self._numberrun)][i] = {'X_model': X_model,
-                                                      'Y_model': Y_model,
-                                                      'Y_predict': Y_predict,
-                                                      'Residuals': Residuals}
+        self._results['%i' % (self._numberrun)][combno] = {'X_model': X_model,
+                                                           'Y_model': Y_model,
+                                                           'Y_predict': Y_predict,
+                                                           'Residuals': Residuals}
 
-    def do_statistics(self, obs_name, test_stat,
+    def do_statistics(self, combno, obs_name, test_stat,
                       obs_valu1, obs_valu2=None):
         """
         Method to comprehense statistical tests
@@ -110,74 +99,35 @@ class ANM():
             tr = stats.mannwhitneyu(obs_valu1, obs_valu2)
         else:
             print('Given test_stat argument is not defined.')
-        self._results['%i' % (self._numberrun)][i]['%s_%s_%i' % (test_stat, obs_name)] = tr
+        self._results['%i' % (self._numberrun)][combno]['%s' % (obs_name)] = tr
 
 
-    def test_statistics(self, i, tdep, tindep, model, X_data, Y_data):
+    def test_statistics(self, combno, tdep, tindep, model, X_data, Y_data):
         """
         Method to perform statistical tests on the given and predicted data.
         """
         for temp_i, temp_tindep in enumerate(tindep):
             # Normality Test on X_data
-            self.do_statistics('X_data_%i' % (temp_tindep), 'Normality',
-                               obs_valu1=X_data[:, temp_tindep], obs_valu2=None)
+            self.do_statistics(combno, 'Normality_X_data_%i' % (temp_tindep), 'Normality',
+                               obs_valu1=X_data[:, temp_i], obs_valu2=None)
             # Test Independence of Residuals
-            self.do_statistics('IndepResiduals_%i' % (temp_tindep),
+            self.do_statistics(combno, 'IndepResiduals_%i' % (temp_tindep),
                                self._config['%i' % (self._numberrun)]['testtype'],
-                               obs_valu1=self._results['%i' % (self._numberrun)][i]['Residuals'],
-                               obs_valu2=X_data[:, temp_tindep])
+                               obs_valu1=self._results['%i' % (self._numberrun)][combno]['Residuals'],
+                               obs_valu2=X_data[:, temp_i])
         # Normality Test on Residuals
-        self.do_statistics('X_data_%i' % (temp_tindep), 'Normality',
-                           obs_valu1=self._results['%i' % (self._numberrun)][i]['Residuals'],
+        self.do_statistics(combno, 'Normality_Residuals', 'Normality',
+                           obs_valu1=self._results['%i' % (self._numberrun)][combno]['Residuals'],
+                           obs_valu2=None)
+        # Normality Test on Y_data
+        self.do_statistics(combno, 'Normality_Y_data', 'Normality',
+                           obs_valu1=Y_data,
                            obs_valu2=None)
         # Test Goodness of Fit
-        self.do_statistics('GoodnessFit_%i' % (temp_tindep),
+        self.do_statistics(combno, 'GoodnessFit',
                            self._config['%i' % (self._numberrun)]['testtype'],
-                           obs_valu1=self._results['%i' % (self._numberrun)][i]['Residuals'],
+                           obs_valu1=self._results['%i' % (self._numberrun)][combno]['Residuals'],
                            obs_valu2=Y_data)
-       #TBD Check Functions (combine pvalue?) correct naming convention, adjust functions in stats
-
-
-    def test_normality(self, i, tdep, tindep):
-        """
-        Method to perform normality test on Xi independent and the
-        corresponding Residuals
-        """
-        ob1 = self._results['%i' % (self._numberrun)][i]['Residuals']
-        ob2 = self._xi[:, tindep]
-        # normality test on Xi
-        tn, tr = stats.normality(ob1)
-        self._results['%i' % (self._numberrun)][i]['X_Names'] = tn
-        self._results['%i' % (self._numberrun)][i]['X_Results'] = tr
-        # normality test on Residuals
-        tn, tr = stats.normality(ob2)
-        self._results['%i' % (self._numberrun)][i]['Residuals_Names'] = tn
-        self._results['%i' % (self._numberrun)][i]['Residuals_Results'] = tr
-
-    def test_independence(self, i, tdep, tindep):
-        """
-        Method to perform independence test on Xi independent and the
-        corresponding Residuals
-        """
-        ob1 = self._results['%i' % (self._numberrun)][i]['Residuals']
-        ob2 = self._xi[:, tindep]
-        # independence test on Xi and Residuals
-        tn, tr = stats.independence(ob1, ob2)
-        self._results['%i' % (self._numberrun)][i]['X-Residuals_Names'] = tn
-        self._results['%i' % (self._numberrun)][i]['X-Residuals_Results'] = tr
-
-    def test_likelihood(self, i, tdep, tindep):
-        """
-        Method to perform
-        a) Calculate the likelihood based on variance (only valid for Gaussian)
-        """
-        ob1 = self._results['%i' % (self._numberrun)][i]['Residuals']
-        ob2 = self._xi[:, tindep]
-        # Get likelihood based on variance
-        tn, tr = stats.likelihood(ob1, ob2)
-        # Write in _dict2V
-        self._results['%i' % (self._numberrun)][i]['X-Residuals_Names'] = tn
-        self._results['%i' % (self._numberrun)][i]['X-Residuals_Results'] = tr
 
     def run_inference(self):
         """
@@ -190,23 +140,177 @@ class ANM():
         # Initialize empty dictionary to be filled
         self._results['%i' % (self._numberrun)] = utils.trans_object_to_list(None, len(self._combinations), dcopy=True)
         # Fit (scaled) models and do statistical tests
-        for i in range(len(self._combinations)):
-            tdep, tindep = self.get_tINdep(i)
-            model, X_data, Y_data = self.get_combination_objects(i, tdep, tindep)
+        for combno in range(len(self._combinations)):
+            tdep, tindep = self.get_tINdep(combno)
+            model, X_data, Y_data = self.get_combination_objects(combno, tdep, tindep)
             # fit regmod on observations
-            self.fit_model2xi(i, tdep, tindep, model, X_data, Y_data)
+            self.fit_model2xi(combno, tdep, tindep, model, X_data, Y_data)
             # predict results
-            self.predict_results(i, tdep, tindep, model, X_data, Y_data)
-            self.get_model_stats(i, tdep, tindep, model, X_data, Y_data)
-            # do normality test
-            self.test_normality(i, tdep, tindep)
+            self.predict_results(combno, tdep, tindep, model, X_data, Y_data)
+            # do statistical tests
+            self.test_statistics(combno, tdep, tindep, model, X_data, Y_data)
             # do independence test
-            if self._config['%i' % (self._numberrun)]['testtype'] is 'independence':
-                self.test_independence(i, tdep, tindep)
-            # do calculate the likelihood
-            if self._config['%i' % (self._numberrun)]['testtype'] is 'likelihood':
-                self.test_likelihood(i, tdep, tindep)
-        # Get results from independence test
-        self.restructure_results()
-        # PairGrid of all Observations
+
+class PlotANM():
+    """
+    Class for "Additive Noise Model" Methods.
+    Please be aware of the assumptions for models of these categorie.
+    """
+
+    def __init__(self):
+        """
+        Class constructor.
+        """
+
+    def get_std_txt(self, combno, tdep, tindep):
+        """
+        Libary of some standard text phrases
+        """
+        txt = r'X_%i ~ f(X_%combno, E_X)' % (tdep, tindep)
+        return(txt)
+
+    def get_math_txt(self, combno, tdep, tindep):
+        """
+        Libary of some standard text phrases
+        """
+        txt = r'X_{%i} \approx f\left( X_{%i}, E_{X}\right)' % (tdep, tindep)
+        return(txt)
+
+    def plt_PairGrid(self):
+        """
+        Method to plot a PairGrid scatter of the observations.
+        """
+        plt.figure(r'PairGrid',
+                   figsize=self._figsize)
+        df = pd.DataFrame(self._xi)
+        df.columns = [r'$X_%i$' % (i) for i in range(self._xi.shape[1])]
+        g = sns.PairGrid(df)
+        g = g.map(plt.scatter)
+        plt.show()
+
+    def plt_1model_adv(self, combno, tdep, temp_i, tindep):
+        """
+        Method to plot a scatter of the samples, the fitted model and the
+        residuals. Plot joint distribution and marginals.
+        """
+        txt = self.get_math_txt(combno, tdep, tindep)
+        g = sns.JointGrid(self._xi[:, tindep], self._xi[:, tdep],
+                          size=self._figsize[0]/6*5,
+                          # ratio=int(5)
+                          )
+        g.plot_joint(plt.scatter)
+        plt.plot(self._results['%i' % (self._numberrun)][combno]['X_model'][:, temp_i],
+                 self._results['%i' % (self._numberrun)][combno]['Y_model'],
+                 c='r')
+        plt.scatter(self._xi[:, tindep],
+                    self._results['%i' % (self._numberrun)][combno]['Residuals'])
+        plt.legend([r'$Model\ %s$' % (txt),
+                    r'$Observations$',
+                    r'$Residuals\ (X_{%i}-\hatX_{%i})$' % (tdep, tdep)])
+        plt.xlabel(r'$X_{%i}$' % (tindep))
+        plt.ylabel(r'$X_{%i}$' % (tdep))
+        g.plot_marginals(sns.distplot, kde=True)
+        plt.show()
+
+    def plot_inference(self):
+        """
+        Method to visualize the interference
+        """
+        # Pairgrid Plot of Observations
         self.plt_PairGrid()
+        # Iterate over combinations
+        for combno in range(len(self._combinations)):
+            tdep, tindep = self.get_tINdep(combno)
+            tdep = tdep[0]
+            # Iterate over independent variables
+            for temp_i, temp_tindep in enumerate(tindep):
+                # Plot Tindep vs Tdep
+                self.plt_1model_adv(combno, tdep, temp_i, temp_tindep)
+        #self.plt_1hist(combno, tdep, tindep)
+
+
+    def loop_and_do(self, do, **kwargs):
+        """
+        Method to scale (if scale==True) and loop trough possible combinations
+        of tdep and tindep for modelfit of residuals. Save result in _dict2V.
+        """
+        # Loop trough possible combinations of tdep and tindep for modelfit
+        for i in range(len(self._combinations)):
+            tdep, tindep = self.get_tINdep(combno)
+
+            # print header for 2V
+            if ((('out_Regr_Model' in do) or
+                 ('out_Regr_Model_info' in do) or
+                 ('out_X_Residuals_NormalityTest' in do) or
+                 ('out_X_vs_Residuals_info' in do))):
+                utils.print_in_console(what='regmod header',
+                                       tdep=tdep, tindep=tindep)
+            # plot joint and marginal together with model and hist
+            if 'out_Regr_Model' in do:
+                print('test')
+            # print/plot model informations
+            if 'out_Regr_Model_info' in do:
+                try:
+                    self.plt_GAMlog(combno, tdep, tindep)
+                except:
+                    print('An exception occurred using -plt_GAMlog()-')
+                try:
+                    utils.print_in_console(what='model summary')
+                    self._regmod[combno].summary()
+                except:
+                    print('An exception occurred using -summary()-')
+            # print the normality log
+            if 'out_X_Residuals_NormalityTest' in do:
+                self.print_log_st(combno, tdep, tindep, 'normality')
+            # print the independence log
+            if 'out_X_vs_Residuals_info' in do:
+                self.print_log_st(combno, tdep, tindep, 'independence')
+
+class ResultsANM():
+    """
+    Class for "Additive Noise Model" Methods.
+    Please be aware of the assumptions for models of these categorie.
+    """
+
+    def __init__(self):
+        """
+        Class constructor.
+        """
+        #         self.restructure_results()
+        # # Plot results
+        # self.plot_results()
+        #     # Loop trough possible combinations of tdep and tindep for plots/logs
+        #     # Define a list of do's (dolist) for plots sorted by tdep/tindep
+        #     # combinations. Start dolist:
+        #     dic = {'KolmogorovSmirnoff': 'p-value', 'Likelihood': 'likelihood'}
+        #     namecode = dic[testtype]
+        #     dolist = []
+        #     if out_Regr_Model is True:
+        #         dolist.append('out_Regr_Model')
+        #     if out_Regr_Model_info is True:
+        #         dolist.append('out_Regr_Model_info')
+        #     if out_X_Residuals_NormalityTest is True:
+        #         dolist.append('out_X_Residuals_NormalityTest')
+        #     if out_X_vs_Residuals_info is True:
+        #         if 'p-value' in namecode:
+        #             dolist.append('out_X_vs_Residuals_info')
+        #         else:
+        #             print('X vs Residual log only available for independence test')
+        #     if len(dolist) != 0:
+        #         self.loop_and_do(do=dolist)
+        #     # end dolist
+        #     utils.print_in_console(what='result header')
+        #     # Plot independence/likelihood tests results
+        #     if out_X_vs_Residuals is True:
+        #         if 'p-value' in namecode:
+        #             self.plt_2metrics_groupedby(namecode)
+        #         self.plt_1metric_groupedby(namecode)
+        #     # Print independence/likelihood tests results
+        #     if out_Results_testtype is True:
+        #         rs = self._results2V['%i' % (self._numberrun)]
+        #         print(rs[['TestType', '2V-case', 'pval/likel',
+        #                   'rank pval/likel', '2V-direction']].to_string())
+        #     # plot the Causal Graph
+        #     if out_CausalGraph is True:
+        #         utils.print_in_console(what='CG Warning')
+        #         self.predict_CG(testtype, CGmetric=CGmetric)

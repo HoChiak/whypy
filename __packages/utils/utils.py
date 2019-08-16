@@ -45,34 +45,58 @@ def trans_tuple_to_scalar(array):
     else:
         return(array)
 
-
-def init_2V_list(no_obs):
+def check_inf_nan(value):
     """
-    Function returns an empty list of list shape=(no_obs, no_obs)
+    Function to check if value is inf or nan. If True replace by 123.456
     """
-    list_inner = list()
-    list_outer = list()
-    for t in range(no_obs):
-        list_inner.append(None)
-    for t in range(no_obs):
-        list_outer.append(list_inner.copy())
-    return(list_outer)
-
-
-def init_comp_matrix_2V(no_obs):
-    """
-    Function returns an empty list of list shape=(no_obs, no_obs)
-    """
-    matrix = np.eye(no_obs, M=None, k=0, dtype=int)
-    matrix -= 1
-    matrix = matrix * (-1)
-    return(matrix)
+    if np.isinf(value) is True:
+        value = 123.456
+        print('WARNING: a passed value is infinite and set to 123.456')
+    elif np.isnan(value) is True:
+        value = 123.456
+        print('WARNING: a passed value is nan and set to 123.456')
+    return(value)
 
 
-def random_environments(obs, ration=0.9, method='Uniform'):
-    """
-    tbd
-    """
+
+
+
+
+
+
+
+
+
+
+
+
+# def init_2V_list(no_obs):
+#     """
+#     Function returns an empty list of list shape=(no_obs, no_obs)
+#     """
+#     list_inner = list()
+#     list_outer = list()
+#     for t in range(no_obs):
+#         list_inner.append(None)
+#     for t in range(no_obs):
+#         list_outer.append(list_inner.copy())
+#     return(list_outer)
+#
+#
+# def init_comp_matrix_2V(no_obs):
+#     """
+#     Function returns an empty list of list shape=(no_obs, no_obs)
+#     """
+#     matrix = np.eye(no_obs, M=None, k=0, dtype=int)
+#     matrix -= 1
+#     matrix = matrix * (-1)
+#     return(matrix)
+#
+#
+# def random_environments(obs, ration=0.9, method='Uniform'):
+#     """
+#     tbd
+#     """
 
 
 def plot_DAG(Edge_list, Node_list=None):
