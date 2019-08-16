@@ -36,22 +36,27 @@ class RunANM():
         scaling.
         """
         model = self._regmod[combno]
-        Y_data = np.copy(self._xi[:, tdep].reshape(-1, 1))
-        X_data = np.copy(self._xi[:, tindep].reshape(-1, len(tindep)))
+        Y_data = np.copy(self._xi[:, tdep]).reshape(-1, 1)
+        X_data = np.copy(self._xi[:, tindep]).reshape(-1, len(tindep))
         return(model, X_data, Y_data)
 
     def fit_model2xi(self, combno, tdep, tindep, model, X_data, Y_data):
         """
         Method to fit model to Xi in the two variable case
         """
+        # Scale data forward
         if self._config['%i' % (self._numberrun)]['scale'] is True:
             X_data = self.scaler_transform(X_data, tindep)
             Y_data = self.scaler_transform(Y_data, tdep)
         # Use gridsearch instead of fit if model is pyGAM
         if 'pygam' in str(self._regmod[0].__class__):
-            model.gridsearch(X_data, Y_data)
+            model.gridsearch(X_data.reshape(-1, len(tindep)), Y_data)
         else:
             model.fit(X_data.reshape(-1, len(tindep)), Y_data)
+        # Scale data back
+        if self._config['%i' % (self._numberrun)]['scale'] is True:
+            X_data = self.scaler_inverse_transform(X_data, tindep)
+            Y_data = self.scaler_inverse_transform(Y_data, tdep)
 
     def predict_results(self, combno, tdep, tindep, model, X_data, Y_data):
         """
@@ -62,9 +67,10 @@ class RunANM():
         Y_predict:  predicted values of y given x
         Residuals:  Y_data - Y_predict
         """
+        # Scale data forward
         if self._config['%i' % (self._numberrun)]['scale'] is True:
             X_data = self.scaler_transform(X_data, tindep)
-            #Y_data = self.scaler_transform(Y_data, tdep)
+            Y_data = self.scaler_transform(Y_data, tdep)
         # Get independent model data
         modelpts = self._config['%i' % (self._numberrun)]['modelpts']
         X_model = self.get_Xmodel(X_data, modelpts)
@@ -73,8 +79,9 @@ class RunANM():
         Y_predict = model.predict(X_data).reshape(-1, 1)
         # Scale data back
         if self._config['%i' % (self._numberrun)]['scale'] is True:
-            X_model = self.scaler_inverse_transform(X_model, tindep)
+            X_data = self.scaler_inverse_transform(X_data, tindep)
             Y_data = self.scaler_inverse_transform(Y_data, tdep)
+            X_model = self.scaler_inverse_transform(X_model, tindep)
             Y_model = self.scaler_inverse_transform(Y_model, tdep)
             Y_predict = self.scaler_inverse_transform(Y_predict, tdep)
         # Scale data back
@@ -195,8 +202,8 @@ class PlotANM():
         """
         txt = self.get_math_txt(combno, tdep, tindep)
         g = sns.JointGrid(self._xi[:, tindep], self._xi[:, tdep],
-                          size=self._figsize[0]/6*5,
-                          # ratio=int(5)
+                          height=self._figsize[0]*5/6,
+                          ratio=int(5)
                           )
         g.plot_joint(plt.scatter)
         plt.plot(self._results['%i' % (self._numberrun)][combno]['X_model'][:, temp_i],
@@ -276,6 +283,12 @@ class ResultsANM():
         """
         Class constructor.
         """
+
+    def plot_results(self):
+        """
+        Method to display the results of the interference
+        """
+        print('Method not defined yet')
         #         self.restructure_results()
         # # Plot results
         # self.plot_results()

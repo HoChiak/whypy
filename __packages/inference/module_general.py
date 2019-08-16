@@ -62,6 +62,10 @@ class General():
         assert hasattr(self.regmod, 'predict'), 'Regression Model has no attribute "predict"'
         assert not(hasattr(type(self.regmod), '__iter__')), 'Regression Model should be passed as single object. Attribute __iter__ detected.'
         assert not(hasattr(type(self.scaler), '__iter__')), 'Scaler Model should be passed as single object. Attribute __iter__ detected.'
+        assert hasattr(self.scaler, 'fit'), 'Scaler Model has no attribute "fit"'
+        assert hasattr(self.scaler, 'transform'), 'Scaler Model has no attribute "transform"'
+        assert hasattr(self.scaler, 'inverse_transform'), 'Scaler Model has no attribute "inverse_transform"'
+        # assert self.scaler.copy is False, 'Scaler Model doesnt support inplace transformation (maybe set "copy=False")'
         assert ((scale is False) or ((scale is True) and (self.scaler is not None))), 'If scale is True, a scaler must be assigned'
 
     def scaler_fit(self):
@@ -77,7 +81,7 @@ class General():
         idx must be in tuple.
         """
         for temp_id, temp_val in enumerate(idx):
-            self._scaler[temp_val].transform(data[:, temp_id].reshape(-1, 1))
+            data = self._scaler[temp_val].transform(data[:, temp_id].reshape(-1, 1))
         return(data)
 
     def scaler_inverse_transform(self, data, idx):
@@ -87,16 +91,16 @@ class General():
         """
         # Univariate Case
         for temp_id, temp_val in enumerate(idx):
-            self._scaler[temp_val].inverse_transform(data[:, temp_id].reshape(-1, 1))
+            data = self._scaler[temp_val].inverse_transform(data[:, temp_id].reshape(-1, 1))
         return(data)
 
-    def get_tINdep(self, i):
+    def get_tINdep(self, combno):
         """
         Method to get the index of the dependent (tdep) and the independent
         (tindep) variable by index i from combinations.
         """
-        tdep = tuple([self._combinations[i][0],])
-        tindep = self._combinations[i][1:]
+        tdep = tuple([self._combinations[combno][0],])
+        tindep = self._combinations[combno][1:]
         return(tdep, tindep)
 
     def get_Xmodel(self, X_data, modelpts):

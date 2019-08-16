@@ -77,14 +77,9 @@ class Model(parent0, parent1, parent2, parent3, parent4, parent5):
             testtype='Likelihood',# Likelihood KolmogorovSmirnoff MannWhitney HSIC
             scale=True,
             modelpts=50,
-            out_Regr_Model=True,
-            out_Regr_Model_info=True,
-            out_X_Residuals_NormalityTest=True,
-            out_X_vs_Residuals=True,
-            out_X_vs_Residuals_info=True,
-            out_Results_testtype=True,
-            out_CausalGraph=True,
-            CGmetric='Combined'):
+            plot_inference=True,
+            plot_results=True
+            ):
         """
         Method to test independence of residuals.
         Theorem: In causal direction, the noise is independent of the input
@@ -93,8 +88,7 @@ class Model(parent0, parent1, parent2, parent3, parent4, parent5):
         # Count Number of runs +1
         self._numberrun += 1
         # Check and Initialisation of Attributes
-        if self._numberrun == 1:
-            self.check_and_init_attr(scale)
+        self.check_and_init_attr(scale)
         self.check_combinations()
         # Check Function Arguments
         ### TBD go on here (assign testtype as atttribute?)
@@ -113,9 +107,11 @@ class Model(parent0, parent1, parent2, parent3, parent4, parent5):
         # Do the math
         self.run_inference()
         # Plot the math of inference
-        self.plot_inference()
+        if plot_inference is True:
+            self.plot_inference()
         # Plot results
-        #self.plot_results()
+        if plot_results is True:
+            self.plot_results()
 
 
 ###############################################################################
