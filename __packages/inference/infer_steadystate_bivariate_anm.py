@@ -67,15 +67,27 @@ class Model(parent0, parent1, parent2, parent3, parent4, parent5):
         self._combinations = None
         self._regmod = None
         self._scaler = None
-        self._results = {}
-        self._results2V = {}
 
-
+    def check_and_init_arg_run(self, testtype, bootstrap):
+        """
+        Method to check the run-methods arguments
+        """
+        assert testtype in ('Likelihood', 'KolmogorovSmirnoff', 'MannWhitney', 'HSIC'), 'Wrong Argument given for TestType'
+        if bootstrap is False:
+            bootstrap = (0,)
+        else:
+            try:
+                assert bootstrap > 0, 'Argument bootstrap must be positive integer > 0'
+                bootstrap = tuple([x for x in range(bootstrap)])
+            except:
+                raise ValueError('Argument bootstrap must be either False or type integer (int>0)')
+        return(bootstrap)
 
 
     def run(self,
             testtype='Likelihood',# Likelihood KolmogorovSmirnoff MannWhitney HSIC
             scale=True,
+            bootstrap=False,
             modelpts=50,
             plot_inference=True,
             plot_results=True
@@ -86,26 +98,30 @@ class Model(parent0, parent1, parent2, parent3, parent4, parent5):
         Valid for Additive Noise Models e.g. LiNGAM, NonLinear GaussianAM
         """
         # Count Number of runs +1
-        self._numberrun += 1
+        self._numberrun = 0
         # Check and Initialisation of Attributes
         self.check_and_init_attr(scale)
         self.check_combinations()
+        # Clear Arguments from previous caclulations
+        parent3.__del__(self)
         # Check Function Arguments
-        ### TBD go on here (assign testtype as atttribute?)
-        ### only run for one testtype (kolmogorov or the other or likelihoodration)
-        ### placeholder for bootstrape, time, holdout set, different environments
-        assert testtype in ('Likelihood', 'KolmogorovSmirnoff', 'MannWhitney', 'HSIC'), 'Wrong Argument given for TestType'
+        bootstrap = self.check_and_init_arg_run(testtype, bootstrap)
         # Add information to config
-        self._config['%i' % (self._numberrun)] = {'testtype': testtype,
-                                                  'scale': scale,
-                                                  'modelpts': modelpts,
-                                                  'shape_observations': self._xi.shape,
-                                                  'shape_combinations': np.array(self._combinations).shape,
-                                                  'regression_model:': str(self._regmod[0]),
-                                                  'scaler_model:': str(self._scaler[0]),
-                                                  }
-        # Do the math
-        self.run_inference()
+        self._config = {'testtype': testtype,
+                        'scale': scale,
+                        'bootstrap': bootstrap,
+                        'modelpts': modelpts,
+                        'shape_observations': self._xi.shape,
+                        'shape_combinations': np.array(self._combinations).shape,
+                        'regression_model:': str(self._regmod[0]),
+                        'scaler_model:': str(self._scaler[0]),
+                        }
+        # Split Holdout Set if defined / Add Time shift / Adress different environments
+        for boot_i, _ in enumerate(self._config['bootstrap']):
+            self._numberrun = boot_i
+            # Do real Bootstrap and not just Iterations TBD
+            # Do the math
+            self.run_inference()
         # Plot the math of inference
         if plot_inference is True:
             self.plot_inference()

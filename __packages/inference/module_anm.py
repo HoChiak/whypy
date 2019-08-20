@@ -25,6 +25,15 @@ class RunANM():
         """
         Class constructor.
         """
+        self._results = {}
+        self._results_df = {}
+
+    def __del__(self):
+        """
+        Class deconstructor.
+        """
+        self._results = {}
+        self._results_df = {}
 
     def get_combination_objects(self, combno, tdep, tindep):
         """
@@ -45,7 +54,7 @@ class RunANM():
         Method to fit model to Xi in the two variable case
         """
         # Scale data forward
-        if self._config['%i' % (self._numberrun)]['scale'] is True:
+        if self._config['scale'] is True:
             X_data = self.scaler_transform(X_data, tindep)
             Y_data = self.scaler_transform(Y_data, tdep)
         # Use gridsearch instead of fit if model is pyGAM
@@ -54,7 +63,7 @@ class RunANM():
         else:
             model.fit(X_data.reshape(-1, len(tindep)), Y_data)
         # Scale data back
-        if self._config['%i' % (self._numberrun)]['scale'] is True:
+        if self._config['scale'] is True:
             X_data = self.scaler_inverse_transform(X_data, tindep)
             Y_data = self.scaler_inverse_transform(Y_data, tdep)
 
@@ -68,17 +77,17 @@ class RunANM():
         Residuals:  Y_data - Y_predict
         """
         # Scale data forward
-        if self._config['%i' % (self._numberrun)]['scale'] is True:
+        if self._config['scale'] is True:
             X_data = self.scaler_transform(X_data, tindep)
             Y_data = self.scaler_transform(Y_data, tdep)
         # Get independent model data
-        modelpts = self._config['%i' % (self._numberrun)]['modelpts']
+        modelpts = self._config['modelpts']
         X_model = self.get_Xmodel(X_data, modelpts)
         # Do Prediction
         Y_model = model.predict(X_model).reshape(-1, 1)
         Y_predict = model.predict(X_data).reshape(-1, 1)
         # Scale data back
-        if self._config['%i' % (self._numberrun)]['scale'] is True:
+        if self._config['scale'] is True:
             X_data = self.scaler_inverse_transform(X_data, tindep)
             Y_data = self.scaler_inverse_transform(Y_data, tdep)
             X_model = self.scaler_inverse_transform(X_model, tindep)
@@ -119,7 +128,7 @@ class RunANM():
                                obs_valu1=X_data[:, temp_i], obs_valu2=None)
             # Test Independence of Residuals
             self.do_statistics(combno, 'IndepResiduals_%i' % (temp_tindep),
-                               self._config['%i' % (self._numberrun)]['testtype'],
+                               self._config['testtype'],
                                obs_valu1=self._results['%i' % (self._numberrun)][combno]['Residuals'],
                                obs_valu2=X_data[:, temp_i])
         # Normality Test on Residuals
@@ -132,7 +141,7 @@ class RunANM():
                            obs_valu2=None)
         # Test Goodness of Fit
         self.do_statistics(combno, 'GoodnessFit',
-                           self._config['%i' % (self._numberrun)]['testtype'],
+                           self._config['testtype'],
                            obs_valu1=self._results['%i' % (self._numberrun)][combno]['Y_predict'],
                            obs_valu2=Y_data)
 
@@ -142,7 +151,7 @@ class RunANM():
         observations and calculate the inference.
         """
         # Fit Scaler
-        if self._config['%i' % (self._numberrun)]['scale'] is True:
+        if self._config['scale'] is True:
             self.scaler_fit()
         # Initialize empty dictionary to be filled
         self._results['%i' % (self._numberrun)] = utils.trans_object_to_list(None, len(self._combinations), dcopy=True)
@@ -283,31 +292,31 @@ class PlotANM():
             self.plt_hist_GoodnessFit(combno, tdep, temp_i, temp_tindep)
 
 
-    def loop_and_do(self, do, **kwargs):
-        """
-        Method to scale (if scale==True) and loop trough possible combinations
-        of tdep and tindep for modelfit of residuals. Save result in _dict2V.
-        """
-        # Loop trough possible combinations of tdep and tindep for modelfit
-        for i in range(len(self._combinations)):
-            tdep, tindep = self.get_tINdep(combno)
-            # print/plot model informations
-            if 'out_Regr_Model_info' in do:
-                try:
-                    self.plt_GAMlog(combno, tdep, tindep)
-                except:
-                    print('An exception occurred using -plt_GAMlog()-')
-                try:
-                    utils.print_in_console(what='model summary')
-                    self._regmod[combno].summary()
-                except:
-                    print('An exception occurred using -summary()-')
-            # print the normality log
-            if 'out_X_Residuals_NormalityTest' in do:
-                self.print_log_st(combno, tdep, tindep, 'normality')
-            # print the independence log
-            if 'out_X_vs_Residuals_info' in do:
-                self.print_log_st(combno, tdep, tindep, 'independence')
+    # def loop_and_do(self, do, **kwargs):
+    #     """
+    #     Method to scale (if scale==True) and loop trough possible combinations
+    #     of tdep and tindep for modelfit of residuals. Save result in _dict2V.
+    #     """
+    #     # Loop trough possible combinations of tdep and tindep for modelfit
+    #     for i in range(len(self._combinations)):
+    #         tdep, tindep = self.get_tINdep(combno)
+    #         # print/plot model informations
+    #         if 'out_Regr_Model_info' in do:
+    #             try:
+    #                 self.plt_GAMlog(combno, tdep, tindep)
+    #             except:
+    #                 print('An exception occurred using -plt_GAMlog()-')
+    #             try:
+    #                 utils.print_in_console(what='model summary')
+    #                 self._regmod[combno].summary()
+    #             except:
+    #                 print('An exception occurred using -summary()-')
+    #         # print the normality log
+    #         if 'out_X_Residuals_NormalityTest' in do:
+    #             self.print_log_st(combno, tdep, tindep, 'normality')
+    #         # print the independence log
+    #         if 'out_X_vs_Residuals_info' in do:
+    #             self.print_log_st(combno, tdep, tindep, 'independence')
 
 class ResultsANM():
     """
@@ -320,9 +329,25 @@ class ResultsANM():
         Class constructor.
         """
 
-    def plot_results(self):
+    def restructure_results(self):
         """
-        Method to display the results of the interference
+        Method to extract a readable DataFrame from the self._results attribute
+        """
+        # Iterate over all possible combinations
+        # for combno in range(len(self._combinations)):
+        #     # Init new dict
+        #     df_dict = {}
+        #     tdep, tindep = self.get_tINdep(combno)
+        #     tdep = tdep[0]
+        #     df_dict['Fitted_Combination'] = 'X_%i ~ f(X_%s)' % (tdep, tindep)
+        #     for temp_i, temp_tindep in enumerate(tindep):
+        #         df_dict['Fitted_Combination'] = 'X_%i ~ f(X_%s)' % (tdep, tindep)
+
+
+    def plot_results(self, number_run=False):
+        """
+        Method to display the results of the interference. If number_run is
+        False the current run will be plotted
         """
         print('Method not defined yet')
         #         self.restructure_results()

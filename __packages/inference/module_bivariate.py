@@ -93,13 +93,13 @@ class CurrentlyExcluded1():
                 txt = self.get_std_txt(what='std-Y~f(X)',
                                        tdep=tdep,
                                        tindep=tindep)
-                if 'independence' in self._config['%i' % (self._numberrun)]['testtype']:
+                if 'independence' in self._config['testtype']:
                     temp.append((tp, (tdep+1) * (tindep+1), txt,
                                  test['X-Residuals_Results'][(i*2)+1],
                                  test['X-Residuals_Results'][i*2],
                                  np.array(test['Model_Statistics']),
                                  tdep, tindep))
-                if 'likelihood' in self._config['%i' % (self._numberrun)]['testtype']:
+                if 'likelihood' in self._config['testtype']:
                     temp.append((tp, (tdep+1) * (tindep+1), txt,
                                  test['X-Residuals_Results'],
                                  np.array(test['Model_Statistics']),
@@ -107,13 +107,13 @@ class CurrentlyExcluded1():
             # Create DataFrame for single TestType and add extra information
             temp = pd.DataFrame(temp)
             # assign names to columns of DF
-            if 'independence' in self._config['%i' % (self._numberrun)]['testtype']:
+            if 'independence' in self._config['testtype']:
                 temp.columns = ('TestType', '2V-no', '2V-case',
                                 'pval/likel',
                                 'statistics',
                                 'Model Statistics',
                                 'tdep', 'tindep')
-            if 'likelihood' in self._config['%i' % (self._numberrun)]['testtype']:
+            if 'likelihood' in self._config['testtype']:
                 temp.columns = ('TestType', '2V-no', '2V-case',
                                 'pval/likel',
                                 'Model Statistics',
