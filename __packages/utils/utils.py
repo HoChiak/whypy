@@ -9,6 +9,7 @@ import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
 from IPython.display import display, HTML
+import pandas as pd
 
 
 # import local libarys
@@ -57,65 +58,110 @@ def check_inf_nan(value):
         print('WARNING: a passed value is nan and set to 123.456')
     return(value)
 
-def print_in_console(what, **kwargs):
+def display_text_predefined(what, **kwargs):
     """
     Fucntion to print text in python console
     """
-    if 'pairgrid header' in what:
+    if 'inference header' in what:
+            text = r"""
+<div style="background-color:black;color:white;padding:8px;letter-spacing:1em;" align="center">
+<h2>Run   Causal   Inference</h2>
+</div>
+                    """
+    if 'count bootstrap' in what:
+            text = r"""
+<div style="background-color:grey;color:white;padding:4px;" align="center">
+<h3>Bootstrap: %i / %i</h3>
+</div>
+                    """ % (kwargs['current']+1, kwargs['sum'])
+    elif 'visualization header' in what:
+            text = r"""
+<div style="background-color:black;color:white;padding:8px;letter-spacing:1em;" align="center">
+<h2>INFERENCE   VISUALIZATION</h2>
+</div>
+                    """
+    elif 'pairgrid header' in what:
         text = r"""
-
-############################################################################
-############################################################################
-----------------------------------------------------------------------------
---------                  PAIRGRID   ALL VARIABLES                  --------
-----------------------------------------------------------------------------
+<div style="background-color:grey;color:white;padding:4px;" align="center">
+<h3>PAIRGRID ALL VARIABLES</h3>
+</div>
                 """
     elif 'combination major header' in what:
         text = r"""
 
-############################################################################
-############################################################################
-----------------------------------------------------------------------------
---------                  INFERENCE  VISUALIZATION                  --------
-----------------------------------------------------------------------------
-Fitted Combination: X_%i ~ f(X_%s)
+<div style="background-color:grey;color:white;padding:4px;" align="center">
+<h3>Fitted Combination: X<sub>%i</sub> ~ f(X<sub>%s</sub>)</h3>
+</div>
                 """ % (kwargs['tdep'], str(kwargs['tindep']))
     elif 'combination minor header' in what:
         text = r"""
-----------------------------------------------------------------------------
-2D Visualisation for: X_%i ~ f(X_%s)
-----------------------------------------------------------------------------
+<div style="background-color:lightgrey;color:black;padding:0px;" align="center">
+<h4>2D Visualisation for: X<sub>%i</sub> ~ f(X<sub>%s</sub>)</h4>
+</div>
                 """ % (kwargs['tdep'], kwargs['tindep'])
-#     elif 'model summary' in what:
-#         text = r"""
-# ----------------------------------------------------------------------------
-# MODEL SUMMARY  RESULTS
-# ----------------------------------------------------------------------------
-#                 """
-#     elif 'result header' in what:
-#         text = r"""
-# ############################################################################
-# ############################################################################
-# ----------------------------------------------------------------------------
-# --------                      OVERALL  RESULTS                      --------
-# ----------------------------------------------------------------------------
-#                 """
-#     elif 'CG Warning' in what:
-#         text = r"""
-# ----------------------------------------------------------------------------
-# CAUSAL GRAPH PREDICTION
-# ----------------------------------------------------------------------------
-# WARNING: This graph is predicted under the underlying assumptions and
-#          only valid under these assumptions. Please check verbose for
-#          more information.
-#                 """
-#     elif 'CG Info' in what:
-#         text = r"""
-# Testtype: %s | Testmetric: %s
-#                 """ % (kwargs['testname'], kwargs['testmetric'])
-    print(text)
+    elif 'result header' in what:
+        text = r"""
+<style>
+table td, table th, table tr {text-align:left !important;}
+</style>
+<div style="background-color:black;color:white;padding:8px;letter-spacing:1em;" align="center">
+<h2>RESULTS</h2>
+</div>
+<div style="background-color:grey;color:white;padding:4px;" align="center">
+<h3>Configuration</h3>
+</div>
+<table>
+                """
+        for temp_key, temp_value in kwargs['dict'].items():
+            text = r"""
+%s
+<tr>
+<td align="left"><b>%s:</b></td>
+<td>%s</td>
+</tr>
+                """ %(text, temp_key, str(temp_value))
+        text = r"""
+ %s
+</table>
+                """ % (text)
+    elif 'normality' in what:
+        text = r"""
+</div>
+<div style="background-color:grey;color:white;padding:4px;" align="center">
+<h3>Normality Test</h3>
+</div>
+                """
+    elif 'dependence residuals' in what:
+        text = r"""
+</div>
+<div style="background-color:grey;color:white;padding:4px;" align="center">
+<h3>Dependence: Indep. Variable - Residuals</h3>
+</div>
+                """
+    elif 'dependence prediction' in what:
+        text = r"""
+</div>
+<div style="background-color:grey;color:white;padding:4px;" align="center">
+<h3>Dependence: Depen. Variable - Prediction (GoF)</h3>
+</div>
+                """
+    elif 'thirdlevel' in what:
+        text = r"""
+<div style="background-color:lightgrey;color:black;padding:0px;" align="center">
+<h4>%s</h4>
+</div>
+                """ % (kwargs['key'])
+    display(HTML(text))
 
-
+def display_df(df, fontsize='6pt'):
+    """
+    Function to output DataFrame in IPhython formatted as HTML.
+    Adjust how df is displayed in width and fontsize TBD.
+    """
+    pd.options.display.float_format = '{:,.3e}'.format
+    # df.style.set_properties(**{'font-size': fontsize})
+    # display(HTML("<style>.container { width:100% !important; }</style>"))
+    display(HTML(df.to_html()))
 
 
 
@@ -219,13 +265,3 @@ def plot_DAG(Edge_list, Node_list=None):
                                          font_size=12,
                                          font_color='black')
     plt.show()
-
-
-def print_DF(df, fontsize='6pt'):
-    """
-    Function to output DataFrame in IPhython formatted as HTML.
-    Adjust how df is displayed in width and fontsize TBD.
-    """
-    # df.style.set_properties(**{'font-size': fontsize})
-    # display(HTML("<style>.container { width:100% !important; }</style>"))
-    display(HTML(df.to_html()))

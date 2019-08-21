@@ -74,14 +74,17 @@ class Model(parent0, parent1, parent2, parent3, parent4, parent5):
         """
         assert testtype in ('Likelihood', 'KolmogorovSmirnoff', 'MannWhitney', 'HSIC'), 'Wrong Argument given for TestType'
         if bootstrap is False:
-            bootstrap = (0,)
+            _bootstrap = (1,)
+        elif bootstrap == 1:
+            bootstrap = False
+            _bootstrap = (1,)
         else:
             try:
                 assert bootstrap > 0, 'Argument bootstrap must be positive integer > 0'
-                bootstrap = tuple([x for x in range(bootstrap)])
+                _bootstrap = tuple([x for x in range(1, bootstrap+1)])
             except:
                 raise ValueError('Argument bootstrap must be either False or type integer (int>0)')
-        return(bootstrap)
+        return(bootstrap, _bootstrap)
 
 
     def run(self,
@@ -105,7 +108,7 @@ class Model(parent0, parent1, parent2, parent3, parent4, parent5):
         # Clear Arguments from previous caclulations
         parent3.__del__(self)
         # Check Function Arguments
-        bootstrap = self.check_and_init_arg_run(testtype, bootstrap)
+        bootstrap, _bootstrap = self.check_and_init_arg_run(testtype, bootstrap)
         # Add information to config
         self._config = {'testtype': testtype,
                         'scale': scale,
@@ -113,11 +116,14 @@ class Model(parent0, parent1, parent2, parent3, parent4, parent5):
                         'modelpts': modelpts,
                         'shape_observations': self._xi.shape,
                         'shape_combinations': np.array(self._combinations).shape,
-                        'regression_model:': str(self._regmod[0]),
-                        'scaler_model:': str(self._scaler[0]),
+                        'regression_model': str(self._regmod[0]),
+                        'scaler_model': str(self._scaler[0]),
                         }
+        utils.display_text_predefined(what='inference header')
         # Split Holdout Set if defined / Add Time shift / Adress different environments
-        for boot_i, _ in enumerate(self._config['bootstrap']):
+        for boot_i, _ in enumerate(_bootstrap):
+            if bootstrap > 0:
+                utils.display_text_predefined(what='count bootstrap', current=boot_i, sum=bootstrap)
             self._numberrun = boot_i
             # Do real Bootstrap and not just Iterations TBD
             # Do the math

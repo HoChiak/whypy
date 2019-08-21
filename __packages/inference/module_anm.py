@@ -113,6 +113,8 @@ class RunANM():
             tr = stats.kolmogorov(obs_valu1, obs_valu2)
         elif test_stat is 'MannWhitney':
             tr = stats.mannwhitneyu(obs_valu1, obs_valu2)
+        elif test_stat is 'HSIC':
+            tr = stats.hsic_gam(obs_valu1, obs_valu2)
         else:
             print('Given test_stat argument is not defined.')
         self._results['%i' % (self._numberrun)][combno]['%s' % (obs_name)] = tr
@@ -272,51 +274,25 @@ class PlotANM():
         """
         Method to visualize the interference
         """
+        utils.display_text_predefined(what='visualization header')
         # Pairgrid Plot of Observations
-        utils.print_in_console(what='pairgrid header')
+        utils.display_text_predefined(what='pairgrid header')
         self.plt_PairGrid()
         # Iterate over combinations
         for combno in range(len(self._combinations)):
             tdep, tindep = self.get_tINdep(combno)
             tdep = tdep[0]
-            utils.print_in_console(what='combination major header',
-                                   tdep=tdep, tindep=tindep)
+            utils.display_text_predefined(what='combination major header',
+                                          tdep=tdep, tindep=tindep)
            # Iterate over independent variables
             for temp_i, temp_tindep in enumerate(tindep):
                 # Plot Tindep vs Tdep
-                if self.attr_variate is 'mvariate':
-                    utils.print_in_console(what='combination minor header',
-                                           tdep=tdep, tindep=temp_tindep)
+                utils.display_text_predefined(what='combination minor header',
+                                              tdep=tdep, tindep=temp_tindep)
                 self.plt_1model_adv(combno, tdep, temp_i, temp_tindep)
                 self.plt_hist_IndepResiduals(combno, tdep, temp_i, temp_tindep)
             self.plt_hist_GoodnessFit(combno, tdep, temp_i, temp_tindep)
 
-
-    # def loop_and_do(self, do, **kwargs):
-    #     """
-    #     Method to scale (if scale==True) and loop trough possible combinations
-    #     of tdep and tindep for modelfit of residuals. Save result in _dict2V.
-    #     """
-    #     # Loop trough possible combinations of tdep and tindep for modelfit
-    #     for i in range(len(self._combinations)):
-    #         tdep, tindep = self.get_tINdep(combno)
-    #         # print/plot model informations
-    #         if 'out_Regr_Model_info' in do:
-    #             try:
-    #                 self.plt_GAMlog(combno, tdep, tindep)
-    #             except:
-    #                 print('An exception occurred using -plt_GAMlog()-')
-    #             try:
-    #                 utils.print_in_console(what='model summary')
-    #                 self._regmod[combno].summary()
-    #             except:
-    #                 print('An exception occurred using -summary()-')
-    #         # print the normality log
-    #         if 'out_X_Residuals_NormalityTest' in do:
-    #             self.print_log_st(combno, tdep, tindep, 'normality')
-    #         # print the independence log
-    #         if 'out_X_vs_Residuals_info' in do:
-    #             self.print_log_st(combno, tdep, tindep, 'independence')
 
 class ResultsANM():
     """
@@ -329,27 +305,148 @@ class ResultsANM():
         Class constructor.
         """
 
+    def bootstrap_to_mean_var(self, combno, namekey, dict, dictkey):
+        """
+        Method to get mean and variance from bootstrap runs
+        """
+        for temp_test in self._results['0'][combno][namekey].keys():
+            newlist = list()
+            for temp_boot in self._results.keys():
+                newlist.append(self._results[temp_boot][combno][namekey][temp_test])
+            newarray = np.array(newlist).flatten()
+            meanarray = np.mean(newarray)
+            vararray = np.var(newarray)
+            dict[dictkey+' '+str(temp_test)+' [Mean]'] = meanarray
+            dict[dictkey+' '+str(temp_test)+' [Var]'] = vararray
+        return(dict)
+
     def restructure_results(self):
         """
         Method to extract a readable DataFrame from the self._results attribute
         """
+        # Init new DataFrame
+        results_df = pd.DataFrame()
         # Iterate over all possible combinations
-        # for combno in range(len(self._combinations)):
-        #     # Init new dict
-        #     df_dict = {}
-        #     tdep, tindep = self.get_tINdep(combno)
-        #     tdep = tdep[0]
-        #     df_dict['Fitted_Combination'] = 'X_%i ~ f(X_%s)' % (tdep, tindep)
-        #     for temp_i, temp_tindep in enumerate(tindep):
-        #         df_dict['Fitted_Combination'] = 'X_%i ~ f(X_%s)' % (tdep, tindep)
+        for combno in range(len(self._combinations)):
+            tdep, tindep = self.get_tINdep(combno)
+            tdep = tdep[0]
+            # Iterate over bivariate comparisons
+            for temp_i, temp_tindep in enumerate(tindep):
+                # Init new dict
+                df_dict = {}
+                df_dict['Fitted Combination'] = 'X_%i ~ f(X_%s)' % (tdep, tindep)
+                df_dict['tdep'] = tdep
+                df_dict['tindep'] = tindep
+                df_dict['Bivariate Comparison'] = 'X_%i ~ f(X_%s)' % (tdep, temp_tindep)
+                df_dict['bivariate tindep'] = temp_tindep
+                # Get Mean and Variance Value out of all bootstrap examples
+                df_dict = self.bootstrap_to_mean_var(combno, 'Normality_X_data_%i' % (temp_tindep), df_dict, 'Normality Indep. Variable')
+                df_dict = self.bootstrap_to_mean_var(combno, 'Normality_Y_data', df_dict, 'Normality Depen. Variable')
+                df_dict = self.bootstrap_to_mean_var(combno, 'Normality_Residuals', df_dict, 'Normality Residuals')
+                df_dict = self.bootstrap_to_mean_var(combno, 'IndepResiduals_%i' % (temp_tindep), df_dict, 'Dependence: Indep. Variable - Residuals')
+                df_dict = self.bootstrap_to_mean_var(combno, 'GoodnessFit', df_dict, 'Dependence: Depen. Variable - Prediction (GoF)')
+            # Append current bivariate comparison to DF
+            results_df = pd.concat([results_df, pd.DataFrame(df_dict)], ignore_index=True, axis=0)
+        self._results_df = results_df
 
+    def get_df_normality(self, testkey):
+        """
+        Method to return the DF summarizing the normality test
+        """
+        columns = ['Fitted Combination',
+                   'Bivariate Comparison',
+                   'Normality Indep. Variable SW_pvalue [Mean]',
+                   'Normality Indep. Variable SW_pvalue [Var]',
+                   'Normality Indep. Variable Pearson_pvalue [Mean]',
+                   'Normality Indep. Variable Pearson_pvalue [Var]',
+                   'Normality Indep. Variable Combined_pvalue [Mean]',
+                   'Normality Indep. Variable Combined_pvalue [Var]',
+                   'Normality Depen. Variable SW_pvalue [Mean]',
+                   'Normality Depen. Variable SW_pvalue [Var]',
+                   'Normality Depen. Variable Pearson_pvalue [Mean]',
+                   'Normality Depen. Variable Pearson_pvalue [Var]',
+                   'Normality Depen. Variable Combined_pvalue [Mean]',
+                   'Normality Depen. Variable Combined_pvalue [Var]',
+                   'Normality Residuals SW_pvalue [Mean]',
+                   'Normality Residuals SW_pvalue [Var]',
+                   'Normality Residuals Pearson_pvalue [Mean]',
+                   'Normality Residuals Pearson_pvalue [Var]',
+                   'Normality Residuals Combined_pvalue [Mean]',
+                   'Normality Residuals Combined_pvalue [Var]']
+        # Extract only testtype of interest
+        _columns = [key for key in columns if testkey in key]
+        columns = columns[0:2]
+        columns.extend(_columns)
+        # Remove "fitted Combination" if bivariate case
+        if self.attr_variate is 'bivariate':
+            columns = columns[1:]
+        # Remove [Var] if no boostrap is done
+        if self._config['bootstrap'] is False:
+            columns = [key for key in columns if '[Var]' not in key]
+        df = self._results_df[columns]
+        # Clean up Columns
+        columns = [key.replace('Normality ', '') for key in columns]
+        columns = [key.replace(testkey+str(' '), '') for key in columns]
+        df.columns = columns
+        return(df)
+
+    def get_df_dependence(self, testkey):
+        """
+        Method to return the DF summarizing the normality test
+        """
+        columns = ['Fitted Combination',
+                   'Bivariate Comparison',
+                   'Dependence: Indep. Variable - Residuals %s [Mean]' % (self._config['testtype']),
+                   'Dependence: Indep. Variable - Residuals %s [Var]' % (self._config['testtype']),
+                   'Dependence: Depen. Variable - Prediction (GoF) %s [Mean]' % (self._config['testtype']),
+                   'Dependence: Depen. Variable - Prediction (GoF) %s [Var]' % (self._config['testtype'])]
+        # Extract only testtype of interest
+        _columns = [key for key in columns if testkey in key]
+        columns = columns[0:2]
+        columns.extend(_columns)
+        # Remove "fitted Combination" if bivariate case
+        if self.attr_variate is 'bivariate':
+            columns = columns[1:]
+        # Remove [Var] if no boostrap is done
+        if self._config['bootstrap'] is False:
+            columns = [key for key in columns if '[Var]' not in key]
+        df = self._results_df[columns]
+        # Clean up Columns
+        columns = [key.replace('Dependence: ', '') for key in columns]
+        columns = [key.replace('(GoF) ', '') for key in columns]
+        columns = [key.replace( self._config['testtype']+str(' '), '') for key in columns]
+        df.columns = columns
+        return(df)
 
     def plot_results(self, number_run=False):
         """
         Method to display the results of the interference. If number_run is
         False the current run will be plotted
         """
-        print('Method not defined yet')
+        # Create self._results_df to get results in a handy way
+        self.restructure_results()
+        # Plot Header and Configuration:
+        utils.display_text_predefined(what='result header', dict=self._config)
+        # Plot Normality DataFrame
+        utils.display_text_predefined(what='normality')
+        utils.display_text_predefined(what='thirdlevel', key='Pearsons p-value')
+        utils.display_df(self.get_df_normality(testkey='Pearson_pvalue'), fontsize='6pt')
+        utils.display_text_predefined(what='thirdlevel', key='Shapiro Wilk p-value')
+        utils.display_df(self.get_df_normality(testkey='SW_pvalue'), fontsize='6pt')
+        utils.display_text_predefined(what='thirdlevel', key='Combined p-value')
+        utils.display_df(self.get_df_normality(testkey='Combined_pvalue'), fontsize='6pt')
+        # Plot Goodness of Fit Test
+        utils.display_text_predefined(what='dependence prediction')
+        utils.display_text_predefined(what='thirdlevel', key='%s: %s' % (self._config['testtype'], self.attr_dict[self._config['testtype']]))
+        utils.display_df(self.get_df_dependence('GoF'))
+        # Plot Indepndence of Residuals
+        utils.display_text_predefined(what='dependence residuals')
+        utils.display_text_predefined(what='thirdlevel', key='%s: %s' % (self._config['testtype'], self.attr_dict[self._config['testtype']]))
+        utils.display_df(self.get_df_dependence('Residuals'))
+
+
+
+
         #         self.restructure_results()
         # # Plot results
         # self.plot_results()
@@ -373,7 +470,7 @@ class ResultsANM():
         #     if len(dolist) != 0:
         #         self.loop_and_do(do=dolist)
         #     # end dolist
-        #     utils.print_in_console(what='result header')
+        #     utils.display_text_predefined(what='result header')
         #     # Plot independence/likelihood tests results
         #     if out_X_vs_Residuals is True:
         #         if 'p-value' in namecode:
@@ -386,5 +483,5 @@ class ResultsANM():
         #                   'rank pval/likel', '2V-direction']].to_string())
         #     # plot the Causal Graph
         #     if out_CausalGraph is True:
-        #         utils.print_in_console(what='CG Warning')
+        #         utils.display_text_predefined(what='CG Warning')
         #         self.predict_CG(testtype, CGmetric=CGmetric)

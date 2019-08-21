@@ -299,7 +299,7 @@ class CurrentlyExcluded1():
         # Loop over all independence tests
         for i, tp in enumerate(testn):
             El, Nl, metricdf = self.do_create_CG(testtype, CGmetric, tp)
-            utils.print_in_console(what='CG Info',
+            utils.display_text_predefined(what='CG Info',
                                    testname=tp, testmetric=CGmetric)
             utils.print_DF(metricdf)
             utils.plot_DAG(El, Nl)

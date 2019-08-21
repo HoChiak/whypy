@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 # import built in libarys
-
+# import sys
+# sys.setrecursionlimit(10000)
 
 # import 3rd party libarys
 import numpy as np
@@ -12,6 +13,7 @@ from scipy.stats import mannwhitneyu, combine_pvalues
 
 # import local libarys
 from whypy.__packages.utils import utils
+from whypy.__packages.utils.hsic_gam import *
 
 
 ###############################################################################
@@ -92,6 +94,26 @@ def mannwhitneyu(sample1, sample2):
     # process value
     id_pv = utils.check_inf_nan(id_pv)
     test_results = {'MannWhitney': id_pv}
+    return(test_results)
+
+def hsic_gam(sample1, sample2):
+    """
+    Method to perform independence test between sample1 and sample2 by
+    t-test (Gaussian only) and Kolmogorov-Smirnoff, Mann-Whitney and
+    Anderson-Darling.
+    (HSIC  and Cramer-von Mises test is to be done)
+
+    INPUT:  Samples to be tested
+
+    RETURN: Test Statistic
+    """
+    sample1 = np.array(sample1).reshape(-1)
+    sample2 = np.array(sample2).reshape(-1)
+    # calculate HSIC
+    id_pv, _ = hsic_gam(sample1, sample2)
+    # process value
+    id_pv = utils.check_inf_nan(id_pv)
+    test_results = {'HSIC': id_pv}
     return(test_results)
 
 
