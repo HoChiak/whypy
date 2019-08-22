@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from sklearn.model_selection import train_test_split
 
 # import local libarys
 from whypy.__packages.utils import utils
@@ -179,3 +180,16 @@ class General():
                               num=modelpts)
         X_model = X_model.reshape(-1, 1)
         return(X_model)
+
+    def get_fit_test_index_ordered(self):
+        """
+        Method to get indexes of fit and test split ordered. Based on lenth of
+        current self._xi
+        """
+        ids_fit, ids_test = train_test_split(np.arange(0, self._xi.shape[0], 1),
+                                             test_size = self._kwargs['holdout_ratio'],
+                                             random_state = self._kwargs['holdout_seed'],
+                                             shuffle = True)
+        ids_fit = np.sort(ids_fit)
+        ids_test = np.sort(ids_test)
+        return(ids_fit, ids_test)

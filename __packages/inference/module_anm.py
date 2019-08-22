@@ -10,7 +10,6 @@ import numpy as np
 from matplotlib import pyplot as plt
 import pandas as pd
 import seaborn as sns
-from sklearn.model_selection import train_test_split
 
 # import local libarys
 from whypy.__packages.utils import utils
@@ -163,10 +162,11 @@ class RunANM():
         # Holdout if defined
         if self._config['holdout'] is True:
             xi_original = deepcopy(self._xi)
-            xi_fit, xi_test = train_test_split(self._xi,
-                                               test_size = self._kwargs['holdout_ratio'],
-                                               random_state = self._kwargs['holdout_seed'],
-                                               shuffle = False)
+            # Get Holdout Index (ids)
+            ids_fit, ids_test = self.get_fit_test_index_ordered()
+            # Get Holdout for observations
+            xi_fit = self._xi[ids_fit, :]
+            xi_test = self._xi[ids_test, :]
         # Fit (scaled) models and do statistical tests
         for combno in range(len(self._combinations)):
             # Holdout if defined
@@ -212,16 +212,17 @@ class PlotANM():
         txt = r'X_{%i} \approx f\left( X_{%i}, E_{X}\right)' % (tdep, tindep)
         return(txt)
 
-    def plt_PairGrid(self):
+    def plt_PairGrid(self, hue):
         """
         Method to plot a PairGrid scatter of the observations.
         """
-        plt.figure(r'PairGrid',
-                   figsize=self._figsize)
         df = pd.DataFrame(self._xi)
         df.columns = [r'$X_%i$' % (i) for i in range(self._xi.shape[1])]
-        g = sns.PairGrid(df);
-        g = g.map(plt.scatter);
+        df = pd.concat([df, pd.DataFrame(hue, columns=['holdout'])], axis=1)
+        g = sns.PairGrid(df, hue='holdout');
+        g = g.map_diag(plt.hist, edgecolor="w")
+        g = g.map_offdiag(plt.scatter, edgecolor="w", s=40, alpha=0.5)
+        g = g.add_legend()
         plt.show();
 
     def plt_1model_adv(self, combno, tdep, temp_i, tindep):
@@ -292,14 +293,23 @@ class PlotANM():
         """
         # Holdout if defined
         if self._config['holdout'] is True:
-            xi_fit, xi_test = train_test_split(self._xi,
-                                               test_size = self._kwargs['holdout_ratio'],
-                                               random_state = self._kwargs['holdout_seed'],
-                                               shuffle = False)
+            xi_original = deepcopy(self._xi)
+            # Get Holdout Index (ids)
+            ids_fit, ids_test = self.get_fit_test_index_ordered()
+            # Get Holdout for observations
+            xi_fit = self._xi[ids_fit, :]
+            xi_test = self._xi[ids_test, :]
+            # Get Holdout for hue
+            hue = np.zeros((self._xi.shape[0], ))
+            hue[ids_fit] = 1
+            hue = hue.tolist()
+            hue = ['test' if i==0 else 'fit' for i in hue]
+        else:
+            hue = ['fit/test' for i in range(self._xi.shape[0])]
         utils.display_text_predefined(what='visualization header')
         # Pairgrid Plot of Observations
         utils.display_text_predefined(what='pairgrid header')
-        self.plt_PairGrid()
+        self.plt_PairGrid(hue)
         # Iterate over combinations
         for combno in range(len(self._combinations)):
             tdep, tindep = self.get_tINdep(combno)
@@ -320,6 +330,9 @@ class PlotANM():
                     self._xi = xi_test
                 self.plt_hist_IndepResiduals(combno, tdep, temp_i, temp_tindep)
             self.plt_hist_GoodnessFit(combno, tdep, temp_i, temp_tindep)
+        # Regain original _xi
+        if self._config['holdout'] is True:
+            self._xi = deepcopy(xi_original)
 
 
 class ResultsANM():
