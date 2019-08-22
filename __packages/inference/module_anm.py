@@ -3,6 +3,7 @@
 # import built in libarys
 from json import dumps as jdump
 from json import loads as jload
+from copy import deepcopy
 
 # import 3rd party libarys
 import numpy as np
@@ -159,17 +160,21 @@ class RunANM():
             self.scaler_fit()
         # Initialize empty dictionary to be filled
         self._results['%i' % (self._numberrun)] = utils.trans_object_to_list(None, len(self._combinations), dcopy=True)
+        # Holdout if defined
+        if self._config['holdout'] is True:
+            xi_original = deepcopy(self._xi)
+            xi_fit, xi_test = train_test_split(self._xi,
+                                               test_size = self._kwargs['holdout_ratio'],
+                                               random_state = self._kwargs['holdout_seed'],
+                                               shuffle = False)
         # Fit (scaled) models and do statistical tests
         for combno in range(len(self._combinations)):
-            tdep, tindep = self.get_tINdep(combno)
-            model, X_data, Y_data = self.get_combination_objects(combno, tdep, tindep)
             # Holdout if defined
             if self._config['holdout'] is True:
-                xi_fit, xi_test = train_test_split(self._xi,
-                                                   test_size = self._kwargs['holdout_ratio'],
-                                                   random_state = self._kwargs['holdout_seed'],
-                                                   shuffle = False)
                 self._xi = xi_fit
+            # Get Constants
+            tdep, tindep = self.get_tINdep(combno)
+            model, X_data, Y_data = self.get_combination_objects(combno, tdep, tindep)
             # fit regmod on observations
             self.fit_model2xi(combno, tdep, tindep, model, X_data, Y_data)
             # predict results
@@ -178,7 +183,9 @@ class RunANM():
             if self._config['holdout'] is True:
                 self._xi = xi_test
             self.test_statistics(combno, tdep, tindep, model, X_data, Y_data)
-            # do independence test
+            # Regain original _xi
+            if self._config['holdout'] is True:
+                self._xi = deepcopy(xi_original)
 
 class PlotANM():
     """
@@ -213,8 +220,8 @@ class PlotANM():
                    figsize=self._figsize)
         df = pd.DataFrame(self._xi)
         df.columns = [r'$X_%i$' % (i) for i in range(self._xi.shape[1])]
-        g = sns.PairGrid(df)
-        g = g.map(plt.scatter)
+        g = sns.PairGrid(df);
+        g = g.map(plt.scatter);
         plt.show();
 
     def plt_1model_adv(self, combno, tdep, temp_i, tindep):
@@ -255,8 +262,7 @@ class PlotANM():
                      norm_hist=True)
         plt.legend([r'$X_{%i}$' % (tindep),
                     r'$Residuals\ (X_{%i}-\hatX_{%i})$' % (tdep, tdep)])
-        plt.title(r'$Independence\ of\ Residuals:\ %s$' % (txt),
-                  fontweight='bold')
+        plt.title(r'$\bf{Independence\ of\ Residuals:\ %s}$' % (txt))
         plt.xlabel(r'$X_{i}$')
         plt.ylabel(r'$f\left(X_{i}\right)$')
         plt.show()
@@ -275,8 +281,7 @@ class PlotANM():
                      norm_hist=True)
         plt.legend([r'$X_{%i}$' % (tdep),
                     r'$\hatX_{%i}$' % (tdep)])
-        plt.title(r'$Goodness\ of\ Fit:\ %s$' % (txt),
-                  fontweight='bold')
+        plt.title(r'$\bf{Goodness\ of\ Fit:\ %s}$' % (txt))
         plt.xlabel(r'$X_{%i}$' % (tdep))
         plt.ylabel(r'$f\left(X_{i}\right)$')
         plt.show()
@@ -285,6 +290,12 @@ class PlotANM():
         """
         Method to visualize the interference
         """
+        # Holdout if defined
+        if self._config['holdout'] is True:
+            xi_fit, xi_test = train_test_split(self._xi,
+                                               test_size = self._kwargs['holdout_ratio'],
+                                               random_state = self._kwargs['holdout_seed'],
+                                               shuffle = False)
         utils.display_text_predefined(what='visualization header')
         # Pairgrid Plot of Observations
         utils.display_text_predefined(what='pairgrid header')
@@ -297,10 +308,16 @@ class PlotANM():
                                           tdep=tdep, tindep=tindep)
            # Iterate over independent variables
             for temp_i, temp_tindep in enumerate(tindep):
+                # Holdout if defined
+                if self._config['holdout'] is True:
+                    self._xi = xi_fit
                 # Plot Tindep vs Tdep
                 utils.display_text_predefined(what='combination minor header',
                                               tdep=tdep, tindep=temp_tindep)
                 self.plt_1model_adv(combno, tdep, temp_i, temp_tindep)
+                # Holdout if defined
+                if self._config['holdout'] is True:
+                    self._xi = xi_test
                 self.plt_hist_IndepResiduals(combno, tdep, temp_i, temp_tindep)
             self.plt_hist_GoodnessFit(combno, tdep, temp_i, temp_tindep)
 

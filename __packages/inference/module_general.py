@@ -113,7 +113,7 @@ class General():
         if self._config['holdout'] > 0:
             new_kwargs = self.check_kwargs_declaration(kwargs, kwargskey='holdout_ratio', default_value=0.2)
             assert 0 < new_kwargs['holdout_ratio'] <=1 , 'Holdout Ratio must be in range [0, 1]'
-            new_kwargs = self.check_kwargs_declaration(kwargs, kwargskey='Holdout_seed', default_value=1)
+            new_kwargs = self.check_kwargs_declaration(kwargs, kwargskey='holdout_seed', default_value=1)
             assert isinstance(new_kwargs['holdout_seed'], int), 'Holdout Seed must be integer'
         if self._xi.shape[0] < 50:
             warn('WARNING: Less than 50 values remaining to fit the regression model')
@@ -131,7 +131,6 @@ class General():
                     warn('WARNING: Less than 50 values remaining to fit the regression model, from holdout_ratio')
                 if (new_kwargs['holdout_ratio']) * self._xi.shape[0] < 50:
                     warn('WARNING: Less than 50 values remaining to estimate the test statistics, from holdout_ratio')
-
         return(new_kwargs)
 
     def scaler_fit(self):

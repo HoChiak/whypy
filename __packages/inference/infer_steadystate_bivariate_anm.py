@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 # import built in libarys
-
+from copy import deepcopy
 
 # import 3rd party libarys
 import numpy as np
@@ -115,7 +115,7 @@ class Model(parent0, parent1, parent2, parent3, parent4, parent5):
                 # Display the current bootstrap number
                 utils.display_text_predefined(what='count bootstrap', current=boot_i, sum=bootstrap)
                 # Do the Bootstrap
-                self._xi = resample(self.xi, replace=True,
+                self._xi = resample(deepcopy(self.xi), replace=True,
                                     n_samples=int(self.xi.shape[0] * self._kwargs['bootstrap_ratio']),
                                     random_state=self._kwargs['bootstrap_seed']+boot_i)
             self._numberrun = boot_i
