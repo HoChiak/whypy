@@ -26,6 +26,7 @@ class General():
         Class Constructor for General CI Methods
         """
         self._figsize = (10, 7.071)
+        self._cmap = plt.get_cmap('Pastel1', 100)
         self._numberrun = 0
         self._config = {}
 
@@ -67,6 +68,48 @@ class General():
         assert hasattr(self.scaler, 'inverse_transform'), 'Scaler Model has no attribute "inverse_transform"'
         # assert self.scaler.copy is False, 'Scaler Model doesnt support inplace transformation (maybe set "copy=False")'
         assert ((scale is False) or ((scale is True) and (self.scaler is not None))), 'If scale is True, a scaler must be assigned'
+
+    def check_kwargs_declaration(self, kwargs, kwargskey, default_value):
+        """
+        Method to test wheter a keyword in kwargs exist. If not, set kwargs
+        keyword to given default_value.
+        """
+        try:
+            kwargs[kwargskey]
+        except:
+            kwargs[kwargskey] = default_value
+        finally:
+            return(kwargs)
+
+    def check_and_init_arg_run(self, testtype, bootstrap):
+        """
+        Method to check the run-methods arguments
+        """
+        assert testtype in ('Likelihood', 'KolmogorovSmirnoff', 'MannWhitney', 'HSIC'), 'Wrong Argument given for TestType'
+        if bootstrap is False:
+            _bootstrap = (1,)
+        elif bootstrap == 1:
+            bootstrap = False
+            _bootstrap = (1,)
+        else:
+            try:
+                assert bootstrap > 0, 'Argument bootstrap must be positive integer > 0'
+                _bootstrap = tuple([x for x in range(1, bootstrap+1)])
+            except:
+                raise ValueError('Argument bootstrap must be either False or type integer (int>0)')
+        return(bootstrap, _bootstrap)
+
+    def check_init_kwargs(self, kwargs):
+        """
+        Method to check and init the run-methods kwargs
+        """
+        new_kwargs = {}
+        if self._config['bootstrap'] > 0:
+            new_kwargs = self.check_kwargs_declaration(kwargs, kwargskey='bootstrap_ratio', default_value=1)
+            assert 0 < kwargs['bootstrap_ratio'] <=1 , 'Bootstrap Ratio must be in range [0, 1]'
+            new_kwargs = self.check_kwargs_declaration(kwargs, kwargskey='bootstrap_seed', default_value=1)
+            assert isinstance(kwargs['bootstrap_seed'], int), 'Bootstrap Seed must be integer'
+        return(new_kwargs)
 
     def scaler_fit(self):
         """

@@ -8,6 +8,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from sklearn.utils import resample
+
 
 # import local libarys
 from whypy.__packages.inference.module_general import General as parent0
@@ -68,33 +70,14 @@ class Model(parent0, parent1, parent2, parent3, parent4, parent5):
         self._regmod = None
         self._scaler = None
 
-    def check_and_init_arg_run(self, testtype, bootstrap):
-        """
-        Method to check the run-methods arguments
-        """
-        assert testtype in ('Likelihood', 'KolmogorovSmirnoff', 'MannWhitney', 'HSIC'), 'Wrong Argument given for TestType'
-        if bootstrap is False:
-            _bootstrap = (1,)
-        elif bootstrap == 1:
-            bootstrap = False
-            _bootstrap = (1,)
-        else:
-            try:
-                assert bootstrap > 0, 'Argument bootstrap must be positive integer > 0'
-                _bootstrap = tuple([x for x in range(1, bootstrap+1)])
-            except:
-                raise ValueError('Argument bootstrap must be either False or type integer (int>0)')
-        return(bootstrap, _bootstrap)
-
-
     def run(self,
             testtype='Likelihood',# Likelihood KolmogorovSmirnoff MannWhitney HSIC
             scale=True,
             bootstrap=False,
             modelpts=50,
             plot_inference=True,
-            plot_results=True
-            ):
+            plot_results=True,
+            **kwargs):
         """
         Method to test independence of residuals.
         Theorem: In causal direction, the noise is independent of the input
@@ -119,11 +102,20 @@ class Model(parent0, parent1, parent2, parent3, parent4, parent5):
                         'regression_model': str(self._regmod[0]),
                         'scaler_model': str(self._scaler[0]),
                         }
+        # Check and Init Kwargs
+        kwargs = self.check_init_kwargs(kwargs)
+        self._config['**kwargs'] = str(kwargs)
+        # Display Start of Causal Inference
         utils.display_text_predefined(what='inference header')
         # Split Holdout Set if defined / Add Time shift / Adress different environments
         for boot_i, _ in enumerate(_bootstrap):
             if bootstrap > 0:
+                # Display the current bootstrap number
                 utils.display_text_predefined(what='count bootstrap', current=boot_i, sum=bootstrap)
+                # Do the Bootstrap
+                self._xi = resample(self.xi, replace=True,
+                                    n_samples=int(self.xi.shape[0] * kwargs['bootstrap_ratio']),
+                                    random_state=kwargs['bootstrap_seed']+boot_i)
             self._numberrun = boot_i
             # Do real Bootstrap and not just Iterations TBD
             # Do the math

@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 # import built in libarys
-
+from json import dumps as jdump
+from json import loads as jload
 
 # import 3rd party libarys
 import numpy as np
@@ -314,10 +315,11 @@ class ResultsANM():
             for temp_boot in self._results.keys():
                 newlist.append(self._results[temp_boot][combno][namekey][temp_test])
             newarray = np.array(newlist).flatten()
-            meanarray = np.mean(newarray)
-            vararray = np.var(newarray)
-            dict[dictkey+' '+str(temp_test)+' [Mean]'] = meanarray
-            dict[dictkey+' '+str(temp_test)+' [Var]'] = vararray
+            medianarray = np.median(newarray)
+            vararray = np.std(newarray)
+            dict[dictkey+' '+str(temp_test)+' [List]'] = jdump(newlist)
+            dict[dictkey+' '+str(temp_test)+' [Median]'] = medianarray
+            dict[dictkey+' '+str(temp_test)+' [SD]'] = vararray
         return(dict)
 
     def restructure_results(self):
@@ -334,10 +336,10 @@ class ResultsANM():
             for temp_i, temp_tindep in enumerate(tindep):
                 # Init new dict
                 df_dict = {}
-                df_dict['Fitted Combination'] = 'X_%i ~ f(X_%s)' % (tdep, tindep)
+                df_dict['Fitted Combination'] = r'$X_%i \sim f(X_{%s})$' % (tdep, tindep)
                 df_dict['tdep'] = tdep
                 df_dict['tindep'] = tindep
-                df_dict['Bivariate Comparison'] = 'X_%i ~ f(X_%s)' % (tdep, temp_tindep)
+                df_dict['Bivariate Comparison'] = r'$X_%i \sim f(X_%s)$' % (tdep, temp_tindep)
                 df_dict['bivariate tindep'] = temp_tindep
                 # Get Mean and Variance Value out of all bootstrap examples
                 df_dict = self.bootstrap_to_mean_var(combno, 'Normality_X_data_%i' % (temp_tindep), df_dict, 'Normality Indep. Variable')
@@ -346,7 +348,8 @@ class ResultsANM():
                 df_dict = self.bootstrap_to_mean_var(combno, 'IndepResiduals_%i' % (temp_tindep), df_dict, 'Dependence: Indep. Variable - Residuals')
                 df_dict = self.bootstrap_to_mean_var(combno, 'GoodnessFit', df_dict, 'Dependence: Depen. Variable - Prediction (GoF)')
             # Append current bivariate comparison to DF
-            results_df = pd.concat([results_df, pd.DataFrame(df_dict)], ignore_index=True, axis=0)
+            new_df = pd.DataFrame(df_dict)
+            results_df = pd.concat([results_df, new_df], ignore_index=True, axis=0)
         self._results_df = results_df
 
     def get_df_normality(self, testkey):
@@ -355,24 +358,24 @@ class ResultsANM():
         """
         columns = ['Fitted Combination',
                    'Bivariate Comparison',
-                   'Normality Indep. Variable SW_pvalue [Mean]',
-                   'Normality Indep. Variable SW_pvalue [Var]',
-                   'Normality Indep. Variable Pearson_pvalue [Mean]',
-                   'Normality Indep. Variable Pearson_pvalue [Var]',
-                   'Normality Indep. Variable Combined_pvalue [Mean]',
-                   'Normality Indep. Variable Combined_pvalue [Var]',
-                   'Normality Depen. Variable SW_pvalue [Mean]',
-                   'Normality Depen. Variable SW_pvalue [Var]',
-                   'Normality Depen. Variable Pearson_pvalue [Mean]',
-                   'Normality Depen. Variable Pearson_pvalue [Var]',
-                   'Normality Depen. Variable Combined_pvalue [Mean]',
-                   'Normality Depen. Variable Combined_pvalue [Var]',
-                   'Normality Residuals SW_pvalue [Mean]',
-                   'Normality Residuals SW_pvalue [Var]',
-                   'Normality Residuals Pearson_pvalue [Mean]',
-                   'Normality Residuals Pearson_pvalue [Var]',
-                   'Normality Residuals Combined_pvalue [Mean]',
-                   'Normality Residuals Combined_pvalue [Var]']
+                   'Normality Indep. Variable SW_pvalue [Median]',
+                   'Normality Indep. Variable SW_pvalue [SD]',
+                   'Normality Indep. Variable Pearson_pvalue [Median]',
+                   'Normality Indep. Variable Pearson_pvalue [SD]',
+                   'Normality Indep. Variable Combined_pvalue [Median]',
+                   'Normality Indep. Variable Combined_pvalue [SD]',
+                   'Normality Depen. Variable SW_pvalue [Median]',
+                   'Normality Depen. Variable SW_pvalue [SD]',
+                   'Normality Depen. Variable Pearson_pvalue [Median]',
+                   'Normality Depen. Variable Pearson_pvalue [SD]',
+                   'Normality Depen. Variable Combined_pvalue [Median]',
+                   'Normality Depen. Variable Combined_pvalue [SD]',
+                   'Normality Residuals SW_pvalue [Median]',
+                   'Normality Residuals SW_pvalue [SD]',
+                   'Normality Residuals Pearson_pvalue [Median]',
+                   'Normality Residuals Pearson_pvalue [SD]',
+                   'Normality Residuals Combined_pvalue [Median]',
+                   'Normality Residuals Combined_pvalue [SD]']
         # Extract only testtype of interest
         _columns = [key for key in columns if testkey in key]
         columns = columns[0:2]
@@ -380,9 +383,9 @@ class ResultsANM():
         # Remove "fitted Combination" if bivariate case
         if self.attr_variate is 'bivariate':
             columns = columns[1:]
-        # Remove [Var] if no boostrap is done
+        # Remove [SD] if no boostrap is done
         if self._config['bootstrap'] is False:
-            columns = [key for key in columns if '[Var]' not in key]
+            columns = [key for key in columns if '[SD]' not in key]
         df = self._results_df[columns]
         # Clean up Columns
         columns = [key.replace('Normality ', '') for key in columns]
@@ -390,26 +393,34 @@ class ResultsANM():
         df.columns = columns
         return(df)
 
-    def get_df_dependence(self, testkey):
+    def get_df_dependence(self, testkey, removeList=True):
         """
         Method to return the DF summarizing the normality test
         """
         columns = ['Fitted Combination',
                    'Bivariate Comparison',
-                   'Dependence: Indep. Variable - Residuals %s [Mean]' % (self._config['testtype']),
-                   'Dependence: Indep. Variable - Residuals %s [Var]' % (self._config['testtype']),
-                   'Dependence: Depen. Variable - Prediction (GoF) %s [Mean]' % (self._config['testtype']),
-                   'Dependence: Depen. Variable - Prediction (GoF) %s [Var]' % (self._config['testtype'])]
+                   'Dependence: Indep. Variable - Residuals %s [List]' % (self._config['testtype']),
+                   'Dependence: Indep. Variable - Residuals %s [Median]' % (self._config['testtype']),
+                   'Dependence: Indep. Variable - Residuals %s [SD]' % (self._config['testtype']),
+                   'Dependence: Depen. Variable - Prediction (GoF) %s [List]' % (self._config['testtype']),
+                   'Dependence: Depen. Variable - Prediction (GoF) %s [Median]' % (self._config['testtype']),
+                   'Dependence: Depen. Variable - Prediction (GoF) %s [SD]' % (self._config['testtype'])]
         # Extract only testtype of interest
         _columns = [key for key in columns if testkey in key]
         columns = columns[0:2]
         columns.extend(_columns)
-        # Remove "fitted Combination" if bivariate case
-        if self.attr_variate is 'bivariate':
-            columns = columns[1:]
-        # Remove [Var] if no boostrap is done
+        # Remove [SD] if no boostrap is done
         if self._config['bootstrap'] is False:
-            columns = [key for key in columns if '[Var]' not in key]
+            columns = [key for key in columns if '[SD]' not in key]
+        # Remove [SD] if no boostrap is done
+        if removeList is True:
+            columns = [key for key in columns if '[List]' not in key]
+            # Remove "fitted Combination" if bivariate case
+            if self.attr_variate is 'bivariate':
+                columns = columns[1:]
+        else:
+            columns = [key for key in columns if '[Median]' not in key]
+            columns = [key for key in columns if '[SD]' not in key]
         df = self._results_df[columns]
         # Clean up Columns
         columns = [key.replace('Dependence: ', '') for key in columns]
@@ -417,6 +428,44 @@ class ResultsANM():
         columns = [key.replace( self._config['testtype']+str(' '), '') for key in columns]
         df.columns = columns
         return(df)
+
+    def plt_combinations_boxplot(self, testkey):
+        """
+        Method to plot the results of the independence test.
+        """
+        # Get Dictionary
+        df_dependence = self.get_df_dependence(testkey, removeList=False)
+        # Init Plot
+        plt.figure('Combination Boxplot', figsize=[self._figsize[0], self._figsize[1]/1.5])
+        if 'p-value' in self.attr_dict[self._config['testtype']]:
+            plt.yscale('log')
+            lbl = r'$dependence \leftarrow\ p-value\ \rightarrow independence$'
+        elif 'likelihood-ratio' in self.attr_dict[self._config['testtype']]:
+            lbl = r'$not favored \leftarrow\ likelihood-ratio\ \rightarrow favored$'
+        # Get Data for each bivariate case from dictionary
+        x_data = np.arange(0.5, df_dependence.shape[0]+0.5, 1)
+        y_data = [jload(bivacomp[-1]) for i, bivacomp in df_dependence.iterrows()]
+        labels_box = [r'$\bf{%i}:$' % (i) + '\n%s' % (bivacomp[1]) for i, bivacomp in df_dependence.iterrows()]
+        combnos = [bivacomp[0] for i, bivacomp in df_dependence.iterrows()]
+        # Get Unique combinations and give number to them
+        combno_unique = set(combnos)
+        combno_unique = {key: i for i, key in enumerate(combno_unique)}
+        # Background Color different bivariate cases from same combinations
+        for i, combno in enumerate(combnos):
+            plt.axvspan(x_data[i]-1/3, x_data[i]+1/3,
+                        facecolor=self._cmap(combno_unique[combno]/len(combno_unique)), alpha=0.5)
+        plt.legend(combnos,
+                   loc='upper center',
+                   bbox_to_anchor=(0.5, -0.25),
+                   ncol=3)
+        # Boxplot
+        plt.boxplot(y_data, positions=x_data, labels=labels_box)
+        # Further Plot Settings
+        plt.title(r'BoxPlot', fontweight='bold')
+        plt.tick_params(labelbottom=True)
+        plt.tick_params(right=False, top=False, left=True, bottom=False)
+        plt.ylabel(lbl)
+        plt.show()
 
     def plot_results(self, number_run=False):
         """
@@ -439,10 +488,12 @@ class ResultsANM():
         utils.display_text_predefined(what='dependence prediction')
         utils.display_text_predefined(what='thirdlevel', key='%s: %s' % (self._config['testtype'], self.attr_dict[self._config['testtype']]))
         utils.display_df(self.get_df_dependence('GoF'))
+        self.plt_combinations_boxplot('GoF')
         # Plot Indepndence of Residuals
         utils.display_text_predefined(what='dependence residuals')
         utils.display_text_predefined(what='thirdlevel', key='%s: %s' % (self._config['testtype'], self.attr_dict[self._config['testtype']]))
         utils.display_df(self.get_df_dependence('Residuals'))
+        self.plt_combinations_boxplot('Residuals')
 
 
 
