@@ -74,6 +74,7 @@ class Model(parent0, parent1, parent2, parent3, parent4, parent5):
             testtype='Likelihood',# Likelihood KolmogorovSmirnoff MannWhitney HSIC
             scale=True,
             bootstrap=False,
+            holdout=False,
             modelpts=50,
             plot_inference=True,
             plot_results=True,
@@ -96,6 +97,7 @@ class Model(parent0, parent1, parent2, parent3, parent4, parent5):
         self._config = {'testtype': testtype,
                         'scale': scale,
                         'bootstrap': bootstrap,
+                        'holdout': holdout,
                         'modelpts': modelpts,
                         'shape_observations': self._xi.shape,
                         'shape_combinations': np.array(self._combinations).shape,
@@ -103,8 +105,8 @@ class Model(parent0, parent1, parent2, parent3, parent4, parent5):
                         'scaler_model': str(self._scaler[0]),
                         }
         # Check and Init Kwargs
-        kwargs = self.check_init_kwargs(kwargs)
-        self._config['**kwargs'] = str(kwargs)
+        self._kwargs = self.check_init_kwargs(kwargs)
+        self._config['**kwargs'] = str(self._kwargs)
         # Display Start of Causal Inference
         utils.display_text_predefined(what='inference header')
         # Split Holdout Set if defined / Add Time shift / Adress different environments
@@ -114,8 +116,8 @@ class Model(parent0, parent1, parent2, parent3, parent4, parent5):
                 utils.display_text_predefined(what='count bootstrap', current=boot_i, sum=bootstrap)
                 # Do the Bootstrap
                 self._xi = resample(self.xi, replace=True,
-                                    n_samples=int(self.xi.shape[0] * kwargs['bootstrap_ratio']),
-                                    random_state=kwargs['bootstrap_seed']+boot_i)
+                                    n_samples=int(self.xi.shape[0] * self._kwargs['bootstrap_ratio']),
+                                    random_state=self._kwargs['bootstrap_seed']+boot_i)
             self._numberrun = boot_i
             # Do real Bootstrap and not just Iterations TBD
             # Do the math

@@ -2,7 +2,7 @@
 
 # import built in libarys
 from copy import deepcopy
-
+from warnings import warn
 
 # import 3rd party libarys
 import numpy as np
@@ -29,6 +29,7 @@ class General():
         self._cmap = plt.get_cmap('Pastel1', 100)
         self._numberrun = 0
         self._config = {}
+        self._kwargs = None
 
     def check_and_init_attr(self, scale):
         """
@@ -106,9 +107,31 @@ class General():
         new_kwargs = {}
         if self._config['bootstrap'] > 0:
             new_kwargs = self.check_kwargs_declaration(kwargs, kwargskey='bootstrap_ratio', default_value=1)
-            assert 0 < kwargs['bootstrap_ratio'] <=1 , 'Bootstrap Ratio must be in range [0, 1]'
+            assert 0 < new_kwargs['bootstrap_ratio'] <=1 , 'Bootstrap Ratio must be in range [0, 1]'
             new_kwargs = self.check_kwargs_declaration(kwargs, kwargskey='bootstrap_seed', default_value=1)
-            assert isinstance(kwargs['bootstrap_seed'], int), 'Bootstrap Seed must be integer'
+            assert isinstance(new_kwargs['bootstrap_seed'], int), 'Bootstrap Seed must be integer'
+        if self._config['holdout'] > 0:
+            new_kwargs = self.check_kwargs_declaration(kwargs, kwargskey='holdout_ratio', default_value=0.2)
+            assert 0 < new_kwargs['holdout_ratio'] <=1 , 'Holdout Ratio must be in range [0, 1]'
+            new_kwargs = self.check_kwargs_declaration(kwargs, kwargskey='Holdout_seed', default_value=1)
+            assert isinstance(new_kwargs['holdout_seed'], int), 'Holdout Seed must be integer'
+        if self._xi.shape[0] < 50:
+            warn('WARNING: Less than 50 values remaining to fit the regression model')
+        else:
+            if (self._config['bootstrap'] > 0) and (self._config['holdout'] > 0):
+                if new_kwargs['bootstrap_ratio'] * (1 - new_kwargs['holdout_ratio']) * self._xi.shape[0] < 50:
+                    warn('WARNING: Less than 50 values remaining to fit the regression model, from bootstrap- and holdout_ratio')
+                if new_kwargs['bootstrap_ratio'] * (new_kwargs['holdout_ratio']) * self._xi.shape[0] < 50:
+                    warn('WARNING: Less than 50 values remaining to estimate the test statistics, from bootstrap- and holdout_ratio')
+            elif (self._config['bootstrap'] > 0):
+                if new_kwargs['bootstrap_ratio'] * self._xi.shape[0] < 50:
+                    warn('WARNING: Less than 50 values remaining to fit the regression model, from bootstrap_ratio')
+            elif (self._config['holdout'] > 0):
+                if (1 - new_kwargs['holdout_ratio']) * self._xi.shape[0] < 50:
+                    warn('WARNING: Less than 50 values remaining to fit the regression model, from holdout_ratio')
+                if (new_kwargs['holdout_ratio']) * self._xi.shape[0] < 50:
+                    warn('WARNING: Less than 50 values remaining to estimate the test statistics, from holdout_ratio')
+
         return(new_kwargs)
 
     def scaler_fit(self):

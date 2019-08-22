@@ -9,6 +9,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import pandas as pd
 import seaborn as sns
+from sklearn.model_selection import train_test_split
 
 # import local libarys
 from whypy.__packages.utils import utils
@@ -162,11 +163,20 @@ class RunANM():
         for combno in range(len(self._combinations)):
             tdep, tindep = self.get_tINdep(combno)
             model, X_data, Y_data = self.get_combination_objects(combno, tdep, tindep)
+            # Holdout if defined
+            if self._config['holdout'] is True:
+                xi_fit, xi_test = train_test_split(self._xi,
+                                                   test_size = self._kwargs['holdout_ratio'],
+                                                   random_state = self._kwargs['holdout_seed'],
+                                                   shuffle = False)
+                self._xi = xi_fit
             # fit regmod on observations
             self.fit_model2xi(combno, tdep, tindep, model, X_data, Y_data)
             # predict results
             self.predict_results(combno, tdep, tindep, model, X_data, Y_data)
             # do statistical tests
+            if self._config['holdout'] is True:
+                self._xi = xi_test
             self.test_statistics(combno, tdep, tindep, model, X_data, Y_data)
             # do independence test
 
