@@ -37,7 +37,7 @@ class RunANM():
         self._results = {}
         self._results_df = {}
 
-    def get_combination_objects(self, combno, tdep, tindep):
+    def get_combination_objects(self, combno, tdep, tindep, ids_list):
         """
         Method to return [X, Y and the regarding model], controlled by index combno,
         where i is in (0, number_of_combinations, 1).
@@ -47,8 +47,8 @@ class RunANM():
         scaling.
         """
         model = self._regmod[combno]
-        Y_data = np.copy(self._xi[:, tdep]).reshape(-1, 1)
-        X_data = np.copy(self._xi[:, tindep]).reshape(-1, len(tindep))
+        Y_data = np.copy(self._xi[ids_list, tdep]).reshape(-1, 1)
+        X_data = np.copy(self._xi[ids_list, tindep]).reshape(-1, len(tindep))
         return(model, X_data, Y_data)
 
     def fit_model2xi(self, combno, tdep, tindep, model, X_data, Y_data):
@@ -69,7 +69,7 @@ class RunANM():
             X_data = self.scaler_inverse_transform(X_data, tindep)
             Y_data = self.scaler_inverse_transform(Y_data, tdep)
 
-    def predict_results(self, combno, tdep, tindep, model, X_data, Y_data):
+    def predict_model(self, combno, tdep, tindep, model, X_data, Y_data):
         """
         Method to create further information on a fit. Returns a list for each
         fit including the following values:
@@ -83,24 +83,41 @@ class RunANM():
             X_data = self.scaler_transform(X_data, tindep)
             Y_data = self.scaler_transform(Y_data, tdep)
         # Get independent model data
-        modelpts = self._config['modelpts']
+        modelpts = self._kwargs['modelpts']
         X_model = self.get_Xmodel(X_data, modelpts)
         # Do Prediction
         Y_model = model.predict(X_model).reshape(-1, 1)
-        Y_predict = model.predict(X_data).reshape(-1, 1)
         # Scale data back
         if self._config['scale'] is True:
             X_data = self.scaler_inverse_transform(X_data, tindep)
             Y_data = self.scaler_inverse_transform(Y_data, tdep)
             X_model = self.scaler_inverse_transform(X_model, tindep)
             Y_model = self.scaler_inverse_transform(Y_model, tdep)
-            Y_predict = self.scaler_inverse_transform(Y_predict, tdep)
+        self._results['%i' % (self._numberrun)][combno]['X_model'] = X_model
+        self._results['%i' % (self._numberrun)][combno]['Y_model'] = Y_model
+
+    def predict_residuals(self, combno, tdep, tindep, model, X_data, Y_data):
+        """
+        Method to create further information on a fit. Returns a list for each
+        fit including the following values:
+        X_model:    # X values in linspace to plot the fitted model
+        Y_model:    # Y values in linspace to plot the fitted model
+        Y_predict:  predicted values of y given x
+        Residuals:  Y_data - Y_predict
+        """
+        # Scale data forward
+        if self._config['scale'] is True:
+            X_data = self.scaler_transform(X_data, tindep)
+        # Do Prediction
+        Y_predict = model.predict(X_data).reshape(-1, 1)
         # Scale data back
+        if self._config['scale'] is True:
+            X_data = self.scaler_inverse_transform(X_data, tindep)
+            Y_predict = self.scaler_inverse_transform(Y_predict, tdep)
+        # Get residuals
         Residuals = Y_data - Y_predict
-        self._results['%i' % (self._numberrun)][combno] = {'X_model': X_model,
-                                                           'Y_model': Y_model,
-                                                           'Y_predict': Y_predict,
-                                                           'Residuals': Residuals}
+        self._results['%i' % (self._numberrun)][combno]['Y_predict'] = Y_predict
+        self._results['%i' % (self._numberrun)][combno]['Residuals'] = Residuals
 
     def do_statistics(self, combno, obs_name, test_stat,
                       obs_valu1, obs_valu2=None):
@@ -157,35 +174,26 @@ class RunANM():
         # Fit Scaler
         if self._config['scale'] is True:
             self.scaler_fit()
-        # Initialize empty dictionary to be filled
+        # Initialize empty list to be filled
         self._results['%i' % (self._numberrun)] = utils.trans_object_to_list(None, len(self._combinations), dcopy=True)
-        # Holdout if defined
-        if self._config['holdout'] is True:
-            xi_original = deepcopy(self._xi)
-            # Get Holdout Index (ids)
-            ids_fit, ids_test = self.get_fit_test_index_ordered()
-            # Get Holdout for observations
-            xi_fit = self._xi[ids_fit, :]
-            xi_test = self._xi[ids_test, :]
         # Fit (scaled) models and do statistical tests
         for combno in range(len(self._combinations)):
-            # Holdout if defined
-            if self._config['holdout'] is True:
-                self._xi = xi_fit
+            # Initialize empty dictionary to be filled
+            self._results['%i' % (self._numberrun)][combno] = {}
             # Get Constants
             tdep, tindep = self.get_tINdep(combno)
-            model, X_data, Y_data = self.get_combination_objects(combno, tdep, tindep)
+            # Get Constants
+            model, X_data, Y_data = self.get_combination_objects(combno, tdep, tindep, self._ids_fit)
             # fit regmod on observations
             self.fit_model2xi(combno, tdep, tindep, model, X_data, Y_data)
-            # predict results
-            self.predict_results(combno, tdep, tindep, model, X_data, Y_data)
+            # predict model points
+            self.predict_model(combno, tdep, tindep, model, X_data, Y_data)
+            # Get Constants
+            model, X_data, Y_data = self.get_combination_objects(combno, tdep, tindep, self._ids_test)
+            # predict residuals
+            self.predict_residuals(combno, tdep, tindep, model, X_data, Y_data)
             # do statistical tests
-            if self._config['holdout'] is True:
-                self._xi = xi_test
             self.test_statistics(combno, tdep, tindep, model, X_data, Y_data)
-            # Regain original _xi
-            if self._config['holdout'] is True:
-                self._xi = deepcopy(xi_original)
 
 class PlotANM():
     """
@@ -212,10 +220,19 @@ class PlotANM():
         txt = r'X_{%i} \approx f\left( X_{%i}, E_{X}\right)' % (tdep, tindep)
         return(txt)
 
-    def plt_PairGrid(self, hue):
+    def plt_PairGrid(self):
         """
         Method to plot a PairGrid scatter of the observations.
         """
+        # Differentiate between holdout case
+        if self._config['holdout'] is True:
+            # Get Holdout for hue
+            hue = np.zeros((self._xi.shape[0], ))
+            hue[self._ids_fit] = 1
+            hue = hue.tolist()
+            hue = ['test' if i==0 else 'fit' for i in hue]
+        else:
+            hue = ['fit/test' for i in range(self._xi.shape[0])]
         df = pd.DataFrame(self._xi)
         df.columns = [r'$X_%i$' % (i) for i in range(self._xi.shape[1])]
         df = pd.concat([df, pd.DataFrame(hue, columns=['holdout'])], axis=1)
@@ -223,6 +240,7 @@ class PlotANM():
         g = g.map_diag(plt.hist, edgecolor="w")
         g = g.map_offdiag(plt.scatter, edgecolor="w", s=40, alpha=0.5)
         g = g.add_legend()
+        g.fig.set_size_inches(self._figsize)
         plt.show();
 
     def plt_1model_adv(self, combno, tdep, temp_i, tindep):
@@ -231,19 +249,39 @@ class PlotANM():
         residuals. Plot joint distribution and marginals.
         """
         txt = self.get_math_txt(combno, tdep, tindep)
-        g = sns.JointGrid(self._xi[:, tindep], self._xi[:, tdep],
+        # Jointgrid of Observations for Fit
+        g = sns.JointGrid(self._xi[self._ids_fit, tindep], self._xi[self._ids_fit, tdep],
                           height=self._figsize[0]*5/6,
                           ratio=int(5)
                           )
-        g.plot_joint(plt.scatter)
-        plt.plot(self._results['%i' % (self._numberrun)][combno]['X_model'][:, temp_i],
+        g.plot_joint(plt.scatter, edgecolor="w", s=40, alpha=0.5,
+                     c=self._colors[0])
+        # Plot of Model
+        plt.plot(self._results['%i' % (self._numberrun)][combno]['X_model'],
                  self._results['%i' % (self._numberrun)][combno]['Y_model'],
                  c='r')
-        plt.scatter(self._xi[:, tindep],
-                    self._results['%i' % (self._numberrun)][combno]['Residuals'])
-        plt.legend([r'$Model\ %s$' % (txt),
-                    r'$Observations$',
-                    r'$Residuals\ (X_{%i}-\hatX_{%i})$' % (tdep, tdep)])
+        # Differentiate between holdout case
+        if self._config['holdout'] is True:
+            # Scatter of Observations for Test
+            plt.scatter(self._xi[self._ids_test, tindep],
+                        self._xi[self._ids_test, tdep],
+                        marker='s', edgecolor="w", s=40, alpha=0.5,
+                        c=self._colors[1])
+            legend = [r'$Model\ %s$' % (txt),
+                      r'$Observations\ for\ Fit$',
+                      r'$Observations\ for\ Test$',
+                      r'$Residuals\ (X_{%i}-\hatX_{%i})$' % (tdep, tdep)]
+        else:
+            legend = [r'$Model\ %s$' % (txt),
+                      r'$Observations\ for\ Fit/Test$',
+                      r'$Residuals\ (X_{%i}-\hatX_{%i})$' % (tdep, tdep)]
+        # Scatter of Residuals
+        plt.scatter(self._xi[self._ids_test, tindep],
+                    self._results['%i' % (self._numberrun)][combno]['Residuals'],
+                    marker='D', edgecolor="w", s=40, alpha=0.8,
+                    c=self._colors[2])
+        # Further Plot Options
+        plt.legend(legend)
         plt.xlabel(r'$X_{%i}$' % (tindep))
         plt.ylabel(r'$X_{%i}$' % (tdep))
         g.plot_marginals(sns.distplot, kde=True)
@@ -257,15 +295,22 @@ class PlotANM():
         txt = self.get_math_txt(combno, tdep, tindep)
         plt.figure(r'Independence of Residuals: %s' % (txt),
                    figsize=self._figsize)
-        sns.distplot(self._xi[:, tindep],
-                     norm_hist=True)
+        if self._config['holdout'] is True:
+            sns.distplot(self._xi[self._ids_test, tindep],
+                         norm_hist=True,
+                         color=self._colors[1])
+        else:
+            sns.distplot(self._xi[self._ids_test, tindep],
+                         norm_hist=True,
+                         color=self._colors[0])
         sns.distplot(self._results['%i' % (self._numberrun)][combno]['Residuals'],
-                     norm_hist=True)
+                     norm_hist=True,
+                     color=self._colors[2])
         plt.legend([r'$X_{%i}$' % (tindep),
                     r'$Residuals\ (X_{%i}-\hatX_{%i})$' % (tdep, tdep)])
         plt.title(r'$\bf{Independence\ of\ Residuals:\ %s}$' % (txt))
         plt.xlabel(r'$X_{i}$')
-        plt.ylabel(r'$f\left(X_{i}\right)$')
+        plt.ylabel(r'$p\left(X_{i}\right)$')
         plt.show()
 
     def plt_hist_GoodnessFit(self, combno, tdep, temp_i, tindep):
@@ -276,40 +321,30 @@ class PlotANM():
         txt = self.get_math_txt(combno, tdep, tindep)
         plt.figure(r'Goodness of Fit: %s' % (txt),
                    figsize=self._figsize)
-        sns.distplot(self._xi[:, tdep],
-                     norm_hist=True)
+        sns.distplot(self._xi[self._ids_fit, tdep],
+                     norm_hist=True,
+                     hist_kws={"alpha": 0.3},
+                     color=self._colors[0])
         sns.distplot(self._results['%i' % (self._numberrun)][combno]['Y_predict'],
-                     norm_hist=True)
+                     norm_hist=False,
+                     hist_kws={"alpha": 0.7},
+                     color=self._colors[0],
+                     kde_kws={"linestyle": "--"})
         plt.legend([r'$X_{%i}$' % (tdep),
                     r'$\hatX_{%i}$' % (tdep)])
         plt.title(r'$\bf{Goodness\ of\ Fit:\ %s}$' % (txt))
         plt.xlabel(r'$X_{%i}$' % (tdep))
-        plt.ylabel(r'$f\left(X_{i}\right)$')
+        plt.ylabel(r'$p\left(X_{i}\right)$')
         plt.show()
 
     def plot_inference(self):
         """
         Method to visualize the interference
         """
-        # Holdout if defined
-        if self._config['holdout'] is True:
-            xi_original = deepcopy(self._xi)
-            # Get Holdout Index (ids)
-            ids_fit, ids_test = self.get_fit_test_index_ordered()
-            # Get Holdout for observations
-            xi_fit = self._xi[ids_fit, :]
-            xi_test = self._xi[ids_test, :]
-            # Get Holdout for hue
-            hue = np.zeros((self._xi.shape[0], ))
-            hue[ids_fit] = 1
-            hue = hue.tolist()
-            hue = ['test' if i==0 else 'fit' for i in hue]
-        else:
-            hue = ['fit/test' for i in range(self._xi.shape[0])]
         utils.display_text_predefined(what='visualization header')
         # Pairgrid Plot of Observations
         utils.display_text_predefined(what='pairgrid header')
-        self.plt_PairGrid(hue)
+        self.plt_PairGrid()
         # Iterate over combinations
         for combno in range(len(self._combinations)):
             tdep, tindep = self.get_tINdep(combno)
@@ -318,21 +353,12 @@ class PlotANM():
                                           tdep=tdep, tindep=tindep)
            # Iterate over independent variables
             for temp_i, temp_tindep in enumerate(tindep):
-                # Holdout if defined
-                if self._config['holdout'] is True:
-                    self._xi = xi_fit
                 # Plot Tindep vs Tdep
                 utils.display_text_predefined(what='combination minor header',
                                               tdep=tdep, tindep=temp_tindep)
                 self.plt_1model_adv(combno, tdep, temp_i, temp_tindep)
-                # Holdout if defined
-                if self._config['holdout'] is True:
-                    self._xi = xi_test
                 self.plt_hist_IndepResiduals(combno, tdep, temp_i, temp_tindep)
             self.plt_hist_GoodnessFit(combno, tdep, temp_i, temp_tindep)
-        # Regain original _xi
-        if self._config['holdout'] is True:
-            self._xi = deepcopy(xi_original)
 
 
 class ResultsANM():

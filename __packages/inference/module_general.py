@@ -28,6 +28,7 @@ class General():
         """
         self._figsize = (10, 7.071)
         self._cmap = plt.get_cmap('Pastel1', 100)
+        self._colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
         self._numberrun = 0
         self._config = {}
         self._kwargs = None
@@ -105,6 +106,7 @@ class General():
         """
         Method to check and init the run-methods kwargs
         """
+        # Init Kwargs
         new_kwargs = {}
         if self._config['bootstrap'] > 0:
             new_kwargs = self.check_kwargs_declaration(kwargs, kwargskey='bootstrap_ratio', default_value=1)
@@ -116,6 +118,8 @@ class General():
             assert 0 < new_kwargs['holdout_ratio'] <=1 , 'Holdout Ratio must be in range [0, 1]'
             new_kwargs = self.check_kwargs_declaration(kwargs, kwargskey='holdout_seed', default_value=1)
             assert isinstance(new_kwargs['holdout_seed'], int), 'Holdout Seed must be integer'
+        new_kwargs = self.check_kwargs_declaration(kwargs, kwargskey='modelpts', default_value=50)
+        # Check and display Warnings
         if self._xi.shape[0] < 50:
             warn('WARNING: Less than 50 values remaining to fit the regression model')
         else:
@@ -133,6 +137,24 @@ class General():
                 if (new_kwargs['holdout_ratio']) * self._xi.shape[0] < 50:
                     warn('WARNING: Less than 50 values remaining to estimate the test statistics, from holdout_ratio')
         return(new_kwargs)
+
+    def check_init_holdout(self):
+        """
+        Method to get indexes of fit and test split ordered. Based on length of
+        current self._xi
+        """
+        if self._config['holdout'] is True:
+            ids_fit, ids_test = train_test_split(np.arange(0, self._xi.shape[0], 1),
+                                                 test_size = self._kwargs['holdout_ratio'],
+                                                 random_state = self._kwargs['holdout_seed'],
+                                                 shuffle = True)
+            ids_fit = np.sort(ids_fit).tolist()
+            ids_test = np.sort(ids_test).tolist()
+        else:
+            ids_fit = np.arange(0, self._xi.shape[0], 1).tolist()
+            ids_test = ids_fit
+        self._ids_fit = ids_fit
+        self._ids_test = ids_test
 
     def scaler_fit(self):
         """
@@ -181,15 +203,15 @@ class General():
         X_model = X_model.reshape(-1, 1)
         return(X_model)
 
-    def get_fit_test_index_ordered(self):
-        """
-        Method to get indexes of fit and test split ordered. Based on lenth of
-        current self._xi
-        """
-        ids_fit, ids_test = train_test_split(np.arange(0, self._xi.shape[0], 1),
-                                             test_size = self._kwargs['holdout_ratio'],
-                                             random_state = self._kwargs['holdout_seed'],
-                                             shuffle = True)
-        ids_fit = np.sort(ids_fit)
-        ids_test = np.sort(ids_test)
-        return(ids_fit, ids_test)
+    # def get_fit_test_index_ordered(self):
+    #     """
+    #     Method to get indexes of fit and test split ordered. Based on lenth of
+    #     current self._xi
+    #     """
+    #     ids_fit, ids_test = train_test_split(np.arange(0, self._xi.shape[0], 1),
+    #                                          test_size = self._kwargs['holdout_ratio'],
+    #                                          random_state = self._kwargs['holdout_seed'],
+    #                                          shuffle = True)
+    #     ids_fit = np.sort(ids_fit)
+    #     ids_test = np.sort(ids_test)
+    #     return(ids_fit, ids_test)
