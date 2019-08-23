@@ -502,35 +502,36 @@ class ResultsANM():
         # Get Dictionary
         df_dependence = self.get_df_dependence(testkey, removeList=False)
         # Init Plot
-        plt.figure('Combination Boxplot', figsize=[self._figsize[0], self._figsize[1]/1.5])
+        plt.figure('Combination Boxplot', figsize=[self._figsize[0], self._figsize[1]*(len(self._combinations)/9)])
         if 'p-value' in self.attr_dict[self._config['testtype']]:
-            plt.yscale('log')
+            plt.xscale('log')
             lbl = r'$dependence \leftarrow\ p-value\ \rightarrow independence$'
         elif 'likelihood-ratio' in self.attr_dict[self._config['testtype']]:
             lbl = r'$not favored \leftarrow\ likelihood-ratio\ \rightarrow favored$'
         # Get Data for each bivariate case from dictionary
-        x_data = np.arange(0.5, df_dependence.shape[0]+0.5, 1)
+        x_data = np.arange(-0.5, -(df_dependence.shape[0]+0.5), -1)
         y_data = [jload(bivacomp[-1]) for i, bivacomp in df_dependence.iterrows()]
-        labels_box = [r'$\bf{%i}:$' % (i) + '\n%s' % (bivacomp[1]) for i, bivacomp in df_dependence.iterrows()]
+        labels_box = [r'$\bf{%i}:$' % (i) + ' %s' % (bivacomp[1]) for i, bivacomp in df_dependence.iterrows()]
         combnos = [bivacomp[0] for i, bivacomp in df_dependence.iterrows()]
         # Get Unique combinations and give number to them
         combno_unique = set(combnos)
         combno_unique = {key: i for i, key in enumerate(combno_unique)}
         # Background Color different bivariate cases from same combinations
         for i, combno in enumerate(combnos):
-            plt.axvspan(x_data[i]-1/3, x_data[i]+1/3,
-                        facecolor=self._cmap(combno_unique[combno]/len(combno_unique)), alpha=0.5)
+            plt.axhspan(x_data[i]-1/3, x_data[i]+1/3,
+                        facecolor=self._cmap(combno_unique[combno]/(len(combno_unique)-1)), alpha=1)
         plt.legend(combnos,
-                   loc='upper center',
-                   bbox_to_anchor=(0.5, -0.25),
-                   ncol=3)
+                   loc='center right',
+                   bbox_to_anchor=(1.2, 0.5),
+                   ncol=1)
         # Boxplot
-        plt.boxplot(y_data, positions=x_data, labels=labels_box)
+        plt.boxplot(y_data, positions=x_data, labels=labels_box, vert=False,
+                    patch_artist=True)
         # Further Plot Settings
         plt.title(r'BoxPlot', fontweight='bold')
         plt.tick_params(labelbottom=True)
         plt.tick_params(right=False, top=False, left=True, bottom=False)
-        plt.ylabel(lbl)
+        plt.xlabel(lbl)
         plt.show()
 
     def plot_results(self, number_run=False):

@@ -106,7 +106,7 @@ class Model(parent0, parent1, parent2, parent3, parent4, parent5):
         self._kwargs = self.check_init_kwargs(kwargs)
         self._config['**kwargs'] = str(self._kwargs)
         # Check and Init Holdout Lists
-        self.check_init_holdout()
+        self.check_init_holdout_ids()
         # Display Start of Causal Inference
         utils.display_text_predefined(what='inference header')
         # Split Holdout Set if defined / Add Time shift / Adress different environments

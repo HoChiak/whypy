@@ -138,7 +138,7 @@ class General():
                     warn('WARNING: Less than 50 values remaining to estimate the test statistics, from holdout_ratio')
         return(new_kwargs)
 
-    def check_init_holdout(self):
+    def check_init_holdout_ids(self):
         """
         Method to get indexes of fit and test split ordered. Based on length of
         current self._xi
