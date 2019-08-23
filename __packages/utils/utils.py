@@ -64,43 +64,69 @@ def display_text_predefined(what, **kwargs):
     """
     if 'inference header' in what:
             text = r"""
+<html>
+<body>
 <div style="background-color:black;color:white;padding:8px;letter-spacing:1em;" align="center">
 <h2>Run   Causal   Inference</h2>
 </div>
+</body>
+</html>
                     """
-    if 'count bootstrap' in what:
+    elif 'count bootstrap' in what:
             text = r"""
+<html>
+<body>
 <div style="background-color:grey;color:white;padding:4px;" align="center">
 <h3>Bootstrap: %i / %i</h3>
 </div>
+</body>
+</html>
                     """ % (kwargs['current']+1, kwargs['sum'])
     elif 'visualization header' in what:
             text = r"""
+<html>
+<body>
 <div style="background-color:black;color:white;padding:8px;letter-spacing:1em;" align="center">
 <h2>INFERENCE   VISUALIZATION</h2>
 </div>
+</body>
+</html>
                     """
     elif 'pairgrid header' in what:
         text = r"""
+<html>
+<body>
 <div style="background-color:grey;color:white;padding:4px;" align="center">
 <h3>PAIRGRID ALL VARIABLES</h3>
 </div>
+</body>
+</html>
                 """
     elif 'combination major header' in what:
         text = r"""
+<html>
+<body>
 
 <div style="background-color:grey;color:white;padding:4px;" align="center">
 <h3>Fitted Combination: X<sub>%i</sub> ~ f(X<sub>%s</sub>)</h3>
 </div>
+</body>
+</html>
                 """ % (kwargs['tdep'], str(kwargs['tindep']))
     elif 'combination minor header' in what:
         text = r"""
+<html>
+<body>
 <div style="background-color:lightgrey;color:black;padding:0px;" align="center">
 <h4>2D Visualisation for: X<sub>%i</sub> ~ f(X<sub>%s</sub>)</h4>
 </div>
+</body>
+</html>
                 """ % (kwargs['tdep'], kwargs['tindep'])
     elif 'result header' in what:
         text = r"""
+<html>
+<body>
 <style>
 table td, table th, table tr {text-align:left !important;}
 </style>
@@ -123,23 +149,35 @@ table td, table th, table tr {text-align:left !important;}
         text = r"""
  %s
 </table>
+</body>
+</html>
                 """ % (text)
     elif 'normality' in what:
         text = r"""
+<html>
+<body>
 </div>
 <div style="background-color:grey;color:white;padding:4px;" align="center">
 <h3>Normality Test</h3>
 </div>
+</body>
+</html>
                 """
     elif 'dependence residuals' in what:
         text = r"""
+<html>
+<body>
 </div>
 <div style="background-color:grey;color:white;padding:4px;" align="center">
 <h3>Dependence: Indep. Variable - Residuals</h3>
 </div>
+</body>
+</html>
                 """
     elif 'dependence prediction' in what:
         text = r"""
+<html>
+<body>
 </div>
 <div style="background-color:grey;color:white;padding:4px;" align="center">
 <h3>Dependence: Depen. Variable - Prediction (GoF)</h3>
@@ -147,9 +185,13 @@ table td, table th, table tr {text-align:left !important;}
                 """
     elif 'thirdlevel' in what:
         text = r"""
+<html>
+<body>
 <div style="background-color:lightgrey;color:black;padding:0px;" align="center">
 <h4>%s</h4>
 </div>
+</body>
+</html>
                 """ % (kwargs['key'])
     display(HTML(text))
 
@@ -163,6 +205,35 @@ def display_df(df, fontsize='6pt'):
     # display(HTML("<style>.container { width:100% !important; }</style>"))
     display(HTML(df.to_html()))
 
+def display_get_params(name, params):
+    """
+    """
+    text = r"""
+    <html>
+    <body>
+    <style>
+    table td, table th, table tr {text-align:left !important;}
+    </style>
+    <div style="background-color:lightgrey;color:black;padding:0px;" align="center">
+    <h4>%s</h4>
+    </div>
+    <table>
+            """ % (name)
+    for temp_key, temp_value in params.items():
+        text = r"""
+    %s
+    <tr>
+    <td align="left"><b>%s:</b></td>
+    <td>%s</td>
+    </tr>
+                """ %(text, temp_key, str(temp_value))
+    text = r"""
+     %s
+    </table>
+    </body>
+    </html>
+            """ % (text)
+    display(HTML(text))
 
 
 

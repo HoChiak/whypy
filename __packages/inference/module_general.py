@@ -3,6 +3,8 @@
 # import built in libarys
 from copy import deepcopy
 from warnings import warn
+from contextlib import contextmanager
+import sys, os
 
 # import 3rd party libarys
 import numpy as np
@@ -155,6 +157,22 @@ class General():
             ids_test = ids_fit
         self._ids_fit = ids_fit
         self._ids_test = ids_test
+
+    @contextmanager
+    def suppress_stdout(self):
+        """
+        Method to temporarily suppress consle output
+        By: Dave Smith's Blog
+        https://thesmithfam.org/blog/2012/10/25/
+        temporarily-suppress-console-output-in-python/
+        """
+        with open(os.devnull, "w") as devnull:
+            old_stdout = sys.stdout
+            sys.stdout = devnull
+            try:
+                yield
+            finally:
+                sys.stdout = old_stdout
 
     def scaler_fit(self):
         """

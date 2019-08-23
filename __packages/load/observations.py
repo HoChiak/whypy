@@ -5,15 +5,48 @@
 
 # import 3rd party libarys
 import numpy as np
-from sklearn.svm import SVR
-from sklearn.preprocessing import MinMaxScaler, StandardScaler
-from pygam import LinearGAM, s, f, l
+from IPython.display import display, HTML
 
 # import local libarys
 from whypy.__packages.utils import utils
 
 
 ###############################################################################
+def get_desc(modelclass, no_var, cl_func, cl_Noise, SCM):
+    desc = """
+<html>
+<body>
+<style>
+table td, table th, table tr {text-align:left !important;}
+</style>
+<div style="background-color:lightgrey;color:black;padding:0px;" align="center">
+<h4>Description</h4>
+</div>
+<table>
+<tr>
+<td><b>Modelclass:</b></td> <td>%i</td>
+</tr>
+<tr>
+<td><b>No. of Variables:</b></td> <td>%i</td>
+</tr>
+<tr>
+<td><b>Class of Functions:</b></td> <td>%s</td>
+</tr>
+<tr>
+<td><b>Class of Noise Distribution:</b></td> <td>%s</td>
+</tr>
+<tr>
+<td><b>SCM</b></td> <td>
+%s
+</td>
+</tr>
+</table>
+</body>
+</html>
+             """ % (modelclass, no_var, cl_func, cl_Noise, SCM)
+    return(desc)
+
+
 def observations(modelclass, no_obs=100, seed=None):
     """
     Method to load ovbservations. In the 2 variable case there are restrictions
@@ -34,15 +67,13 @@ def observations(modelclass, no_obs=100, seed=None):
     """
     np.random.seed(seed=seed)
     # model class 1
-    if modelclass == '2VLiNGAM':
-        desc = """
-Modelclass '2VLiNGAM':
-No. of variables:\t 2
-Class of functions:\t Linear,
-Class of noise distr:\t Non-Gaussian (here Uniform), Additive, non equivalent
-SCM -> \tX0 ~ [U(0.4)]
-       \tX1 ~ [2*X0 + U(0.2)]
-               """
+    if modelclass == 1:
+        desc = get_desc(modelclass, no_var=2,
+                        cl_func = 'Linear',
+                        cl_Noise = 'Uniform, Additive, Non-Equivalent',
+                        SCM = """<p>X<sub>0</sub> ~ [ 0.4 * <strong><i>U</i></strong> (0, 5) ]</p>
+                                 <p>X<sub>1</sub> ~ [ 2 * X<sub>0</sub> + 0.2 * <strong><i>U</i></strong> (0, 5) ]</p>""")
+        Edge_list = [['X_0', 'X_1']]
         X0 = np.array(0.4 * np.random.uniform(0, 5, no_obs))
         X1 = np.array(2 * X0 + 0.2 * np.random.uniform(0, 5, no_obs))
         X0 = X0.reshape(-1, 1)
@@ -50,32 +81,30 @@ SCM -> \tX0 ~ [U(0.4)]
         xi = np.concatenate([X0, X1], axis=1)
         no_var = xi.shape[1]
     # model class 2
-    elif modelclass == '2VNLiGAM':
-        desc = """
-Modelclass '2VNLiGAM':
-No. of variables:\t 2
-Class of functions:\t Non-Linear,
-Class of noise distr:\t Gaussian, Additive, equivalent
-SCM -> \tX0 ~ [5 + G(0, 2.25)]
-       \tX1 ~ [X0^3 + G(0, 0.25)]
-               """
+    elif modelclass == 2:
+        desc = get_desc(modelclass, no_var=2,
+                        cl_func = 'Non-Linear',
+                        cl_Noise = 'Gaussian, Additive, Non-Equivalent',
+                        SCM = """<p>X<sub>0</sub> ~ [ <strong><i>N</i></strong> (5, 0.25) ]</p>
+                                 <p>X<sub>1</sub> ~ [ X<sub>0</sub><sup>3</sup> + <strong><i>N</i></strong> (0, 2.25) ]</p>""")
+        Edge_list = [['X_0', 'X_1']]
         X0 = np.array(5 + 0.5 * np.random.randn(no_obs))
-        X1 = np.array(X0**3 + 0.5 * np.random.randn(no_obs))
+        X1 = np.array(X0**3 + 1.5 * np.random.randn(no_obs))
         X0 = X0.reshape(-1, 1)
         X1 = X1.reshape(-1, 1)
         xi = np.concatenate([X0, X1], axis=1)
         no_var = xi.shape[1]
     # model class 3
-    elif modelclass == '3VLiNGAM':
-        desc = """
-Modelclass '3VLiNGAM':
-No. of variables:\t 3
-Class of functions:\t Linear,
-Class of noise distr:\t Non-Gaussian, Additive, non equivalent
-SCM -> \tX0 ~ [5 + U(0.4)]
-       \tX1 ~ [X0 + U(0.6)]
-       \tX2 ~ [X0 + X1 + U(0.2)]
-               """
+    elif modelclass == 3:
+        desc = get_desc(modelclass, no_var=3,
+                        cl_func = 'Linear',
+                        cl_Noise = 'Uniform, Additive, Non-Equivalent',
+                        SCM = """<p>X<sub>0</sub> ~ [ 5 + 0.4 * <strong><i>U</i></strong> (0, 5) ]</p>
+                                 <p>X<sub>1</sub> ~ [ X<sub>0</sub> + 0.6 * <strong><i>U</i></strong> (0, 5) ]</p>
+                                 <p>X<sub>2</sub> ~ [ X<sub>0</sub> + X<sub>1</sub> + 0.2 * <strong><i>U</i></strong> (0, 5) ]</p>""")
+        Edge_list = [['X_0', 'X_1'],
+                     ['X_0', 'X_2'],
+                     ['X_1', 'X_2']]
         X0 = np.array(5 + 0.4 * np.random.uniform(0, 5, no_obs))
         X1 = np.array(X0 + 0.6 * np.random.uniform(0, 5, no_obs))
         X2 = np.array(X0 + X1 + 0.2 * np.random.uniform(0, 5, no_obs))
@@ -85,16 +114,16 @@ SCM -> \tX0 ~ [5 + U(0.4)]
         xi = np.concatenate([X0, X1, X2], axis=1)
         no_var = xi.shape[1]
     # model class 4
-    elif modelclass == '3VLiGAM':
-        desc = """
-Modelclass '3VLiGAM':
-No. of variables:\t 3
-Class of functions:\t Linear,
-Class of noise distr:\t Gaussian, Additive, non equivalent
-SCM -> \tX0 ~ [G(5, 0.25)]
-       \tX1 ~ [X0*3 + G(0, 0.16)]
-       \tX2 ~ [X0*4 + X1*3 + G(0, 0.09)]
-               """
+    elif modelclass == 4:
+        desc = get_desc(modelclass, no_var=3,
+                        cl_func = 'Non-Linear',
+                        cl_Noise = 'Gaussian, Additive, Non-Equivalent',
+                        SCM = """<p>X<sub>0</sub> ~ [ <strong><i>N</i></strong> (5, 0.25) ]</p>
+                                 <p>X<sub>1</sub> ~ [ X<sub>0</sub><sup>3</sup> + <strong><i>N</i></strong> (0, 0.16) ]</p>
+                                 <p>X<sub>2</sub> ~ [ X<sub>0</sub><sup>4</sup> + X<sub>1</sub><sup>3</sup> + <strong><i>N</i></strong> (0, 0.09) ]</p>""")
+        Edge_list = [['X_0', 'X_1'],
+                     ['X_0', 'X_2'],
+                     ['X_1', 'X_2']]
         X0 = np.array(5 + 0.5 * np.random.randn(no_obs))
         X1 = np.array(X0*3 + 0.4 * np.random.randn(no_obs))
         X2 = np.array(X0*4 + X1*3 + 0.3 * np.random.randn(no_obs))
@@ -104,16 +133,13 @@ SCM -> \tX0 ~ [G(5, 0.25)]
         xi = np.concatenate([X0, X1, X2], axis=1)
         no_var = xi.shape[1]
     # model class 5.0
-    elif modelclass == '3VNLiGAM-collider':
-        desc = """
-Modelclass '3VNLiGAM':
-No. of variables:\t 3
-Class of functions:\t Non-Linear,
-Class of noise distr:\t Gaussian, Additive, non equivalent
-SCM -> \tX0 ~ [G(1, 2.25)]
-       \tX1 ~ [G(0, 2.25)]
-       \tX2 ~ [X0^4 + X1^2 + G(0, 0.25)]
-               """
+    elif modelclass == 5:
+        desc = get_desc(modelclass, no_var=3,
+                        cl_func = 'Non-Linear',
+                        cl_Noise = 'Gaussian, Additive, Non-Equivalent',
+                        SCM = """<p>X<sub>0</sub> ~ [ <strong><i>N</i></strong> (1, 0.25) ]</p>
+                                 <p>X<sub>1</sub> ~ [ <strong><i>N</i></strong> (0, 2.25) ]</p>
+                                 <p>X<sub>2</sub> ~ [ X<sub>0</sub><sup>4</sup> + X<sub>1</sub><sup>2</sup> + <strong><i>N</i></strong> (0, 0.25) ]</p>""")
         Edge_list = [['X_0', 'X_2'],
                      ['X_1', 'X_2']]
         X0 = np.array(1 + 0.5 * np.random.randn(no_obs))
@@ -125,16 +151,13 @@ SCM -> \tX0 ~ [G(1, 2.25)]
         xi = np.concatenate([X0, X1, X2], axis=1)
         no_var = xi.shape[1]
     # model class 5.1
-    elif modelclass == '3VNLiGAM-rev-collider':
-        desc = """
-Modelclass '3VNLiGAM':
-No. of variables:\t 3
-Class of functions:\t Non-Linear,
-Class of noise distr:\t Gaussian, Additive, non equivalent
-SCM -> \tX0 ~ [G(1, 2.25)]
-       \tX1 ~ [X0^4 + G(0, 2.25)]
-       \tX2 ~ [X0^3 + G(0, 0.25)]
-               """
+    elif modelclass == 6:
+        desc = get_desc(modelclass, no_var=3,
+                        cl_func = 'Non-Linear',
+                        cl_Noise = 'Gaussian, Additive, Non-Equivalent',
+                        SCM = """<p>X<sub>0</sub> ~ [ <strong><i>N</i></strong> (1, 0.25) ]</p>
+                                 <p>X<sub>1</sub> ~ [ X<sub>0</sub><sup>4</sup> + <strong><i>N</i></strong> (0, 2.25) ]</p>
+                                 <p>X<sub>2</sub> ~ [ X<sub>0</sub><sup>3</sup> + <strong><i>N</i></strong> (0, 0.25) ]</p>""")
         Edge_list = [['X_0', 'X_1'],
                      ['X_0', 'X_2']]
         X0 = np.array(1 + 0.5 * np.random.randn(no_obs))
@@ -146,16 +169,13 @@ SCM -> \tX0 ~ [G(1, 2.25)]
         xi = np.concatenate([X0, X1, X2], axis=1)
         no_var = xi.shape[1]
     # model class 5.2
-    elif modelclass == '3VNLiGAM-confounded':
-        desc = """
-Modelclass '3VNLiGAM':
-No. of variables:\t 3
-Class of functions:\t Non-Linear,
-Class of noise distr:\t Gaussian, Additive, non equivalent
-SCM -> \tX0 ~ [G(1, 2.25)]
-       \tX1 ~ [X0^4 + G(0, 2.25)]
-       \tX2 ~ [X0^4 + X1^2 + G(0, 0.25)]
-               """
+    elif modelclass == 7:
+        desc = get_desc(modelclass, no_var=3,
+                        cl_func = 'Non-Linear',
+                        cl_Noise = 'Gaussian, Additive, Non-Equivalent',
+                        SCM = """<p>X<sub>0</sub> ~ [ <strong><i>N</i></strong> (1, 0.25) ]</p>
+                                 <p>X<sub>1</sub> ~ [ X<sub>0</sub><sup>4</sup> + <strong><i>N</i></strong> (0, 2.25) ]</p>
+                                 <p>X<sub>2</sub> ~ [ X<sub>0</sub><sup>4</sup> + X<sub>1</sub><sup>2</sup> + <strong><i>N</i></strong> (0, 0.25) ]</p>""")
         Edge_list = [['X_0', 'X_1'],
                      ['X_0', 'X_2'],
                      ['X_1', 'X_2']]
@@ -168,16 +188,13 @@ SCM -> \tX0 ~ [G(1, 2.25)]
         xi = np.concatenate([X0, X1, X2], axis=1)
         no_var = xi.shape[1]
     # model class 5.3
-    elif modelclass == '3VNLiGAM-series':
-        desc = """
-Modelclass '3VNLiGAM':
-No. of variables:\t 3
-Class of functions:\t Non-Linear,
-Class of noise distr:\t Gaussian, Additive, non equivalent
-SCM -> \tX0 ~ [G(1, 2.25)]
-       \tX1 ~ [X0^4 + G(0, 2.25)]
-       \tX2 ~ [X1^2 + G(0, 0.25)]
-               """
+    elif modelclass == 8:
+        desc = get_desc(modelclass, no_var=3,
+                        cl_func = 'Non-Linear',
+                        cl_Noise = 'Gaussian, Additive, Non-Equivalent',
+                        SCM = """<p>X<sub>0</sub> ~ [ <strong><i>N</i></strong> (1, 0.25) ]</p>
+                                 <p>X<sub>1</sub> ~ [ X<sub>0</sub><sup>4</sup> + <strong><i>N</i></strong> (0, 2.25) ]</p>
+                                 <p>X<sub>2</sub> ~ [ X<sub>1</sub><sup>2</sup> + <strong><i>N</i></strong> (0, 0.25) ]</p>""")
         Edge_list = [['X_0', 'X_1'],
                      ['X_1', 'X_2']]
         X0 = np.array(1 + 0.5 * np.random.randn(no_obs))
@@ -189,16 +206,13 @@ SCM -> \tX0 ~ [G(1, 2.25)]
         xi = np.concatenate([X0, X1, X2], axis=1)
         no_var = xi.shape[1]
     # model class 5.4
-    elif modelclass == '3VNLiGAM-none':
-        desc = """
-Modelclass '3VNLiGAM':
-No. of variables:\t 3
-Class of functions:\t Non-Linear,
-Class of noise distr:\t Gaussian, Additive, non equivalent
-SCM -> \tX0 ~ [G(1, 2.25)]
-       \tX1 ~ [G(4, 2.25)]
-       \tX2 ~ [G(2, 0.25)]
-               """
+    elif modelclass == 9:
+        desc = get_desc(modelclass, no_var=3,
+                        cl_func = 'Non-Linear',
+                        cl_Noise = 'Gaussian, Additive, Non-Equivalent',
+                        SCM = """<p>X<sub>0</sub> ~ [ <strong><i>N</i></strong> (1, 0.25) ]</p>
+                                 <p>X<sub>1</sub> ~ [ <strong><i>N</i></strong> (0, 2.25) ]</p>
+                                 <p>X<sub>2</sub> ~ [ <strong><i>N</i></strong> (0, 0.25) ]</p>""")
         Edge_list = []
         X0 = np.array(1 + 0.5 * np.random.randn(no_obs))
         X1 = np.array(4 + 1.5 * np.random.randn(no_obs))
@@ -209,17 +223,17 @@ SCM -> \tX0 ~ [G(1, 2.25)]
         xi = np.concatenate([X0, X1, X2], axis=1)
         no_var = xi.shape[1]
     # model class 6
-    elif modelclass == '4VNLiGAM':
-        desc = """
-Modelclass '3VNLiGAM':
-No. of variables:\t 3
-Class of functions:\t Non-Linear,
-Class of noise distr:\t Gaussian, Additive, non equivalent
-SCM -> \tX0 ~ [G(1, 2.25)]
-       \tX1 ~ [X0^3 + G(0, 2.25)]
-       \tX2 ~ [X0^3 + X1^2 + G(0, 0.25)]
-       \tX3 ~ [G(2, 0.125)]
-               """
+    elif modelclass == 10:
+        desc = get_desc(modelclass, no_var=4,
+                        cl_func = 'Non-Linear',
+                        cl_Noise = 'Gaussian, Additive, Non-Equivalent',
+                        SCM = """<p>X<sub>0</sub> ~ [ <strong><i>N</i></strong> (1, 0.25) ]</p>
+                                 <p>X<sub>1</sub> ~ [ X<sub>0</sub><sup>4</sup> + <strong><i>N</i></strong> (0, 2.25) ]</p>
+                                 <p>X<sub>2</sub> ~ [ X<sub>0</sub><sup>4</sup> + X<sub>1</sub><sup>2</sup> + <strong><i>N</i></strong> (0, 0.25) ]</p>
+                                 <p>X<sub>3</sub> ~ [ <strong><i>N</i></strong> (2, 0.25) ]</p>""")
+        Edge_list = [['X_0', 'X_1'],
+                     ['X_0', 'X_2'],
+                     ['X_1', 'X_2']]
         X0 = np.array(1 + 0.5 * np.random.randn(no_obs))
         X1 = np.array(X0**4 + 1.5 * np.random.randn(no_obs))
         X2 = np.array(X0**4 + X1**2 + 0.5 * np.random.randn(no_obs))
@@ -236,7 +250,10 @@ SCM -> \tX0 ~ [G(1, 2.25)]
     Node_list = np.arange(0, no_var, 1)
     Node_list = [r'X_%i' % (t) for t in Node_list]
     # Plot correct Causal Graph
-    print('CAUSAL GRAPH:')
+    display(HTML(desc))
+    display(HTML("""
+    <div style="background-color:lightgrey;color:black;padding:0px;" align="center">
+    <h4>Causal Graph</h4>
+    </div>"""))
     utils.plot_DAG(Edge_list, Node_list)
-    print(desc)
     return(xi)

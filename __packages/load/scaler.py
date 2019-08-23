@@ -18,7 +18,8 @@ def minmax():
     RETURN:
     scaler
     """
-    scaler = MinMaxScaler(feature_range=(0, 1), copy=False)
+    scaler = MinMaxScaler(feature_range=(0, 1), copy=True)
+    utils.display_get_params('MinMaxScaler Description', scaler.get_params())
     return(scaler)
 
 
@@ -29,5 +30,6 @@ def standard():
     RETURN:
     scaler
     """
-    scaler = StandardScaler(copy=False)
+    scaler = StandardScaler(copy=True)
+    utils.display_get_params('StandardScaler Description', scaler.get_params())
     return(scaler)

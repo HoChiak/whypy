@@ -35,10 +35,11 @@ def lingam(term='spline'):
         regmod = LinearGAM(f(0))
     else:
         raise ValueError('Given Gam term unknown')
+    utils.display_get_params('LinearGAM Model Description', regmod.get_params())
     return(regmod)
 
 
-def svr(no_obs, term='poly4'):
+def svr(term='poly4'):
     """
     Method to load unfitted SVR models of type modelclass
 
@@ -49,19 +50,20 @@ def svr(no_obs, term='poly4'):
     model
     """
     if term == 'linear':
-        regrmodl[tdep][tindep] = SVR(kernel='linear',
-                                     gamma='auto_deprecated',
-                                     C=1.0, epsilon=0.1)
+        regmod = SVR(kernel='linear',
+                      gamma='auto_deprecated',
+                      C=1.0, epsilon=0.1)
     # SVR with poly kernel
     elif term == 'poly2':
-        regrmodl[tdep][tindep] = SVR(kernel='poly', degree=2,
-                                     gamma=0.8,
-                                     C=0.8, epsilon=0.1)
+        regmod = SVR(kernel='poly', degree=2,
+                      gamma=0.8,
+                      C=0.8, epsilon=0.1)
     # GAM with factor term
     elif term == 'poly4':
-        regrmodl[tdep][tindep] = SVR(kernel='poly', degree=4,
-                                     gamma=0.8,
-                                     C=0.8, epsilon=0.1)
+        regmod = SVR(kernel='poly', degree=4,
+                      gamma=0.8,
+                      C=0.8, epsilon=0.1)
     else:
         raise ValueError('Term unknown')
-    return(regrmodl)
+    utils.display_get_params('SVR Model Description', regmod.get_params())
+    return(regmod)
