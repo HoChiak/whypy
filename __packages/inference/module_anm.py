@@ -222,7 +222,7 @@ class PlotANM():
         """
         Libary of some standard text phrases
         """
-        txt = r'X_%i ~ f(X_%combno, E_X)' % (tdep, tindep)
+        txt = r'X_{%i} ~ f(X_{%combno}, E_X)' % (tdep, tindep)
         return(txt)
 
     def get_math_txt(self, combno, tdep, tindep):
@@ -246,7 +246,7 @@ class PlotANM():
         else:
             hue = ['fit/test' for i in range(self._xi.shape[0])]
         df = pd.DataFrame(self._xi)
-        df.columns = [r'$X_%i$' % (i) for i in range(self._xi.shape[1])]
+        df.columns = [r'$X_{%i}$' % (i) for i in range(self._xi.shape[1])]
         df = pd.concat([df, pd.DataFrame(hue, columns=['holdout'])], axis=1)
         g = sns.PairGrid(df, hue='holdout');
         g = g.map_diag(plt.hist, edgecolor="w")
@@ -414,10 +414,10 @@ class ResultsANM():
             for temp_i, temp_tindep in enumerate(tindep):
                 # Init new dict
                 df_dict = {}
-                df_dict['Fitted Combination'] = r'$X_%i \sim f(X_{%s})$' % (tdep, tindep)
+                df_dict['Fitted Combination'] = r'$X_{%i} \sim f(X_{%s})$' % (tdep, tindep)
                 df_dict['tdep'] = tdep
                 df_dict['tindep'] = tindep
-                df_dict['Bivariate Comparison'] = r'$X_%i \sim f(X_%s)$' % (tdep, temp_tindep)
+                df_dict['Bivariate Comparison'] = r'$X_{%i} \sim f(X_{%s})$' % (tdep, temp_tindep)
                 df_dict['bivariate tindep'] = temp_tindep
                 # Get Mean and Variance Value out of all bootstrap examples
                 df_dict = self.bootstrap_to_mean_var(combno, 'Normality_X_data_%i' % (temp_tindep), df_dict, 'Normality Indep. Variable')
@@ -573,45 +573,3 @@ class ResultsANM():
         utils.display_text_predefined(what='thirdlevel', key='%s: %s' % (self._config['testtype'], self.attr_dict[self._config['testtype']]))
         utils.display_df(self.get_df_dependence('Residuals'))
         self.plt_combinations_boxplot('Residuals')
-
-
-
-
-        #         self.restructure_results()
-        # # Plot results
-        # self.plot_results()
-        #     # Loop trough possible combinations of tdep and tindep for plots/logs
-        #     # Define a list of do's (dolist) for plots sorted by tdep/tindep
-        #     # combinations. Start dolist:
-        #     dic = {'KolmogorovSmirnoff': 'p-value', 'Likelihood': 'likelihood'}
-        #     namecode = dic[testtype]
-        #     dolist = []
-        #     if out_Regr_Model is True:
-        #         dolist.append('out_Regr_Model')
-        #     if out_Regr_Model_info is True:
-        #         dolist.append('out_Regr_Model_info')
-        #     if out_X_Residuals_NormalityTest is True:
-        #         dolist.append('out_X_Residuals_NormalityTest')
-        #     if out_X_vs_Residuals_info is True:
-        #         if 'p-value' in namecode:
-        #             dolist.append('out_X_vs_Residuals_info')
-        #         else:
-        #             print('X vs Residual log only available for independence test')
-        #     if len(dolist) != 0:
-        #         self.loop_and_do(do=dolist)
-        #     # end dolist
-        #     utils.display_text_predefined(what='result header')
-        #     # Plot independence/likelihood tests results
-        #     if out_X_vs_Residuals is True:
-        #         if 'p-value' in namecode:
-        #             self.plt_2metrics_groupedby(namecode)
-        #         self.plt_1metric_groupedby(namecode)
-        #     # Print independence/likelihood tests results
-        #     if out_Results_testtype is True:
-        #         rs = self._results2V['%i' % (self._numberrun)]
-        #         print(rs[['TestType', '2V-case', 'pval/likel',
-        #                   'rank pval/likel', '2V-direction']].to_string())
-        #     # plot the Causal Graph
-        #     if out_CausalGraph is True:
-        #         utils.display_text_predefined(what='CG Warning')
-        #         self.predict_CG(testtype, CGmetric=CGmetric)

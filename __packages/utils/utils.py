@@ -236,43 +236,6 @@ def display_get_params(name, params):
     display(HTML(text))
 
 
-
-
-
-
-
-
-
-
-# def init_2V_list(no_obs):
-#     """
-#     Function returns an empty list of list shape=(no_obs, no_obs)
-#     """
-#     list_inner = list()
-#     list_outer = list()
-#     for t in range(no_obs):
-#         list_inner.append(None)
-#     for t in range(no_obs):
-#         list_outer.append(list_inner.copy())
-#     return(list_outer)
-#
-#
-# def init_comp_matrix_2V(no_obs):
-#     """
-#     Function returns an empty list of list shape=(no_obs, no_obs)
-#     """
-#     matrix = np.eye(no_obs, M=None, k=0, dtype=int)
-#     matrix -= 1
-#     matrix = matrix * (-1)
-#     return(matrix)
-#
-#
-# def random_environments(obs, ration=0.9, method='Uniform'):
-#     """
-#     tbd
-#     """
-
-
 def plot_DAG(Edge_list, Node_list=None):
     """
     Function to plot a directed acyclic graph (DAG)
