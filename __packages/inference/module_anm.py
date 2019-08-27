@@ -65,11 +65,6 @@ class RunANM():
             if 'pygam' in str(self._regmod[0].__class__):
                 model.gridsearch(X_data.reshape(-1, len(tindep)), Y_data)
             elif:
-                # param_grid = {'C': [0.001, 0.01, 0.1, 1, 10, 100, 1000, 1E4, 1E5, 1E6],
-                #               'gamma': [0, 0.00001, 0.0001, 0.001, 0.01, 0.1, 1],
-                #               'coef0': [0, 0.000001, 0.00001, 0.0001, 0.001, 0.01, 0.1],
-                #               'tol': [0.00001, 0.0001, 0.001, 0.01, 0.1, 1, 10, 100],
-                #               'epsilon': [0, 0.000001, 0.00001, 0.0001, 0.001, 0.01, 0.1]}
                 grid_search = GridSearchCV(model, self._kwargs['param_grid'])
                 grid_search.fit(X_data.reshape(-1, len(tindep)), Y_data)
                 #### TBD check if redundant
