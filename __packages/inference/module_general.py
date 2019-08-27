@@ -101,7 +101,7 @@ class General():
                 assert bootstrap > 0, 'Argument bootstrap must be positive integer > 0'
                 _bootstrap = tuple([x for x in range(1, bootstrap+1)])
             except:
-                raise ValueError('Argument bootstrap must be either False or type integer (int>0)')
+                raise TypeError('Argument bootstrap must be either False or type integer (int>0)')
         return(bootstrap, _bootstrap)
 
     def check_init_kwargs(self, kwargs):
@@ -121,6 +121,7 @@ class General():
             new_kwargs = self.check_kwargs_declaration(kwargs, kwargskey='holdout_seed', default_value=1)
             assert isinstance(new_kwargs['holdout_seed'], int), 'Holdout Seed must be integer'
         new_kwargs = self.check_kwargs_declaration(kwargs, kwargskey='modelpts', default_value=50)
+        new_kwargs = self.check_kwargs_declaration(kwargs, kwargskey='gridsearch', default_value=False)
         # Check and display Warnings
         if self._xi.shape[0] < 50:
             warn('WARNING: Less than 50 values remaining to fit the regression model')
@@ -138,6 +139,10 @@ class General():
                     warn('WARNING: Less than 50 values remaining to fit the regression model, from holdout_ratio')
                 if (new_kwargs['holdout_ratio']) * self._xi.shape[0] < 50:
                     warn('WARNING: Less than 50 values remaining to estimate the test statistics, from holdout_ratio')
+        # Check if Params is defined, if gridsearch is true and model is not pygam
+        if ('gridsearch' in kwargs) and not('pygam' in str(self._regmod[0].__class__)):
+            if not('param_grid' in kwargs):
+                raise AssertionError('If "gridsearch" is True, argument params must be specified')
         return(new_kwargs)
 
     def check_init_holdout_ids(self):
