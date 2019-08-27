@@ -64,7 +64,7 @@ class RunANM():
         if self._kwargs['gridsearch'] is True:
             if 'pygam' in str(self._regmod[0].__class__):
                 model.gridsearch(X_data.reshape(-1, len(tindep)), Y_data)
-            elif:
+            else:
                 grid_search = GridSearchCV(model, self._kwargs['param_grid'])
                 grid_search.fit(X_data.reshape(-1, len(tindep)), Y_data)
                 #### TBD check if redundant
