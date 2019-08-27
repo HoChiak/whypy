@@ -414,7 +414,14 @@ class ResultsANM():
             for temp_i, temp_tindep in enumerate(tindep):
                 # Init new dict
                 df_dict = {}
-                df_dict['Fitted Combination'] = r'$X_{%i} \sim f(X_{%s})$' % (tdep, tindep)
+                # Differ between bivariate and mvariate for fitted combination
+                if self.attr_variate is 'bivariate':
+                    if tdep < tindep:
+                        df_dict['Fitted Combination'] = r'$X_{%i}, X_{%s}$' % (tdep, temp_tindep)
+                    elif tdep >= tindep:
+                        df_dict['Fitted Combination'] = r'$X_{%s}, X_{%i}$' % (temp_tindep, tdep)
+                elif self.attr_variate is 'mvariate':
+                    df_dict['Fitted Combination'] = r'$X_{%i} \sim f(X_{%s})$' % (tdep, tindep)
                 df_dict['tdep'] = tdep
                 df_dict['tindep'] = tindep
                 df_dict['Bivariate Comparison'] = r'$X_{%i} \sim f(X_{%s})$' % (tdep, temp_tindep)
