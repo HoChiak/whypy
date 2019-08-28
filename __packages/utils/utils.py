@@ -198,7 +198,6 @@ table td, table th, table tr {text-align:left !important;}
 def display_df(df, fontsize='6pt'):
     """
     Function to output DataFrame in IPhython formatted as HTML.
-    Adjust how df is displayed in width and fontsize TBD.
     """
     pd.options.display.float_format = '{:,.3e}'.format
     # df.style.set_properties(**{'font-size': fontsize})

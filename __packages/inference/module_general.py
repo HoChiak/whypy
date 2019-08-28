@@ -3,8 +3,6 @@
 # import built in libarys
 from copy import deepcopy
 from warnings import warn
-from contextlib import contextmanager
-import sys, os
 
 # import 3rd party libarys
 import numpy as np
@@ -163,22 +161,6 @@ class General():
         self._ids_fit = ids_fit
         self._ids_test = ids_test
 
-    @contextmanager
-    def suppress_stdout(self):
-        """
-        Method to temporarily suppress consle output
-        By: Dave Smith's Blog
-        https://thesmithfam.org/blog/2012/10/25/
-        temporarily-suppress-console-output-in-python/
-        """
-        with open(os.devnull, "w") as devnull:
-            old_stdout = sys.stdout
-            sys.stdout = devnull
-            try:
-                yield
-            finally:
-                sys.stdout = old_stdout
-
     def scaler_fit(self):
         """
         Method to fit a choosen list of scalers to all Xi
@@ -218,23 +200,16 @@ class General():
         """
         Method to linspaced x_model data from the limits of x_data.
         """
-        X_range = np.max(X_data, axis=0) - np.min(X_data, axis=0)
-        # TBD not working vor mvariate case
-        X_model = np.linspace(np.min(X_data, axis=0) - (X_range * 0.05),
-                              np.max(X_data, axis=0) + (X_range * 0.05),
-                              num=modelpts)
-        X_model = X_model.reshape(-1, 1)
+        # Get Key Indicators
+        X_max = np.max(X_data, axis=0)
+        X_min = np.min(X_data, axis=0)
+        X_range = X_max - X_min
+        # Init empty Array of Shape Modelpoints, Number Variables
+        X_model = np.ndarray(shape=(modelpts, X_data.shape[1]))
+        # Iter over all variables in
+        # TBD, is there a vectorized version?
+        for i in range(X_data.shape[1]):
+            X_model[:, i] = np.linspace(X_min[i] - (X_range[i] * 0.05),
+                                        X_max[i] + (X_range[i] * 0.05),
+                                        num=modelpts)
         return(X_model)
-
-    # def get_fit_test_index_ordered(self):
-    #     """
-    #     Method to get indexes of fit and test split ordered. Based on lenth of
-    #     current self._xi
-    #     """
-    #     ids_fit, ids_test = train_test_split(np.arange(0, self._xi.shape[0], 1),
-    #                                          test_size = self._kwargs['holdout_ratio'],
-    #                                          random_state = self._kwargs['holdout_seed'],
-    #                                          shuffle = True)
-    #     ids_fit = np.sort(ids_fit)
-    #     ids_test = np.sort(ids_test)
-    #     return(ids_fit, ids_test)

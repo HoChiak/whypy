@@ -67,7 +67,7 @@ class RunANM():
             else:
                 grid_search = GridSearchCV(model, self._kwargs['param_grid'])
                 grid_search.fit(X_data.reshape(-1, len(tindep)), Y_data)
-                #### TBD check if redundant
+                # TBD check if redundant
                 model.set_params(grid_search.best_params_)
                 model.fit(X_data.reshape(-1, len(tindep)), Y_data)
         else:
