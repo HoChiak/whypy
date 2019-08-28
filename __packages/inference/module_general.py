@@ -27,32 +27,11 @@ class General():
         self._figsize = (10, 7.071)
         self._cmap = plt.get_cmap('Pastel1', 100)
         self._colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
-        self._numberrun = 0
+        self._norun = 0
         self._config = {}
         self._kwargs = None
 
-    def check_and_init_attr(self, scale):
-        """
-        Method to check correctness of instance attributes as well as init
-        missing attributs.
-        """
-        # Do Checks on global attributes
-        self.check_instance_attr(scale)
-        # Init Observations
-        self._xi = deepcopy(self.xi)
-        # Get Combinations of dependent and independent variable if not given
-        if self.combinations is 'all':
-            self.get_combinations()
-        else:
-            self._combinations = deepcopy(self.combinations)
-        # Initiate a regmod for each combination
-        no_combinations = len(self._combinations)
-        self._regmod = utils.trans_object_to_list(self.regmod, no_combinations, dcopy=True)
-        # Initiate a scaler for each variable
-        no_variables = self._xi.shape[1]
-        self._scaler = utils.trans_object_to_list(self.scaler, no_variables, dcopy=True)
-
-    def check_instance_attr(self, scale):
+    def check_instance_model_attr(self, scale):
         """
         Method to check the instance attributes
         """
@@ -63,83 +42,109 @@ class General():
         assert hasattr(self.regmod, 'fit'), 'Regression Model has no attribute "fit"'
         assert hasattr(self.regmod, 'predict'), 'Regression Model has no attribute "predict"'
         assert not(hasattr(type(self.regmod), '__iter__')), 'Regression Model should be passed as single object. Attribute __iter__ detected.'
-        assert not(hasattr(type(self.scaler), '__iter__')), 'Scaler Model should be passed as single object. Attribute __iter__ detected.'
-        assert hasattr(self.scaler, 'fit'), 'Scaler Model has no attribute "fit"'
-        assert hasattr(self.scaler, 'transform'), 'Scaler Model has no attribute "transform"'
-        assert hasattr(self.scaler, 'inverse_transform'), 'Scaler Model has no attribute "inverse_transform"'
-        # assert self.scaler.copy is False, 'Scaler Model doesnt support inplace transformation (maybe set "copy=False")'
-        assert ((scale is False) or ((scale is True) and (self.scaler is not None))), 'If scale is True, a scaler must be assigned'
+        assert isinstance(scale, bool), 'Scale must be Bool'
+        if scale is True:
+            assert self.scaler is not None, 'If scale is True, a scaler must be assigned'
+            assert hasattr(self.scaler, 'fit'), 'Scaler Model has no attribute "fit"'
+            assert hasattr(self.scaler, 'transform'), 'Scaler Model has no attribute "transform"'
+            assert hasattr(self.scaler, 'inverse_transform'), 'Scaler Model has no attribute "inverse_transform"'
+            assert not(hasattr(type(self.scaler), '__iter__')), 'Scaler Model should be passed as single object. Attribute __iter__ detected.'
+        if self.comb is not 'all':
+            self.check_combinations()
 
-    def check_kwargs_declaration(self, kwargs, kwargskey, default_value):
+    def init_instance_model_attr(self):
         """
-        Method to test wheter a keyword in kwargs exist. If not, set kwargs
-        keyword to given default_value.
+        Method to check correctness of instance attributes as well as init
+        missing attributs.
         """
-        try:
-            kwargs[kwargskey]
-        except:
-            kwargs[kwargskey] = default_value
-        finally:
-            return(kwargs)
+        # Get Combinations of dependent and independent variable if not given
+        if self.comb is 'all':
+            self.get_combinations()
+        else:
+            self._comb = deepcopy(self.comb)
+        # Init Observations
+        self._xi = deepcopy(self.xi)
+        # Initiate a regmod for each combination
+        no_combs = len(self._comb)
+        self._regmod = utils.trans_object_to_list(self.regmod, no_combs,
+                                                  dcopy=True)
+        # Initiate a scaler for each variable
+        no_var = self._xi.shape[1]
+        self._scaler = utils.trans_object_to_list(self.scaler, no_var,
+                                                  dcopy=True)
 
-    def check_and_init_arg_run(self, testtype, bootstrap):
+    def check_and_init_arg_run(self, testtype, bootstrap, holdout):
         """
         Method to check the run-methods arguments
         """
         assert testtype in ('LikelihoodVariance', 'LikelihoodEntropy', 'KolmogorovSmirnoff', 'MannWhitney', 'HSIC'), 'Wrong Argument given for TestType'
-        if bootstrap is False:
-            _bootstrap = (1,)
-        elif bootstrap == 1:
-            bootstrap = False
-            _bootstrap = (1,)
+        assert isinstance(bootstrap, bool) or (isinstance(bootstrap, int) and (bootstrap > 0)), 'Bootstrap must be Bool or Int (int>0)'
+        assert isinstance(holdout, bool), 'Holdout must be Bool'
+        if bootstrap < 2:  # If bootstrap is False or 1
+            self._bootstrap = (1,)
         else:
-            try:
-                assert bootstrap > 0, 'Argument bootstrap must be positive integer > 0'
-                _bootstrap = tuple([x for x in range(1, bootstrap+1)])
-            except:
-                raise TypeError('Argument bootstrap must be either False or type integer (int>0)')
-        return(bootstrap, _bootstrap)
+            self._bootstrap = tuple([x for x in range(1, bootstrap+1)])
+
+    def check_kwargs_declaration(self, key, default):
+        """
+        Method to test wheter a keyword in kwargs exist. If not, set kwargs
+        keyword to given default.
+        """
+        if key not in self._kwargs:
+            self._kwargs[key] = default
 
     def check_init_kwargs(self, kwargs):
         """
-        Method to check and init the run-methods kwargs
+        Method to check and init the run-method kwargs
         """
-        # Init Kwargs
-        new_kwargs = {}
+        # Delete and init new self._kwargs
+        del self._kwargs
+        self._kwargs = kwargs
+        # Check Bootstrap Kwargs
         if self._config['bootstrap'] > 0:
-            new_kwargs = self.check_kwargs_declaration(kwargs, kwargskey='bootstrap_ratio', default_value=1)
-            assert 0 < new_kwargs['bootstrap_ratio'] <=1 , 'Bootstrap Ratio must be in range [0, 1]'
-            new_kwargs = self.check_kwargs_declaration(kwargs, kwargskey='bootstrap_seed', default_value=1)
-            assert isinstance(new_kwargs['bootstrap_seed'], int), 'Bootstrap Seed must be integer'
+            self.check_kwargs_declaration(key='bootstrap_ratio', default=1)
+            assert 0 < self._kwargs['bootstrap_ratio'] <= 1, 'Bootstrap Ratio must be in range [0, 1]'
+            self.check_kwargs_declaration(key='bootstrap_seed', default=1)
+            assert isinstance(self._kwargs['bootstrap_seed'], int), 'Bootstrap Seed must be integer'
+        # Check Holdout Kwargs
         if self._config['holdout'] > 0:
-            new_kwargs = self.check_kwargs_declaration(kwargs, kwargskey='holdout_ratio', default_value=0.2)
-            assert 0 < new_kwargs['holdout_ratio'] <=1 , 'Holdout Ratio must be in range [0, 1]'
-            new_kwargs = self.check_kwargs_declaration(kwargs, kwargskey='holdout_seed', default_value=1)
-            assert isinstance(new_kwargs['holdout_seed'], int), 'Holdout Seed must be integer'
-        new_kwargs = self.check_kwargs_declaration(kwargs, kwargskey='modelpts', default_value=50)
-        new_kwargs = self.check_kwargs_declaration(kwargs, kwargskey='gridsearch', default_value=False)
-        # Check and display Warnings
-        if self._xi.shape[0] < 50:
+            self.check_kwargs_declaration(key='holdout_ratio', default=0.2)
+            assert 0 < self._kwargs['holdout_ratio'] <= 1, 'Holdout Ratio must be in range [0, 1]'
+            self.check_kwargs_declaration(key='holdout_seed', default=1)
+            assert isinstance(self._kwargs['holdout_seed'], int), 'Holdout Seed must be integer'
+        # Check Other Kwargs
+        self.check_kwargs_declaration(key='modelpts', default=50)
+        assert isinstance(self._kwargs['modelpts'], int), 'Modelpts must be Int'
+        self.check_kwargs_declaration(key='gridsearch', default=False)
+        assert isinstance(self._kwargs['gridsearch'], bool), 'Gridsearch must be Bool, if defined'
+        # Check Gridsearch Kwargs
+        if ((self._kwargs['gridsearch'] is True) and
+           not('pygam' in str(self._regmod[0].__class__))):
+            if not('param_grid' in kwargs):
+                raise AssertionError('If "gridsearch" is True, argument params must be specified')
+        # Add a list of Kwargs to config
+        self._config['**kwargs'] = str(self._kwargs)
+
+    def check_warnings(self):
+        """
+        Method to display warnings
+        """
+        if self.xi.shape[0] < 50:
             warn('WARNING: Less than 50 values remaining to fit the regression model')
         else:
             if (self._config['bootstrap'] > 0) and (self._config['holdout'] > 0):
-                if new_kwargs['bootstrap_ratio'] * (1 - new_kwargs['holdout_ratio']) * self._xi.shape[0] < 50:
+                if self._kwargs['bootstrap_ratio'] * (1 - self._kwargs['holdout_ratio']) * self.xi.shape[0] < 50:
                     warn('WARNING: Less than 50 values remaining to fit the regression model, from bootstrap- and holdout_ratio')
-                if new_kwargs['bootstrap_ratio'] * (new_kwargs['holdout_ratio']) * self._xi.shape[0] < 50:
+                if self._kwargs['bootstrap_ratio'] * (self._kwargs['holdout_ratio']) * self.xi.shape[0] < 50:
                     warn('WARNING: Less than 50 values remaining to estimate the test statistics, from bootstrap- and holdout_ratio')
             elif (self._config['bootstrap'] > 0):
-                if new_kwargs['bootstrap_ratio'] * self._xi.shape[0] < 50:
+                if self._kwargs['bootstrap_ratio'] * self.xi.shape[0] < 50:
                     warn('WARNING: Less than 50 values remaining to fit the regression model, from bootstrap_ratio')
             elif (self._config['holdout'] > 0):
-                if (1 - new_kwargs['holdout_ratio']) * self._xi.shape[0] < 50:
+                if (1 - self._kwargs['holdout_ratio']) * self.xi.shape[0] < 50:
                     warn('WARNING: Less than 50 values remaining to fit the regression model, from holdout_ratio')
-                if (new_kwargs['holdout_ratio']) * self._xi.shape[0] < 50:
+                if (self._kwargs['holdout_ratio']) * self.xi.shape[0] < 50:
                     warn('WARNING: Less than 50 values remaining to estimate the test statistics, from holdout_ratio')
-        # Check if Params is defined, if gridsearch is true and model is not pygam
-        if (new_kwargs['gridsearch'] is True) and not('pygam' in str(self._regmod[0].__class__)):
-            if not('param_grid' in kwargs):
-                raise AssertionError('If "gridsearch" is True, argument params must be specified')
-        return(new_kwargs)
 
     def check_init_holdout_ids(self):
         """
@@ -164,15 +169,15 @@ class General():
         Method to fit a choosen list of scalers to all Xi
         """
         for i in range(len(self._scaler)):
-            self._scaler[i].fit(self._xi[:, i].reshape(-1, 1))
+            self._scaler[i].fit(self._xi[self._ids_fit, i].reshape(-1, 1))
 
     def scaler_transform(self, data, idx):
         """
         Method to fit a choosen list of scalers to all Xi
         idx must be in tuple.
         """
-        for temp_id, temp_val in enumerate(idx):
-            data = self._scaler[temp_val].transform(data[:, temp_id].reshape(-1, 1))
+        for i, val in enumerate(idx):
+            data[:, i] = self._scaler[val].transform(data[:, i].reshape(-1, 1)).reshape(-1)
         return(data)
 
     def scaler_inverse_transform(self, data, idx):
@@ -181,18 +186,18 @@ class General():
         idx must be in tuple.
         """
         # Univariate Case
-        for temp_id, temp_val in enumerate(idx):
-            data = self._scaler[temp_val].inverse_transform(data[:, temp_id].reshape(-1, 1))
+        for i, val in enumerate(idx):
+            data[:, i] = self._scaler[val].inverse_transform(data[:, i].reshape(-1, 1)).reshape(-1)
         return(data)
 
-    def get_tINdep(self, combno):
+    def get_tINdeps(self, combno):
         """
         Method to get the index of the dependent (tdep) and the independent
         (tindep) variable by index i from combinations.
         """
-        tdep = tuple([self._combinations[combno][0],])
-        tindep = self._combinations[combno][1:]
-        return(tdep, tindep)
+        tdep = tuple([self._comb[combno][0], ])
+        tindeps = self._comb[combno][1:]
+        return(tdep, tindeps)
 
     def get_Xmodel(self, X_data, modelpts):
         """

@@ -11,7 +11,7 @@ from sklearn.utils import resample
 # import local libarys
 from whypy.__packages.inference.module_general import General as parent0
 from whypy.__packages.inference.module_steadystate import SteadyState as parent1
-from whypy.__packages.inference.module_bivariate import Bivariate as parent2
+from whypy.__packages.inference.module_mvariate import Mvariate as parent2
 from whypy.__packages.inference.module_anm import RunANM as parent3
 from whypy.__packages.inference.module_anm import PlotANM as parent4
 from whypy.__packages.inference.module_anm import ResultsANM as parent5

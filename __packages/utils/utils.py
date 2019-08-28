@@ -46,6 +46,7 @@ def trans_tuple_to_scalar(array):
     else:
         return(array)
 
+
 def check_inf_nan(value):
     """
     Function to check if value is inf or nan. If True replace by 123.456
@@ -58,22 +59,24 @@ def check_inf_nan(value):
         print('WARNING: a passed value is nan and set to 123.456')
     return(value)
 
+
 def display_text_predefined(what, **kwargs):
     """
     Fucntion to print text in python console
     """
     if 'inference header' in what:
-            text = r"""
+        text = r"""
 <html>
 <body>
-<div style="background-color:black;color:white;padding:8px;letter-spacing:1em;" align="center">
+<div style="background-color:black;color:white;padding:8px;letter-spacing:1em;"
+ align="center">
 <h2>Run   Causal   Inference</h2>
 </div>
 </body>
 </html>
                     """
     elif 'count bootstrap' in what:
-            text = r"""
+        text = r"""
 <html>
 <body>
 <div style="background-color:grey;color:white;padding:4px;" align="center">
@@ -83,10 +86,11 @@ def display_text_predefined(what, **kwargs):
 </html>
                     """ % (kwargs['current']+1, kwargs['sum'])
     elif 'visualization header' in what:
-            text = r"""
+        text = r"""
 <html>
 <body>
-<div style="background-color:black;color:white;padding:8px;letter-spacing:1em;" align="center">
+<div style="background-color:black;color:white;padding:8px;letter-spacing:1em;"
+align="center">
 <h2>INFERENCE   VISUALIZATION</h2>
 </div>
 </body>
@@ -112,17 +116,18 @@ def display_text_predefined(what, **kwargs):
 </div>
 </body>
 </html>
-                """ % (kwargs['tdep'], str(kwargs['tindep']))
+                """ % (kwargs['tdep'], str(kwargs['tindeps']))
     elif 'combination minor header' in what:
         text = r"""
 <html>
 <body>
-<div style="background-color:lightgrey;color:black;padding:0px;" align="center">
+<div style="background-color:lightgrey;color:black;padding:0px;"
+align="center">
 <h4>2D Visualisation for: X<sub>%i</sub> ~ f(X<sub>%s</sub>)</h4>
 </div>
 </body>
 </html>
-                """ % (kwargs['tdep'], kwargs['tindep'])
+                """ % (kwargs['tdep'], kwargs['tindeps'])
     elif 'result header' in what:
         text = r"""
 <html>
@@ -130,7 +135,8 @@ def display_text_predefined(what, **kwargs):
 <style>
 table td, table th, table tr {text-align:left !important;}
 </style>
-<div style="background-color:black;color:white;padding:8px;letter-spacing:1em;" align="center">
+<div style="background-color:black;color:white;padding:8px;letter-spacing:1em;"
+align="center">
 <h2>RESULTS</h2>
 </div>
 <div style="background-color:grey;color:white;padding:4px;" align="center">
@@ -145,7 +151,7 @@ table td, table th, table tr {text-align:left !important;}
 <td align="left"><b>%s:</b></td>
 <td>%s</td>
 </tr>
-                """ %(text, temp_key, str(temp_value))
+                """ % (text, temp_key, str(temp_value))
         text = r"""
  %s
 </table>
@@ -187,13 +193,15 @@ table td, table th, table tr {text-align:left !important;}
         text = r"""
 <html>
 <body>
-<div style="background-color:lightgrey;color:black;padding:0px;" align="center">
+<div style="background-color:lightgrey;color:black;padding:0px;"
+align="center">
 <h4>%s</h4>
 </div>
 </body>
 </html>
                 """ % (kwargs['key'])
     display(HTML(text))
+
 
 def display_df(df, fontsize='6pt'):
     """
@@ -204,33 +212,35 @@ def display_df(df, fontsize='6pt'):
     # display(HTML("<style>.container { width:100% !important; }</style>"))
     display(HTML(df.to_html()))
 
+
 def display_get_params(name, params):
     """
     """
     text = r"""
-    <html>
-    <body>
-    <style>
-    table td, table th, table tr {text-align:left !important;}
-    </style>
-    <div style="background-color:lightgrey;color:black;padding:0px;" align="center">
-    <h4>%s</h4>
-    </div>
-    <table>
+<html>
+<body>
+<style>
+table td, table th, table tr {text-align:left !important;}
+</style>
+<div style="background-color:lightgrey;color:black;padding:0px;"
+align="center">
+<h4>%s</h4>
+</div>
+<table>
             """ % (name)
     for temp_key, temp_value in params.items():
         text = r"""
-    %s
-    <tr>
-    <td align="left"><b>%s:</b></td>
-    <td>%s</td>
-    </tr>
-                """ %(text, temp_key, str(temp_value))
+%s
+<tr>
+<td align="left"><b>%s:</b></td>
+<td>%s</td>
+</tr>
+                """ % (text, temp_key, str(temp_value))
     text = r"""
-     %s
-    </table>
-    </body>
-    </html>
+ %s
+</table>
+</body>
+</html>
             """ % (text)
     display(HTML(text))
 
