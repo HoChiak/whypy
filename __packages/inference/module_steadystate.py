@@ -4,10 +4,7 @@
 
 
 # import 3rd party libarys
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
+
 
 # import local libarys
 from whypy.__packages.utils import utils

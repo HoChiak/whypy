@@ -4,10 +4,13 @@
 
 
 # import 3rd party libarys
-import numpy as np
 from sklearn.svm import SVR
-from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from pygam import LinearGAM, s, f, l
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.linear_model import LinearRegression #, ElasticNet, BayesianRidge, RANSACRegressor, HuberRegressor
+from sklearn.pipeline import Pipeline, make_pipeline
+
+model_1 = make_pipeline(PolynomialFeatures(degree = 5),LinearRegression())
 
 # import local libarys
 from whypy.__packages.utils import utils
@@ -25,13 +28,13 @@ def lingam(term='spline'):
     RETURN:
     model
     """
-    if term == 'linear':
+    if term is 'linear':
         regmod = LinearGAM(l(0))
     # GAM with spline term
-    elif term == 'spline':
+    elif term is 'spline':
         regmod = LinearGAM(s(0))
     # GAM with factor term
-    elif term == 'factor':
+    elif term is 'factor':
         regmod = LinearGAM(f(0))
     else:
         raise ValueError('Given Gam term unknown')
@@ -49,21 +52,41 @@ def svr(term='poly4'):
     RETURN:
     model
     """
-    if term == 'linear':
+    if term is 'linear':
         regmod = SVR(kernel='linear',
                       gamma='auto_deprecated',
                       C=1.0, epsilon=0.1)
     # SVR with poly kernel
-    elif term == 'poly2':
+    elif term is 'poly2':
         regmod = SVR(kernel='poly', degree=2,
-                      gamma=0.8,
-                      C=0.8, epsilon=0.1)
-    # GAM with factor term
-    elif term == 'poly4':
+                      gamma='auto_deprecated',
+                      C=1.0, epsilon=0.1)
+    # SVR with poly kernel
+    elif term is 'poly4':
         regmod = SVR(kernel='poly', degree=4,
-                      gamma=0.8,
-                      C=0.8, epsilon=0.1)
+                      gamma='auto_deprecated',
+                      C=1.0, epsilon=0.1)
+    # SVR with rbf kernel
+    elif term is 'rbf':
+        regmod = SVR(kernel='rbf',
+                      gamma='auto_deprecated',
+                      C=1.0, epsilon=0.1)
     else:
         raise ValueError('Term unknown')
     utils.display_get_params('SVR Model Description', regmod.get_params())
+    return(regmod)
+
+def polyreg(degree = 2):
+    """
+    Method to load unfitted LinearRegression models with polynomial features of
+    given degree
+
+    INPUT:
+    degree: polynomial degree
+
+    RETURN:
+    model
+    """
+    regmod = make_pipeline(PolynomialFeatures(degree = degree),
+                           LinearRegression())
     return(regmod)

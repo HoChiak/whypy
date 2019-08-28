@@ -66,10 +66,12 @@ class RunANM():
                 model.gridsearch(X_data.reshape(-1, len(tindep)), Y_data)
             else:
                 grid_search = GridSearchCV(model, self._kwargs['param_grid'])
-                grid_search.fit(X_data.reshape(-1, len(tindep)), Y_data)
+                grid_search.fit(X_data.reshape(-1, len(tindep)), Y_data.reshape(-1,))
                 # TBD check if redundant
-                model.set_params(grid_search.best_params_)
-                model.fit(X_data.reshape(-1, len(tindep)), Y_data)
+                model.set_params(**grid_search.best_params_)
+                model.fit(X_data.reshape(-1, len(tindep)), Y_data.reshape(-1,))
+                # Clean up
+                del grid_search
         else:
             model.fit(X_data.reshape(-1, len(tindep)), Y_data)
         # Scale data back
@@ -134,8 +136,10 @@ class RunANM():
         """
         if test_stat is 'Normality':
             tr = stats.normality(obs_valu1)
-        elif test_stat is 'Likelihood':
-            tr = stats.likelihood(obs_valu1, obs_valu2)
+        elif test_stat is 'LikelihoodVariance':
+            tr = stats.likelihoodvariance(obs_valu1, obs_valu2)
+        elif test_stat is 'LikelihoodEntropy':
+            tr = stats.likelihoodentropy(obs_valu1, obs_valu2)
         elif test_stat is 'KolmogorovSmirnoff':
             tr = stats.kolmogorov(obs_valu1, obs_valu2)
         elif test_stat is 'MannWhitney':
@@ -534,7 +538,7 @@ class ResultsANM():
         # Background Color different bivariate cases from same combinations
         for i, combno in enumerate(combnos):
             plt.axhspan(x_data[i]-1/3, x_data[i]+1/3,
-                        facecolor=self._cmap(combno_unique[combno]/(len(combno_unique)-1)), alpha=1)
+                        facecolor=self._cmap(combno_unique[combno]/(len(combno_unique))), alpha=1)
         plt.legend(combnos,
                    loc='center right',
                    bbox_to_anchor=(1.2, 0.5),

@@ -5,9 +5,6 @@ from copy import deepcopy
 
 # import 3rd party libarys
 import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
 from sklearn.utils import resample
 
 
@@ -28,7 +25,8 @@ class Model(parent0, parent1, parent2, parent3, parent4, parent5):
     identifiable in the two variable case. Additional Assumptions are required,
     given by the modelclass restrictions. Only acyclic graphs are considered.
     """
-    attr_dict = {'Likelihood': 'likelihood-ratio',
+    attr_dict = {'LikelihoodVariance': 'likelihood-ratio',
+                 'LikelihoodEntropy': 'likelihood-ratio',
                  'KolmogorovSmirnoff': 'p-value',
                  'MannWhitney': 'p-value',
                  'HSIC': 'unknown'
@@ -71,7 +69,7 @@ class Model(parent0, parent1, parent2, parent3, parent4, parent5):
         self._scaler = None
 
     def run(self,
-            testtype='Likelihood',# Likelihood KolmogorovSmirnoff MannWhitney HSIC
+            testtype='LikelihoodVariance',# LikelihoodVariance LikelihoodEntropy KolmogorovSmirnoff MannWhitney HSIC
             scale=True,
             bootstrap=False,
             holdout=False,
@@ -103,6 +101,7 @@ class Model(parent0, parent1, parent2, parent3, parent4, parent5):
                         'scaler_model': str(self._scaler[0]),
                         }
         # Check and Init Kwargs
+        del self._kwargs
         self._kwargs = self.check_init_kwargs(kwargs)
         self._config['**kwargs'] = str(self._kwargs)
         # Check and Init Holdout Lists

@@ -39,10 +39,10 @@ def normality(sample):
     return(test_results)
 
 
-def likelihood(sample1, sample2):
+def likelihoodvariance(sample1, sample2):
     """
-    Method to calculate the Likelihood based on the variance (only Valid
-    for Gaussian samples) and based on differential entropy of the error term
+    Method to calculate the Likelihood based on the variance (only valid
+    for Gaussian samples)
     """
     sample1 = np.array(sample1).reshape(-1)
     sample2 = np.array(sample2).reshape(-1)
@@ -50,8 +50,23 @@ def likelihood(sample1, sample2):
     log1 = np.log(np.var(sample1))
     log2 = np.log(np.var(sample2))
     likeratio = - log1 - log2
+    test_results = {'LikelihoodVariance': likeratio}
+    return(test_results)
+
+
+def likelihoodentropy(sample1, sample2):
+    """
+    Method to calculate the Likelihood based on the differential entropy
+    of the error term
+    """
+    sample1 = np.array(sample1).reshape(-1)
+    sample2 = np.array(sample2).reshape(-1)
+    # calculate likelihood based on entropy TBD!!!!
+    log1 = np.log(np.var(sample1))
+    log2 = np.log(np.var(sample2))
+    likeratio = - log1 - log2
     # TBD calculate likelihood based on entropy (also non Gaussian)
-    test_results = {'Likelihood': likeratio}
+    test_results = {'LikelihoodEntropy': likeratio}
     return(test_results)
 
 

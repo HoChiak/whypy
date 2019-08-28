@@ -6,9 +6,7 @@ from warnings import warn
 
 # import 3rd party libarys
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
 from sklearn.model_selection import train_test_split
 
 # import local libarys
@@ -88,7 +86,7 @@ class General():
         """
         Method to check the run-methods arguments
         """
-        assert testtype in ('Likelihood', 'KolmogorovSmirnoff', 'MannWhitney', 'HSIC'), 'Wrong Argument given for TestType'
+        assert testtype in ('LikelihoodVariance', 'LikelihoodEntropy', 'KolmogorovSmirnoff', 'MannWhitney', 'HSIC'), 'Wrong Argument given for TestType'
         if bootstrap is False:
             _bootstrap = (1,)
         elif bootstrap == 1:
@@ -138,7 +136,7 @@ class General():
                 if (new_kwargs['holdout_ratio']) * self._xi.shape[0] < 50:
                     warn('WARNING: Less than 50 values remaining to estimate the test statistics, from holdout_ratio')
         # Check if Params is defined, if gridsearch is true and model is not pygam
-        if ('gridsearch' in kwargs) and not('pygam' in str(self._regmod[0].__class__)):
+        if (new_kwargs['gridsearch'] is True) and not('pygam' in str(self._regmod[0].__class__)):
             if not('param_grid' in kwargs):
                 raise AssertionError('If "gridsearch" is True, argument params must be specified')
         return(new_kwargs)
