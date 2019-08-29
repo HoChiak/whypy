@@ -2,6 +2,7 @@
 
 # import built in libarys
 from itertools import permutations
+from copy import deepcopy
 
 # import 3rd party libarys
 import numpy as np
@@ -27,23 +28,34 @@ class Bivariate():
         the inference Class.
         """
 
-    def get_combinations(self):
+    def get_all_combinations(self):
         """
         Method to get a list of combinations for the Bivariate Case.
         """
-        var_names = np.arange(self.xi.shape[1]).tolist()
+        var_names = np.arange(self.obs.shape[1]).tolist()
         comb = [x for x in permutations(var_names, 2)]
         # Order combinations by forward, backward equality
         comb_ary = np.array(comb) + 1
         sort_order = np.argsort(np.multiply(comb_ary[:, 0], comb_ary[:, 1]))
         comb = [comb[i] for i in sort_order]
-        self._comb = utils.trans_nestedlist_to_tuple(comb)
+        self._combs = utils.trans_nestedlist_to_tuple(comb)
 
     def check_combinations(self):
         """
         Method to check combinations for the Bivariate Case.
         """
-        assert np.array(self.comb).shape[1] == 2,'Shape of combinations must be (m, 2)'
-        self._comb = utils.trans_nestedlist_to_tuple(self.comb)
+        assert np.array(self.combs).shape[1] == 2,'Shape of combinations must be (m, 2)'
+        assert isinstance(self.combs[0], list),'Combinations must be nested list [[combination 1], [combination 2], ...]'
+
+    def init_combinations(self):
+        """
+        Method to init combinations for the Bivariate Case.
+        """
+        if self.combs is 'all':
+            self.get_all_combinations()
+        else:
+            self._combs = deepcopy(self.combs)
+            self._combs = utils.trans_nestedlist_to_tuple(self._combs)
+
 
 ###############################################################################

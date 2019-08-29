@@ -127,7 +127,7 @@ align="center">
 </div>
 </body>
 </html>
-                """ % (kwargs['tdep'], kwargs['tindeps'])
+                """ % (kwargs['tdep'], kwargs['tindepv'])
     elif 'result header' in what:
         text = r"""
 <html>

@@ -27,7 +27,7 @@ class General():
         self._figsize = (10, 7.071)
         self._cmap = plt.get_cmap('Pastel1', 100)
         self._colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
-        self._norun = 0
+        self._runi = 0
         self._config = {}
         self._kwargs = None
 
@@ -35,9 +35,9 @@ class General():
         """
         Method to check the instance attributes
         """
-        assert self.xi is not None, 'Observations are None type'
-        assert not(np.isnan(self.xi).any()), 'Observations contain np.nan'
-        assert not(np.isinf(self.xi).any()), 'Observations contain np.inf'
+        assert self.obs is not None, 'Observations are None type'
+        assert not(np.isnan(self.obs).any()), 'Observations contain np.nan'
+        assert not(np.isinf(self.obs).any()), 'Observations contain np.inf'
         assert self.regmod is not None, 'Regression Model is None type'
         assert hasattr(self.regmod, 'fit'), 'Regression Model has no attribute "fit"'
         assert hasattr(self.regmod, 'predict'), 'Regression Model has no attribute "predict"'
@@ -49,7 +49,7 @@ class General():
             assert hasattr(self.scaler, 'transform'), 'Scaler Model has no attribute "transform"'
             assert hasattr(self.scaler, 'inverse_transform'), 'Scaler Model has no attribute "inverse_transform"'
             assert not(hasattr(type(self.scaler), '__iter__')), 'Scaler Model should be passed as single object. Attribute __iter__ detected.'
-        if self.comb is not 'all':
+        if self.combs is not 'all':
             self.check_combinations()
 
     def init_instance_model_attr(self):
@@ -58,18 +58,15 @@ class General():
         missing attributs.
         """
         # Get Combinations of dependent and independent variable if not given
-        if self.comb is 'all':
-            self.get_combinations()
-        else:
-            self._comb = deepcopy(self.comb)
+        self.init_combinations()
         # Init Observations
-        self._xi = deepcopy(self.xi)
+        self._obs = deepcopy(self.obs)
         # Initiate a regmod for each combination
-        no_combs = len(self._comb)
-        self._regmod = utils.trans_object_to_list(self.regmod, no_combs,
+        no_combs = len(self._combs)
+        self._regmods = utils.trans_object_to_list(self.regmod, no_combs,
                                                   dcopy=True)
         # Initiate a scaler for each variable
-        no_var = self._xi.shape[1]
+        no_var = self._obs.shape[1]
         self._scaler = utils.trans_object_to_list(self.scaler, no_var,
                                                   dcopy=True)
 
@@ -119,7 +116,7 @@ class General():
         assert isinstance(self._kwargs['gridsearch'], bool), 'Gridsearch must be Bool, if defined'
         # Check Gridsearch Kwargs
         if ((self._kwargs['gridsearch'] is True) and
-           not('pygam' in str(self._regmod[0].__class__))):
+           not('pygam' in str(self._regmods[0].__class__))):
             if not('param_grid' in kwargs):
                 raise AssertionError('If "gridsearch" is True, argument params must be specified')
         # Add a list of Kwargs to config
@@ -129,37 +126,37 @@ class General():
         """
         Method to display warnings
         """
-        if self.xi.shape[0] < 50:
+        if self.obs.shape[0] < 50:
             warn('WARNING: Less than 50 values remaining to fit the regression model')
         else:
             if (self._config['bootstrap'] > 0) and (self._config['holdout'] > 0):
-                if self._kwargs['bootstrap_ratio'] * (1 - self._kwargs['holdout_ratio']) * self.xi.shape[0] < 50:
+                if self._kwargs['bootstrap_ratio'] * (1 - self._kwargs['holdout_ratio']) * self.obs.shape[0] < 50:
                     warn('WARNING: Less than 50 values remaining to fit the regression model, from bootstrap- and holdout_ratio')
-                if self._kwargs['bootstrap_ratio'] * (self._kwargs['holdout_ratio']) * self.xi.shape[0] < 50:
+                if self._kwargs['bootstrap_ratio'] * (self._kwargs['holdout_ratio']) * self.obs.shape[0] < 50:
                     warn('WARNING: Less than 50 values remaining to estimate the test statistics, from bootstrap- and holdout_ratio')
             elif (self._config['bootstrap'] > 0):
-                if self._kwargs['bootstrap_ratio'] * self.xi.shape[0] < 50:
+                if self._kwargs['bootstrap_ratio'] * self.obs.shape[0] < 50:
                     warn('WARNING: Less than 50 values remaining to fit the regression model, from bootstrap_ratio')
             elif (self._config['holdout'] > 0):
-                if (1 - self._kwargs['holdout_ratio']) * self.xi.shape[0] < 50:
+                if (1 - self._kwargs['holdout_ratio']) * self.obs.shape[0] < 50:
                     warn('WARNING: Less than 50 values remaining to fit the regression model, from holdout_ratio')
-                if (self._kwargs['holdout_ratio']) * self.xi.shape[0] < 50:
+                if (self._kwargs['holdout_ratio']) * self.obs.shape[0] < 50:
                     warn('WARNING: Less than 50 values remaining to estimate the test statistics, from holdout_ratio')
 
     def check_init_holdout_ids(self):
         """
         Method to get indexes of fit and test split ordered. Based on length of
-        current self._xi
+        current self._obs
         """
         if self._config['holdout'] is True:
-            ids_fit, ids_test = train_test_split(np.arange(0, self._xi.shape[0], 1),
+            ids_fit, ids_test = train_test_split(np.arange(0, self._obs.shape[0], 1),
                                                  test_size = self._kwargs['holdout_ratio'],
                                                  random_state = self._kwargs['holdout_seed'],
                                                  shuffle = True)
             ids_fit = np.sort(ids_fit).tolist()
             ids_test = np.sort(ids_test).tolist()
         else:
-            ids_fit = np.arange(0, self._xi.shape[0], 1).tolist()
+            ids_fit = np.arange(0, self._obs.shape[0], 1).tolist()
             ids_test = ids_fit
         self._ids_fit = ids_fit
         self._ids_test = ids_test
@@ -169,7 +166,7 @@ class General():
         Method to fit a choosen list of scalers to all Xi
         """
         for i in range(len(self._scaler)):
-            self._scaler[i].fit(self._xi[self._ids_fit, i].reshape(-1, 1))
+            self._scaler[i].fit(self._obs[self._ids_fit, i].reshape(-1, 1))
 
     def scaler_transform(self, data, idx):
         """
@@ -195,8 +192,8 @@ class General():
         Method to get the index of the dependent (tdep) and the independent
         (tindep) variable by index i from combinations.
         """
-        tdep = tuple([self._comb[combno][0], ])
-        tindeps = self._comb[combno][1:]
+        tdep = tuple([self._combs[combno][0], ])
+        tindeps = self._combs[combno][1:]
         return(tdep, tindeps)
 
     def get_Xmodel(self, X_data, modelpts):

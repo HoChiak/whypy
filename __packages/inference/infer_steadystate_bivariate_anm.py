@@ -59,13 +59,13 @@ class Model(parent0, parent1, parent2, parent3, parent4, parent5):
         parent3.__init__(self)
         parent4.__init__(self)
         parent5.__init__(self)
-        self.xi = np.array(xi)
-        self.comb = combinations
+        self.obs = np.array(xi)
+        self.combs = combinations
         self.regmod = regmod
         self.scaler = scaler
-        self._xi = None
-        self._comb = None
-        self._regmod = None
+        self._obs = None
+        self._combs = None
+        self._regmods = None
         self._scaler = None
 
     def run(self,
@@ -82,7 +82,7 @@ class Model(parent0, parent1, parent2, parent3, parent4, parent5):
         Valid for Additive Noise Models e.g. LiNGAM, NonLinear GaussianAM
         """
         # Count Number of runs +1
-        self._norun = 0
+        self._runi = 0
         # Check and Initialisation of Attributes
         self.check_instance_model_attr(scale)
         self.init_instance_model_attr()
@@ -95,9 +95,9 @@ class Model(parent0, parent1, parent2, parent3, parent4, parent5):
                         'scale': scale,
                         'bootstrap': bootstrap,
                         'holdout': holdout,
-                        'shape_observations': self._xi.shape,
-                        'shape_combinations': np.array(self._comb).shape,
-                        'regression_model': str(self._regmod[0]),
+                        'shape_observations': self._obs.shape,
+                        'shape_combinations': np.array(self._combs).shape,
+                        'regression_model': str(self._regmods[0]),
                         'scaler_model': str(self._scaler[0]),
                         }
         # Check and Init Kwargs
@@ -115,14 +115,14 @@ class Model(parent0, parent1, parent2, parent3, parent4, parent5):
                 utils.display_text_predefined(what='count bootstrap',
                                               current=boot_i, sum=bootstrap)
                 # Init fresh _regmod from regmod -> otherwise fit will fail
-                self._regmod = utils.trans_object_to_list(self.regmod,
-                                                          len(self._comb),
+                self._regmods = utils.trans_object_to_list(self.regmod,
+                                                          len(self._combs),
                                                           dcopy=True)
                 # Do the Bootstrap
-                self._xi = resample(deepcopy(self.xi), replace=True,
-                                    n_samples=int(self.xi.shape[0] * self._kwargs['bootstrap_ratio']),
+                self._obs = resample(deepcopy(self.obs), replace=True,
+                                    n_samples=int(self.obs.shape[0] * self._kwargs['bootstrap_ratio']),
                                     random_state=self._kwargs['bootstrap_seed']+boot_i)
-            self._norun = boot_i
+            self._runi = boot_i
             # Do the math
             self.run_inference()
         # Plot the math of inference

@@ -39,22 +39,22 @@ class RunANM():
         self._results = {}
         self._results_df = {}
 
-    def get_combination_objects(self, combno, tdep, tindeps, ids_list):
+    def get_combination_objects(self, combi, tdep, tindeps, ids_list):
         """
         Method to return [X, Y and the regarding model], controlled by index
-        combno, where i is in (0, number_of_combinations, 1).
+        combi, where i is in (0, number_of_combinations, 1).
         In Combinations, the first value of the nested list is always the
         dependent variable whereas the other values are the independent
         variables. Copy values to make original values independent from
         scaling.
         """
-        model = self._regmod[combno]
-        Y_data = np.copy(self._xi[ids_list, tdep]).reshape(-1, 1)
+        model = self._regmods[combi]
+        Y_data = np.copy(self._obs[ids_list, tdep]).reshape(-1, 1)
         # TBD check if there is a better solution to index over two axis
-        X_data = np.copy(self._xi[:, tindeps][ids_list, :]).reshape(-1, len(tindeps))
+        X_data = np.copy(self._obs[:, tindeps][ids_list, :]).reshape(-1, len(tindeps))
         return(model, X_data, Y_data)
 
-    def fit_model2xi(self, combno, tdep, tindeps, model, X_data, Y_data):
+    def fit_model2xi(self, combi, tdep, tindeps, model, X_data, Y_data):
         """
         Method to fit model to Xi in the two variable case
         """
@@ -64,7 +64,7 @@ class RunANM():
             Y_data = self.scaler_transform(Y_data, tdep)
         # Use gridsearch instead of fit if model is pyGAM
         if self._kwargs['gridsearch'] is True:
-            if 'pygam' in str(self._regmod[0].__class__):
+            if 'pygam' in str(self._regmods[0].__class__):
                 model.gridsearch(X_data.reshape(-1, len(tindeps)), Y_data)
             else:
                 grid_search = GridSearchCV(model, self._kwargs['param_grid'])
@@ -83,7 +83,7 @@ class RunANM():
             X_data = self.scaler_inverse_transform(X_data, tindeps)
             Y_data = self.scaler_inverse_transform(Y_data, tdep)
 
-    def predict_model(self, combno, tdep, tindeps, model, X_data, Y_data):
+    def predict_model(self, combi, tdep, tindeps, model, X_data, Y_data):
         """
         Method to create further information on a fit. Returns a list for each
         fit including the following values:
@@ -107,10 +107,10 @@ class RunANM():
             Y_data = self.scaler_inverse_transform(Y_data, tdep)
             X_model = self.scaler_inverse_transform(X_model, tindeps)
             Y_model = self.scaler_inverse_transform(Y_model, tdep)
-        self._results['%i' % (self._norun)][combno]['X_model'] = X_model
-        self._results['%i' % (self._norun)][combno]['Y_model'] = Y_model
+        self._results['%i' % (self._runi)][combi]['X_model'] = X_model
+        self._results['%i' % (self._runi)][combi]['Y_model'] = Y_model
 
-    def predict_residuals(self, combno, tdep, tindeps, model, X_data, Y_data):
+    def predict_residuals(self, combi, tdep, tindeps, model, X_data, Y_data):
         """
         Method to create further information on a fit. Returns a list for each
         fit including the following values:
@@ -130,10 +130,10 @@ class RunANM():
             Y_predict = self.scaler_inverse_transform(Y_predict, tdep)
         # Get residuals
         Residuals = Y_data - Y_predict
-        self._results['%i' % (self._norun)][combno]['Y_predict'] = Y_predict
-        self._results['%i' % (self._norun)][combno]['Residuals'] = Residuals
+        self._results['%i' % (self._runi)][combi]['Y_predict'] = Y_predict
+        self._results['%i' % (self._runi)][combi]['Residuals'] = Residuals
 
-    def do_statistics(self, combno, obs_name, test_stat, obs1, obs2=None):
+    def do_statistics(self, combi, obs_name, test_stat, obs1, obs2=None):
         """
         Method to comprehense statistical tests
         """
@@ -151,42 +151,42 @@ class RunANM():
             tr = stats.hsic_gam(obs1, obs2)
         else:
             print('Given test_stat argument is not defined.')
-        self._results['%i' % (self._norun)][combno]['%s' % (obs_name)] = tr
+        self._results['%i' % (self._runi)][combi]['%s' % (obs_name)] = tr
 
-    def test_statistics(self, combno, tdep, tindeps, model, X_data, Y_data):
+    def test_statistics(self, combi, tdep, tindeps, model, X_data, Y_data):
         """
         Method to perform statistical tests on the given and predicted data.
         """
-        for i, tindep in enumerate(tindeps):
+        for tindepi, tindepv in enumerate(tindeps):
             # Normality Test on X_data
-            self.do_statistics(combno,
-                               'Normality_X_data_%i' % (tindep),
+            self.do_statistics(combi,
+                               'Normality_X_data_%i' % (tindepv),
                                'Normality',
-                               obs1=X_data[:, i],
+                               obs1=X_data[:, tindepi],
                                obs2=None)
             # Test Independence of Residuals
-            self.do_statistics(combno,
-                               'IndepResiduals_%i' % (tindep),
+            self.do_statistics(combi,
+                               'IndepResiduals_%i' % (tindepv),
                                self._config['testtype'],
-                               obs1=self._results['%i' % (self._norun)][combno]['Residuals'],
-                               obs2=X_data[:, i])
+                               obs1=self._results['%i' % (self._runi)][combi]['Residuals'],
+                               obs2=X_data[:, tindepi])
         # Normality Test on Residuals
-        self.do_statistics(combno,
+        self.do_statistics(combi,
                            'Normality_Residuals',
                            'Normality',
-                           obs1=self._results['%i' % (self._norun)][combno]['Residuals'],
+                           obs1=self._results['%i' % (self._runi)][combi]['Residuals'],
                            obs2=None)
         # Normality Test on Y_data
-        self.do_statistics(combno,
+        self.do_statistics(combi,
                            'Normality_Y_data',
                            'Normality',
                            obs1=Y_data,
                            obs2=None)
         # Test Goodness of Fit
-        self.do_statistics(combno,
+        self.do_statistics(combi,
                            'GoodnessFit',
                            self._config['testtype'],
-                           obs1=self._results['%i' % (self._norun)][combno]['Y_predict'],
+                           obs1=self._results['%i' % (self._runi)][combi]['Y_predict'],
                            obs2=Y_data)
 
     def run_inference(self):
@@ -198,25 +198,25 @@ class RunANM():
         if self._config['scale'] is True:
             self.scaler_fit()
         # Initialize empty list to be filled
-        self._results['%i' % (self._norun)] = utils.trans_object_to_list(None, len(self._comb), dcopy=True)
+        self._results['%i' % (self._runi)] = utils.trans_object_to_list(None, len(self._combs), dcopy=True)
         # Fit (scaled) models and do statistical tests
-        for combno in range(len(self._comb)):
+        for combi in range(len(self._combs)):
             # Initialize empty dictionary to be filled
-            self._results['%i' % (self._norun)][combno] = {}
+            self._results['%i' % (self._runi)][combi] = {}
             # Get Constants
-            tdep, tindeps = self.get_tINdeps(combno)
+            tdep, tindeps = self.get_tINdeps(combi)
             # Get Constants
-            model, X_data, Y_data = self.get_combination_objects(combno, tdep, tindeps, self._ids_fit)
+            model, X_data, Y_data = self.get_combination_objects(combi, tdep, tindeps, self._ids_fit)
             # fit regmod on observations
-            self.fit_model2xi(combno, tdep, tindeps, model, X_data, Y_data)
+            self.fit_model2xi(combi, tdep, tindeps, model, X_data, Y_data)
             # predict model points
-            self.predict_model(combno, tdep, tindeps, model, X_data, Y_data)
+            self.predict_model(combi, tdep, tindeps, model, X_data, Y_data)
             # Get Constants
-            model, X_data, Y_data = self.get_combination_objects(combno, tdep, tindeps, self._ids_test)
+            model, X_data, Y_data = self.get_combination_objects(combi, tdep, tindeps, self._ids_test)
             # predict residuals
-            self.predict_residuals(combno, tdep, tindeps, model, X_data, Y_data)
+            self.predict_residuals(combi, tdep, tindeps, model, X_data, Y_data)
             # do statistical tests
-            self.test_statistics(combno, tdep, tindeps, model, X_data, Y_data)
+            self.test_statistics(combi, tdep, tindeps, model, X_data, Y_data)
 
 
 class PlotANM():
@@ -230,14 +230,14 @@ class PlotANM():
         Class constructor.
         """
 
-    def get_std_txt(self, combno, tdep, tindeps):
+    def get_std_txt(self, combi, tdep, tindeps):
         """
         Libary of some standard text phrases
         """
-        txt = r'X_{%i} ~ f(X_{%combno}, E_X)' % (tdep, tindeps)
+        txt = r'X_{%i} ~ f(X_{%combi}, E_X)' % (tdep, tindeps)
         return(txt)
 
-    def get_math_txt(self, combno, tdep, tindeps):
+    def get_math_txt(self, combi, tdep, tindeps):
         """
         Libary of some standard text phrases
         """
@@ -251,14 +251,14 @@ class PlotANM():
         # Differentiate between holdout case
         if self._config['holdout'] is True:
             # Get Holdout for hue
-            hue = np.zeros((self._xi.shape[0], ))
+            hue = np.zeros((self._obs.shape[0], ))
             hue[self._ids_fit] = 1
             hue = hue.tolist()
             hue = ['test' if i == 0 else 'fit' for i in hue]
         else:
-            hue = ['fit/test' for i in range(self._xi.shape[0])]
-        df = pd.DataFrame(self._xi)
-        df.columns = [r'$X_{%i}$' % (i) for i in range(self._xi.shape[1])]
+            hue = ['fit/test' for i in range(self._obs.shape[0])]
+        df = pd.DataFrame(self._obs)
+        df.columns = [r'$X_{%i}$' % (i) for i in range(self._obs.shape[1])]
         df = pd.concat([df, pd.DataFrame(hue, columns=['holdout'])], axis=1)
         g = sns.PairGrid(df, hue='holdout');
         g = g.map_diag(plt.hist, edgecolor="w")
@@ -267,29 +267,29 @@ class PlotANM():
         g.fig.set_size_inches(self._figsize)
         plt.show();
 
-    def plt_1model_adv(self, combno, tdep, i, tindeps):
+    def plt_1model_adv(self, combi, tdep, tindepi, tindepv):
         """
         Method to plot a scatter of the samples, the fitted model and the
         residuals. Plot joint distribution and marginals.
         """
-        txt = self.get_math_txt(combno, tdep, tindeps)
+        txt = self.get_math_txt(combi, tdep, tindepv)
         # Jointgrid of Observations for Fit
-        g = sns.JointGrid(self._xi[self._ids_fit, tindeps],
-                          self._xi[self._ids_fit, tdep],
+        g = sns.JointGrid(self._obs[self._ids_fit, tindepv],
+                          self._obs[self._ids_fit, tdep],
                           height=self._figsize[0]*5/6,
                           ratio=int(5)
                           )
         g.plot_joint(plt.scatter, edgecolor="w", s=40, alpha=0.5,
                      c=self._colors[0])
         # Plot of Model
-        plt.plot(self._results['%i' % (self._norun)][combno]['X_model'][:, i],
-                 self._results['%i' % (self._norun)][combno]['Y_model'],
+        plt.plot(self._results['%i' % (self._runi)][combi]['X_model'][:, tindepi],
+                 self._results['%i' % (self._runi)][combi]['Y_model'],
                  c='r')
         # Differentiate between holdout case
         if self._config['holdout'] is True:
             # Scatter of Observations for Test
-            plt.scatter(self._xi[self._ids_test, tindeps],
-                        self._xi[self._ids_test, tdep],
+            plt.scatter(self._obs[self._ids_test, tindepv],
+                        self._obs[self._ids_test, tdep],
                         marker='s', edgecolor="w", s=40, alpha=0.5,
                         c=self._colors[1])
             legend = [r'$Model\ %s$' % (txt),
@@ -301,56 +301,56 @@ class PlotANM():
                       r'$Observations\ for\ Fit/Test$',
                       r'$Residuals\ (X_{%i}-\hatX_{%i})$' % (tdep, tdep)]
         # Scatter of Residuals
-        plt.scatter(self._xi[self._ids_test, tindeps],
-                    self._results['%i' % (self._norun)][combno]['Residuals'],
+        plt.scatter(self._obs[self._ids_test, tindepv],
+                    self._results['%i' % (self._runi)][combi]['Residuals'],
                     marker='D', edgecolor="w", s=40, alpha=0.8,
                     c=self._colors[2])
         # Further Plot Options
         plt.legend(legend)
-        plt.xlabel(r'$X_{%i}$' % (tindeps))
+        plt.xlabel(r'$X_{%i}$' % (tindepv))
         plt.ylabel(r'$X_{%i}$' % (tdep))
         g.plot_marginals(sns.distplot, kde=True)
         plt.show();
 
-    def plt_hist_IndepResiduals(self, combno, tdep, i, tindeps):
+    def plt_hist_IndepResiduals(self, combi, tdep, tindepi, tindepv):
         """
         Method to plot a histogramm of both the independent sample and the
         Residuals
         """
-        txt = self.get_math_txt(combno, tdep, tindeps)
+        txt = self.get_math_txt(combi, tdep, tindepv)
         plt.figure(r'Independence of Residuals: %s' % (txt),
                    figsize=self._figsize)
         if self._config['holdout'] is True:
-            sns.distplot(self._xi[self._ids_test, tindeps],
+            sns.distplot(self._obs[self._ids_test, tindepv],
                          norm_hist=True,
                          color=self._colors[1])
         else:
-            sns.distplot(self._xi[self._ids_test, tindeps],
+            sns.distplot(self._obs[self._ids_test, tindepv],
                          norm_hist=True,
                          color=self._colors[0])
-        sns.distplot(self._results['%i' % (self._norun)][combno]['Residuals'],
+        sns.distplot(self._results['%i' % (self._runi)][combi]['Residuals'],
                      norm_hist=True,
                      color=self._colors[2])
-        plt.legend([r'$X_{%i}$' % (tindeps),
+        plt.legend([r'$X_{%i}$' % (tindepv),
                     r'$Residuals\ (X_{%i}-\hatX_{%i})$' % (tdep, tdep)])
         plt.title(r'$\bf{Independence\ of\ Residuals:\ %s}$' % (txt))
         plt.xlabel(r'$X_{i}$')
         plt.ylabel(r'$p\left(X_{i}\right)$')
         plt.show()
 
-    def plt_hist_GoodnessFit(self, combno, tdep, i, tindeps):
+    def plt_hist_GoodnessFit(self, combi, tdep, tindepi, tindepv):
         """
         Method to plot a histogramm of both the independent sample and the
         Residuals
         """
-        txt = self.get_math_txt(combno, tdep, tindeps)
+        txt = self.get_math_txt(combi, tdep, tindepv)
         plt.figure(r'Goodness of Fit: %s' % (txt),
                    figsize=self._figsize)
-        sns.distplot(self._xi[self._ids_fit, tdep],
+        sns.distplot(self._obs[self._ids_fit, tdep],
                      norm_hist=True,
                      hist_kws={"alpha": 0.3},
                      color=self._colors[0])
-        sns.distplot(self._results['%i' % (self._norun)][combno]['Y_predict'],
+        sns.distplot(self._results['%i' % (self._runi)][combi]['Y_predict'],
                      norm_hist=False,
                      hist_kws={"alpha": 0.7},
                      color=self._colors[0],
@@ -371,19 +371,19 @@ class PlotANM():
         utils.display_text_predefined(what='pairgrid header')
         self.plt_PairGrid()
         # Iterate over combinations
-        for combno in range(len(self._comb)):
-            tdep, tindeps = self.get_tINdeps(combno)
+        for combi in range(len(self._combs)):
+            tdep, tindeps = self.get_tINdeps(combi)
             tdep = tdep[0]
             utils.display_text_predefined(what='combination major header',
                                           tdep=tdep, tindeps=tindeps)
             # Iterate over independent variables
-            for i, tindep in enumerate(tindeps):
+            for tindepi, tindepv in enumerate(tindeps):
                 # Plot tindeps vs Tdep
                 utils.display_text_predefined(what='combination minor header',
-                                              tdep=tdep, tindeps=tindep)
-                self.plt_1model_adv(combno, tdep, i, tindep)
-                self.plt_hist_IndepResiduals(combno, tdep, i, tindep)
-            self.plt_hist_GoodnessFit(combno, tdep, i, tindep)
+                                              tdep=tdep, tindepv=tindepv)
+                self.plt_1model_adv(combi, tdep, tindepi, tindepv)
+                self.plt_hist_IndepResiduals(combi, tdep, tindepi, tindepv)
+            self.plt_hist_GoodnessFit(combi, tdep, tindepi, tindepv)
 
 
 class ResultsANM():
@@ -397,14 +397,14 @@ class ResultsANM():
         Class constructor.
         """
 
-    def boots_to_med_sd(self, combno, namekey, dict, dictkey):
+    def boots_to_med_sd(self, combi, namekey, dict, dictkey):
         """
         Method to get mean and variance from bootstrap runs
         """
-        for testi in self._results['0'][combno][namekey].keys():
+        for testi in self._results['0'][combi][namekey].keys():
             newlist = list()
             for booti in self._results.keys():
-                newlist.append(self._results[booti][combno][namekey][testi])
+                newlist.append(self._results[booti][combi][namekey][testi])
             newarray = np.array(newlist).flatten()
             medianarray = np.median(newarray)
             vararray = np.std(newarray)
@@ -420,51 +420,50 @@ class ResultsANM():
         # Init new DataFrame
         results_df = pd.DataFrame()
         # Iterate over all possible combinations
-        for combno in range(len(self._comb)):
-            tdep, tindeps = self.get_tINdeps(combno)
+        for combi in range(len(self._combs)):
+            tdep, tindeps = self.get_tINdeps(combi)
             tdep = tdep[0]
             # Iterate over bivariate comparisons
-            for i, tindep in enumerate(tindeps):
+            for tindepi, tindepv in enumerate(tindeps):
                 # Init new dict
                 df_dict = {}
                 # Differ between bivariate and mvariate for fitted combination
                 if self.attr_variate is 'bivariate':
-                    if tdep < tindep:
-                        df_dict['Fitted Combination'] = r'$X_{%i}, X_{%s}$' % (tdep, tindep)
-                    elif tdep >= tindep:
-                        df_dict['Fitted Combination'] = r'$X_{%s}, X_{%i}$' % (tindep, tdep)
+                    if tdep < tindepv:
+                        df_dict['Fitted Combination'] = r'$X_{%i}, X_{%s}$' % (tdep, tindepv)
+                    elif tdep >= tindepv:
+                        df_dict['Fitted Combination'] = r'$X_{%s}, X_{%i}$' % (tindepv, tdep)
                 elif self.attr_variate is 'mvariate':
                     df_dict['Fitted Combination'] = r'$X_{%i} \sim f(X_{%s})$' % (tdep, tindeps)
+                df_dict['Bivariate Comparison'] = r'$X_{%i} \sim f(X_{%s})$' % (tdep, tindepv)
                 df_dict['tdep'] = tdep
-                df_dict['tindeps'] = tindeps
-                df_dict['Bivariate Comparison'] = r'$X_{%i} \sim f(X_{%s})$' % (tdep, tindep)
-                df_dict['bivariate tindeps'] = tindep
+                df_dict['tindeps'] = jdump(tindeps)
+                df_dict['tindep'] = tindepv
                 # Get Mean and Variance Value out of all bootstrap examples
-                df_dict = self.boots_to_med_sd(combno,
-                                               'Normality_X_data_%i' % (tindep),
+                df_dict = self.boots_to_med_sd(combi,
+                                               'Normality_X_data_%i' % (tindepv),
                                                df_dict,
                                                'Normality Indep. Variable')
-                df_dict = self.boots_to_med_sd(combno,
+                df_dict = self.boots_to_med_sd(combi,
                                                'Normality_Y_data',
                                                df_dict,
                                                'Normality Depen. Variable')
-                df_dict = self.boots_to_med_sd(combno,
+                df_dict = self.boots_to_med_sd(combi,
                                                'Normality_Residuals',
                                                df_dict,
                                                'Normality Residuals')
-                df_dict = self.boots_to_med_sd(combno,
-                                               'IndepResiduals_%i' % (tindep),
+                df_dict = self.boots_to_med_sd(combi,
+                                               'IndepResiduals_%i' % (tindepv),
                                                df_dict,
                                                'Dependence: Indep. Variable - Residuals')
-                df_dict = self.boots_to_med_sd(combno,
+                df_dict = self.boots_to_med_sd(combi,
                                                'GoodnessFit',
                                                df_dict,
                                                'Dependence: Depen. Variable - Prediction (GoF)')
-            # Append current bivariate comparison to DF
-            new_df = pd.DataFrame(df_dict)
-            results_df = pd.concat([results_df, new_df],
-                                   ignore_index=True, axis=0)
-        self._results_df = results_df
+                # Append current bivariate comparison to DF
+                results_df = pd.concat([results_df, pd.Series(df_dict)],
+                                       ignore_index=False, axis=1)
+            self._results_df = results_df.T
 
     def get_df_normality(self, testkey):
         """
@@ -549,34 +548,34 @@ class ResultsANM():
         """
         # Get Dictionary
         df_dependence = self.get_df_dependence(testkey, removeList=False)
+        # Get Data for each bivariate case from dictionary
+        positions = np.arange(-0.5, -(df_dependence.shape[0]+0.5), -1)
+        y_data = [jload(bivacomp[-1]) for i, bivacomp in df_dependence.iterrows()]
+        labels_box = [r'$\bf{%i}:$' % (i) + ' %s' % (bivacomp[1]) for i, bivacomp in df_dependence.iterrows()]
+        combis = [bivacomp[0] for i, bivacomp in df_dependence.iterrows()]
+        # Get Unique combinations and give number to them
+        combi_unique = set(combis)
+        combi_unique = {key: i for i, key in enumerate(combi_unique)}
         # Init Plot
         plt.figure('Combination Boxplot',
                    figsize=[self._figsize[0],
-                            self._figsize[1]*(len(self._comb)/9)])
+                            self._figsize[1]*(len(combis)/9)])
         if 'p-value' in self.attr_dict[self._config['testtype']]:
             plt.xscale('log')
             lbl = r'$dependence \leftarrow\ p-value\ \rightarrow independence$'
         elif 'likelihood-ratio' in self.attr_dict[self._config['testtype']]:
             lbl = r'$not favored \leftarrow\ likelihood-ratio\ \rightarrow favored$'
-        # Get Data for each bivariate case from dictionary
-        x_data = np.arange(-0.5, -(df_dependence.shape[0]+0.5), -1)
-        y_data = [jload(bivacomp[-1]) for i, bivacomp in df_dependence.iterrows()]
-        labels_box = [r'$\bf{%i}:$' % (i) + ' %s' % (bivacomp[1]) for i, bivacomp in df_dependence.iterrows()]
-        combnos = [bivacomp[0] for i, bivacomp in df_dependence.iterrows()]
-        # Get Unique combinations and give number to them
-        combno_unique = set(combnos)
-        combno_unique = {key: i for i, key in enumerate(combno_unique)}
         # Background Color different bivariate cases from same combinations
-        for i, combno in enumerate(combnos):
-            facecolor = self._cmap(combno_unique[combno]/(len(combno_unique)))
-            plt.axhspan(x_data[i]-1/3, x_data[i]+1/3,
+        for i, combi in enumerate(combis):
+            facecolor = self._cmap(combi_unique[combi]/(len(combi_unique)))
+            plt.axhspan(positions[i]-1/3, positions[i]+1/3,
                         facecolor=facecolor, alpha=1)
-        plt.legend(combnos,
+        plt.legend(combis,
                    loc='center right',
                    bbox_to_anchor=(1.2, 0.5),
                    ncol=1)
         # Boxplot
-        plt.boxplot(y_data, positions=x_data, labels=labels_box, vert=False,
+        plt.boxplot(y_data, positions=positions, labels=labels_box, vert=False,
                     patch_artist=True)
         # Further Plot Settings
         plt.title(r'BoxPlot', fontweight='bold')
