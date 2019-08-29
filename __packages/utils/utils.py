@@ -265,8 +265,8 @@ def plot_DAG(Edge_list, Node_list=None):
         Labels = None
     # Extract Node_list from Edge_list, if not given
     if Node_list is None:
-        Node_list = Edge_list[['Node1', 'Node2']].values.ravel()
-        Node_list = pd.unique(Node_list)
+        Node_list = Edges.reshape(-1,)
+        Node_list = pd.unique(Node_list).tolist()
     # Get length of list
     list_len = len(Node_list)
     # Multiply colors for all entrys in list

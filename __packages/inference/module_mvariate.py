@@ -32,13 +32,30 @@ class Mvariate():
         """
         Method to get a list of combinations for the Mvariate Case. TBD
         """
-        # var_names = np.arange(self.obs.shape[1]).tolist()
-        # comb = [x for x in permutations(var_names, 2)]
-        # # Order combinations by forward, backward equality
-        # comb_ary = np.array(comb) + 1
-        # sort_order = np.argsort(np.multiply(comb_ary[:, 0], comb_ary[:, 1]))
-        # comb = [comb[i] for i in sort_order]
-        # self._comb = utils.trans_nestedlist_to_tuple(comb)
+        var_names = np.arange(self.obs.shape[1]).tolist()
+        combs = []
+        for i in reversed(range(2, len(var_names)+1)):
+            comb = [x for x in permutations(var_names, i)]
+            # Order combinations by forward, backward equality
+            if i == 2:
+                comb_ary = np.array(comb) + 1
+                sort_order = np.argsort(np.multiply(comb_ary[:, 0],
+                                                    comb_ary[:, 1]))
+                comb = [comb[i] for i in sort_order]
+            # Remove i>2 combinations with equal tindeps
+            else:
+                comb_ary = np.array(comb)
+                comb_unique = np.sort(comb_ary[:,1:], axis=1)
+                comb_unique = np.unique(comb_unique, axis=0)
+                comb_sel = []
+                for i in range(comb_unique.shape[0]):
+                    comb_cur = np.all(comb_ary[:, 1:] == comb_unique[i],
+                                      axis=1)
+                    comb_sel.append(comb_cur.tolist())
+                comb_sel = np.any(np.array(comb_sel), axis=0)
+                comb = comb_ary[comb_sel].tolist()
+            combs.extend(comb)
+        self._combs = utils.trans_nestedlist_to_tuple(combs)
 
     def check_combinations(self):
         """

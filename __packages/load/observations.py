@@ -73,7 +73,7 @@ def observations(modelclass, no_obs=100, seed=None):
                         cl_Noise = 'Uniform, Additive, Non-Equivalent',
                         SCM = """<p>X<sub>0</sub> ~ [ 0.4 * <strong><i>U</i></strong> (0, 5) ]</p>
                                  <p>X<sub>1</sub> ~ [ 2 * X<sub>0</sub> + 0.2 * <strong><i>U</i></strong> (0, 5) ]</p>""")
-        Edge_list = [['X_0', 'X_1']]
+        Edge_list = [[0, 1]]
         X0 = np.array(0.4 * np.random.uniform(0, 5, no_obs))
         X1 = np.array(2 * X0 + 0.2 * np.random.uniform(0, 5, no_obs))
         X0 = X0.reshape(-1, 1)
@@ -87,7 +87,7 @@ def observations(modelclass, no_obs=100, seed=None):
                         cl_Noise = 'Gaussian, Additive, Non-Equivalent',
                         SCM = """<p>X<sub>0</sub> ~ [ <strong><i>N</i></strong> (5, 0.25) ]</p>
                                  <p>X<sub>1</sub> ~ [ X<sub>0</sub><sup>3</sup> + <strong><i>N</i></strong> (0, 2.25) ]</p>""")
-        Edge_list = [['X_0', 'X_1']]
+        Edge_list = [[0, 1]]
         X0 = np.array(5 + 0.5 * np.random.randn(no_obs))
         X1 = np.array(X0**3 + 1.5 * np.random.randn(no_obs))
         X0 = X0.reshape(-1, 1)
@@ -102,9 +102,9 @@ def observations(modelclass, no_obs=100, seed=None):
                         SCM = """<p>X<sub>0</sub> ~ [ 5 + 0.4 * <strong><i>U</i></strong> (0, 5) ]</p>
                                  <p>X<sub>1</sub> ~ [ X<sub>0</sub> + 0.6 * <strong><i>U</i></strong> (0, 5) ]</p>
                                  <p>X<sub>2</sub> ~ [ X<sub>0</sub> + X<sub>1</sub> + 0.2 * <strong><i>U</i></strong> (0, 5) ]</p>""")
-        Edge_list = [['X_0', 'X_1'],
-                     ['X_0', 'X_2'],
-                     ['X_1', 'X_2']]
+        Edge_list = [[0, 1],
+                     [0, 2],
+                     [1, 2]]
         X0 = np.array(5 + 0.4 * np.random.uniform(0, 5, no_obs))
         X1 = np.array(X0 + 0.6 * np.random.uniform(0, 5, no_obs))
         X2 = np.array(X0 + X1 + 0.2 * np.random.uniform(0, 5, no_obs))
@@ -121,9 +121,9 @@ def observations(modelclass, no_obs=100, seed=None):
                         SCM = """<p>X<sub>0</sub> ~ [ <strong><i>N</i></strong> (5, 0.25) ]</p>
                                  <p>X<sub>1</sub> ~ [ X<sub>0</sub><sup>3</sup> + <strong><i>N</i></strong> (0, 0.16) ]</p>
                                  <p>X<sub>2</sub> ~ [ X<sub>0</sub><sup>4</sup> + X<sub>1</sub><sup>3</sup> + <strong><i>N</i></strong> (0, 0.09) ]</p>""")
-        Edge_list = [['X_0', 'X_1'],
-                     ['X_0', 'X_2'],
-                     ['X_1', 'X_2']]
+        Edge_list = [[0, 1],
+                     [0, 2],
+                     [1, 2]]
         X0 = np.array(5 + 0.5 * np.random.randn(no_obs))
         X1 = np.array(X0*3 + 0.4 * np.random.randn(no_obs))
         X2 = np.array(X0*4 + X1*3 + 0.3 * np.random.randn(no_obs))
@@ -140,8 +140,8 @@ def observations(modelclass, no_obs=100, seed=None):
                         SCM = """<p>X<sub>0</sub> ~ [ <strong><i>N</i></strong> (1, 0.25) ]</p>
                                  <p>X<sub>1</sub> ~ [ <strong><i>N</i></strong> (0, 2.25) ]</p>
                                  <p>X<sub>2</sub> ~ [ X<sub>0</sub><sup>4</sup> + X<sub>1</sub><sup>2</sup> + <strong><i>N</i></strong> (0, 0.25) ]</p>""")
-        Edge_list = [['X_0', 'X_2'],
-                     ['X_1', 'X_2']]
+        Edge_list = [[0, 2],
+                     [1, 2]]
         X0 = np.array(1 + 0.5 * np.random.randn(no_obs))
         X1 = np.array(1.5 * np.random.randn(no_obs))
         X2 = np.array(X0**4 + X1**2 + 0.5 * np.random.randn(no_obs))
@@ -158,8 +158,8 @@ def observations(modelclass, no_obs=100, seed=None):
                         SCM = """<p>X<sub>0</sub> ~ [ <strong><i>N</i></strong> (1, 0.25) ]</p>
                                  <p>X<sub>1</sub> ~ [ X<sub>0</sub><sup>4</sup> + <strong><i>N</i></strong> (0, 2.25) ]</p>
                                  <p>X<sub>2</sub> ~ [ X<sub>0</sub><sup>3</sup> + <strong><i>N</i></strong> (0, 0.25) ]</p>""")
-        Edge_list = [['X_0', 'X_1'],
-                     ['X_0', 'X_2']]
+        Edge_list = [[0, 1],
+                     [0, 2]]
         X0 = np.array(1 + 0.5 * np.random.randn(no_obs))
         X1 = np.array(X0**4 + 1.5 * np.random.randn(no_obs))
         X2 = np.array(X0**3 + 0.5 * np.random.randn(no_obs))
@@ -176,9 +176,9 @@ def observations(modelclass, no_obs=100, seed=None):
                         SCM = """<p>X<sub>0</sub> ~ [ <strong><i>N</i></strong> (1, 0.25) ]</p>
                                  <p>X<sub>1</sub> ~ [ X<sub>0</sub><sup>4</sup> + <strong><i>N</i></strong> (0, 2.25) ]</p>
                                  <p>X<sub>2</sub> ~ [ X<sub>0</sub><sup>4</sup> + X<sub>1</sub><sup>2</sup> + <strong><i>N</i></strong> (0, 0.25) ]</p>""")
-        Edge_list = [['X_0', 'X_1'],
-                     ['X_0', 'X_2'],
-                     ['X_1', 'X_2']]
+        Edge_list = [[0, 1],
+                     [0, 2],
+                     [1, 2]]
         X0 = np.array(1 + 0.5 * np.random.randn(no_obs))
         X1 = np.array(X0**4 + 1.5 * np.random.randn(no_obs))
         X2 = np.array(X0**4 + X1**2 + 0.5 * np.random.randn(no_obs))
@@ -195,8 +195,8 @@ def observations(modelclass, no_obs=100, seed=None):
                         SCM = """<p>X<sub>0</sub> ~ [ <strong><i>N</i></strong> (1, 0.25) ]</p>
                                  <p>X<sub>1</sub> ~ [ X<sub>0</sub><sup>4</sup> + <strong><i>N</i></strong> (0, 2.25) ]</p>
                                  <p>X<sub>2</sub> ~ [ X<sub>1</sub><sup>2</sup> + <strong><i>N</i></strong> (0, 0.25) ]</p>""")
-        Edge_list = [['X_0', 'X_1'],
-                     ['X_1', 'X_2']]
+        Edge_list = [[0, 1],
+                     [1, 2]]
         X0 = np.array(1 + 0.5 * np.random.randn(no_obs))
         X1 = np.array(X0**4 + 1.5 * np.random.randn(no_obs))
         X2 = np.array(X1**2 + 0.5 * np.random.randn(no_obs))
@@ -231,9 +231,9 @@ def observations(modelclass, no_obs=100, seed=None):
                                  <p>X<sub>1</sub> ~ [ X<sub>0</sub><sup>4</sup> + <strong><i>N</i></strong> (0, 2.25) ]</p>
                                  <p>X<sub>2</sub> ~ [ X<sub>0</sub><sup>4</sup> + X<sub>1</sub><sup>2</sup> + <strong><i>N</i></strong> (0, 0.25) ]</p>
                                  <p>X<sub>3</sub> ~ [ <strong><i>N</i></strong> (2, 0.25) ]</p>""")
-        Edge_list = [['X_0', 'X_1'],
-                     ['X_0', 'X_2'],
-                     ['X_1', 'X_2']]
+        Edge_list = [[0, 1],
+                     [0, 2],
+                     [1, 2]]
         X0 = np.array(1 + 0.5 * np.random.randn(no_obs))
         X1 = np.array(X0**4 + 1.5 * np.random.randn(no_obs))
         X2 = np.array(X0**4 + X1**2 + 0.5 * np.random.randn(no_obs))
@@ -247,8 +247,7 @@ def observations(modelclass, no_obs=100, seed=None):
     else:
         raise ValueError('Modelclass unknown')
     # Extract Node_list by total number of observations
-    Node_list = np.arange(0, no_var, 1)
-    Node_list = [r'X_%i' % (t) for t in Node_list]
+    Node_list = np.arange(0, no_var, 1).tolist()
     # Plot correct Causal Graph
     display(HTML(desc))
     display(HTML("""
