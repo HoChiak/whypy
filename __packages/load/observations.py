@@ -227,17 +227,17 @@ def observations(modelclass, no_obs=100, seed=None):
         desc = get_desc(modelclass, no_var=4,
                         cl_func = 'Non-Linear',
                         cl_Noise = 'Gaussian, Additive, Non-Equivalent',
-                        SCM = """<p>X<sub>0</sub> ~ [ <strong><i>N</i></strong> (1, 0.25) ]</p>
-                                 <p>X<sub>1</sub> ~ [ X<sub>0</sub><sup>4</sup> + <strong><i>N</i></strong> (0, 2.25) ]</p>
-                                 <p>X<sub>2</sub> ~ [ X<sub>0</sub><sup>4</sup> + X<sub>1</sub><sup>2</sup> + <strong><i>N</i></strong> (0, 0.25) ]</p>
-                                 <p>X<sub>3</sub> ~ [ <strong><i>N</i></strong> (2, 0.25) ]</p>""")
+                        SCM = """<p>X<sub>0</sub> ~ [ <strong><i>N</i></strong> (1, 0.16) ]</p>
+                                 <p>X<sub>1</sub> ~ [ X<sub>0</sub><sup>4</sup> + <strong><i>N</i></strong> (0, 0.25) ]</p>
+                                 <p>X<sub>2</sub> ~ [ X<sub>0</sub><sup>4</sup> + X<sub>1</sub><sup>2</sup> + <strong><i>N</i></strong> (0, 0.36) ]</p>
+                                 <p>X<sub>3</sub> ~ [ <strong><i>N</i></strong> (2, 0.64) ]</p>""")
         Edge_list = [[0, 1],
                      [0, 2],
                      [1, 2]]
-        X0 = np.array(1 + 0.5 * np.random.randn(no_obs))
-        X1 = np.array(X0**4 + 1.5 * np.random.randn(no_obs))
-        X2 = np.array(X0**4 + X1**2 + 0.5 * np.random.randn(no_obs))
-        X3 = np.array(2 + 0.5 * np.random.randn(no_obs))
+        X0 = np.array(1 + 0.4 * np.random.randn(no_obs))
+        X1 = np.array(X0**4 + 0.5 * np.random.randn(no_obs))
+        X2 = np.array(X0**4 + X1**2 + 0.6 * np.random.randn(no_obs))
+        X3 = np.array(2 + 0.8 * np.random.randn(no_obs))
         X0 = X0.reshape(-1, 1)
         X1 = X1.reshape(-1, 1)
         X2 = X2.reshape(-1, 1)
