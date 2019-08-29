@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 # import built in libarys
+from copy import deepcopy
 
 
 # import 3rd party libarys
@@ -8,44 +9,245 @@ import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
 from IPython.display import display, HTML
+import pandas as pd
 
 
 # import local libarys
 
 
 ###############################################################################
-def init_2V_list(no_obs):
+def trans_nestedlist_to_tuple(nestedlist):
     """
-    Method returns an empty list of list shape=(no_obs, no_obs)
+    Function to transform nested list to a tuple of tuple.
     """
-    list_inner = list()
-    list_outer = list()
-    for t in range(no_obs):
-        list_inner.append(None)
-    for t in range(no_obs):
-        list_outer.append(list_inner.copy())
-    return(list_outer)
+    tupletuple = [tuple(x) for x in nestedlist]
+    tupletuple = tuple(tupletuple)
+    return(tupletuple)
 
 
-def init_comp_matrix_2V(no_obs):
+def trans_object_to_list(object1, n, dcopy=False):
     """
-    Method returns an empty list of list shape=(no_obs, no_obs)
+    Fuunction to expand one object to a list of length n from this object.
     """
-    matrix = np.eye(no_obs, M=None, k=0, dtype=int)
-    matrix -= 1
-    matrix = matrix * (-1)
-    return(matrix)
+    if dcopy is False:
+        objectn = [object1 for i in range(n)]
+    elif dcopy is True:
+        objectn = [deepcopy(object1) for i in range(n)]
+    return(objectn)
 
 
-def random_environments(obs, ration=0.9, method='Uniform'):
+def trans_tuple_to_scalar(array):
     """
-    tbd
+    Function to turn a np.array([scalar]) into scalar, if possible.
     """
+    if array.size == 1:
+        scalar = array.item()
+        return(scalar)
+    else:
+        return(array)
+
+
+def check_inf_nan(value):
+    """
+    Function to check if value is inf or nan. If True replace by 123.456
+    """
+    if np.isinf(value) is True:
+        value = 123.456
+        print('WARNING: a passed value is infinite and set to 123.456')
+    elif np.isnan(value) is True:
+        value = 123.456
+        print('WARNING: a passed value is nan and set to 123.456')
+    return(value)
+
+
+def display_text_predefined(what, **kwargs):
+    """
+    Fucntion to print text in python console
+    """
+    if 'inference header' in what:
+        text = r"""
+<html>
+<body>
+<div style="background-color:black;color:white;padding:8px;letter-spacing:1em;"
+ align="center">
+<h2>Run   Causal   Inference</h2>
+</div>
+</body>
+</html>
+                    """
+    elif 'count bootstrap' in what:
+        text = r"""
+<html>
+<body>
+<div style="background-color:grey;color:white;padding:4px;" align="center">
+<h3>Bootstrap: %i / %i</h3>
+</div>
+</body>
+</html>
+                    """ % (kwargs['current']+1, kwargs['sum'])
+    elif 'visualization header' in what:
+        text = r"""
+<html>
+<body>
+<div style="background-color:black;color:white;padding:8px;letter-spacing:1em;"
+align="center">
+<h2>INFERENCE   VISUALIZATION</h2>
+</div>
+</body>
+</html>
+                    """
+    elif 'pairgrid header' in what:
+        text = r"""
+<html>
+<body>
+<div style="background-color:grey;color:white;padding:4px;" align="center">
+<h3>PAIRGRID ALL VARIABLES</h3>
+</div>
+</body>
+</html>
+                """
+    elif 'combination major header' in what:
+        text = r"""
+<html>
+<body>
+
+<div style="background-color:grey;color:white;padding:4px;" align="center">
+<h3>Fitted Combination: X<sub>%i</sub> ~ f(X<sub>%s</sub>)</h3>
+</div>
+</body>
+</html>
+                """ % (kwargs['tdep'], str(kwargs['tindeps']))
+    elif 'combination minor header' in what:
+        text = r"""
+<html>
+<body>
+<div style="background-color:lightgrey;color:black;padding:0px;"
+align="center">
+<h4>2D Visualisation for: X<sub>%i</sub> ~ f(X<sub>%s</sub>)</h4>
+</div>
+</body>
+</html>
+                """ % (kwargs['tdep'], kwargs['tindeps'])
+    elif 'result header' in what:
+        text = r"""
+<html>
+<body>
+<style>
+table td, table th, table tr {text-align:left !important;}
+</style>
+<div style="background-color:black;color:white;padding:8px;letter-spacing:1em;"
+align="center">
+<h2>RESULTS</h2>
+</div>
+<div style="background-color:grey;color:white;padding:4px;" align="center">
+<h3>Configuration</h3>
+</div>
+<table>
+                """
+        for temp_key, temp_value in kwargs['dict'].items():
+            text = r"""
+%s
+<tr>
+<td align="left"><b>%s:</b></td>
+<td>%s</td>
+</tr>
+                """ % (text, temp_key, str(temp_value))
+        text = r"""
+ %s
+</table>
+</body>
+</html>
+                """ % (text)
+    elif 'normality' in what:
+        text = r"""
+<html>
+<body>
+</div>
+<div style="background-color:grey;color:white;padding:4px;" align="center">
+<h3>Normality Test</h3>
+</div>
+</body>
+</html>
+                """
+    elif 'dependence residuals' in what:
+        text = r"""
+<html>
+<body>
+</div>
+<div style="background-color:grey;color:white;padding:4px;" align="center">
+<h3>Dependence: Indep. Variable - Residuals</h3>
+</div>
+</body>
+</html>
+                """
+    elif 'dependence prediction' in what:
+        text = r"""
+<html>
+<body>
+</div>
+<div style="background-color:grey;color:white;padding:4px;" align="center">
+<h3>Dependence: Depen. Variable - Prediction (GoF)</h3>
+</div>
+                """
+    elif 'thirdlevel' in what:
+        text = r"""
+<html>
+<body>
+<div style="background-color:lightgrey;color:black;padding:0px;"
+align="center">
+<h4>%s</h4>
+</div>
+</body>
+</html>
+                """ % (kwargs['key'])
+    display(HTML(text))
+
+
+def display_df(df, fontsize='6pt'):
+    """
+    Function to output DataFrame in IPhython formatted as HTML.
+    """
+    pd.options.display.float_format = '{:,.3e}'.format
+    # df.style.set_properties(**{'font-size': fontsize})
+    # display(HTML("<style>.container { width:100% !important; }</style>"))
+    display(HTML(df.to_html()))
+
+
+def display_get_params(name, params):
+    """
+    """
+    text = r"""
+<html>
+<body>
+<style>
+table td, table th, table tr {text-align:left !important;}
+</style>
+<div style="background-color:lightgrey;color:black;padding:0px;"
+align="center">
+<h4>%s</h4>
+</div>
+<table>
+            """ % (name)
+    for temp_key, temp_value in params.items():
+        text = r"""
+%s
+<tr>
+<td align="left"><b>%s:</b></td>
+<td>%s</td>
+</tr>
+                """ % (text, temp_key, str(temp_value))
+    text = r"""
+ %s
+</table>
+</body>
+</html>
+            """ % (text)
+    display(HTML(text))
 
 
 def plot_DAG(Edge_list, Node_list=None):
     """
-    Method to plot a directed acyclic graph (DAG)
+    Function to plot a directed acyclic graph (DAG)
     Edge_list = [[Node1, Node2, EdgeLabel],
                  [Node1, Node2, EdgeLabel],
                  ...                      ]
@@ -106,56 +308,3 @@ def plot_DAG(Edge_list, Node_list=None):
                                          font_size=12,
                                          font_color='black')
     plt.show()
-
-
-def print_DF(df, fontsize='6pt'):
-    """
-    Method to output DataFrame in IPhython formatted as HTML.
-    Adjust how df is displayed in width and fontsize TBD.
-    """
-    # df.style.set_properties(**{'font-size': fontsize})
-    # display(HTML("<style>.container { width:100% !important; }</style>"))
-    display(HTML(df.to_html()))
-
-
-def print_in_console(what, **kwargs):
-    """
-    Method to print text in python console
-    """
-    if 'regmod header' in what:
-        text = r"""
-
-############################################################################
-############################################################################
-----------------------------------------------------------------------------
---------                        X_%i ~ f(X_%i)                        --------
-----------------------------------------------------------------------------
-                """ % (kwargs['tdep'], kwargs['tindep'])
-    if 'model summary' in what:
-        text = r"""
-----------------------------------------------------------------------------
-MODEL SUMMARY  RESULTS
-----------------------------------------------------------------------------
-                """
-    if 'result header' in what:
-        text = r"""
-############################################################################
-############################################################################
-----------------------------------------------------------------------------
---------                      OVERALL  RESULTS                      --------
-----------------------------------------------------------------------------
-                """
-    if 'CG Warning' in what:
-        text = r"""
-----------------------------------------------------------------------------
-CAUSAL GRAPH PREDICTION
-----------------------------------------------------------------------------
-WARNING: This graph is predicted under the underlying assumptions and
-         only valid under these assumptions. Please check verbose for
-         more information.
-                """
-    if 'CG Info' in what:
-        text = r"""
-Testtype: %s | Testmetric: %s
-                """ % (kwargs['testname'], kwargs['testmetric'])
-    print(text)

@@ -15,7 +15,7 @@ from whypy.__packages.utils import utils
 from importlib import reload
 utils=reload(utils)
 ###############################################################################
-class Inference():
+class Transient():
     """
     Causal methods... tbd
     """
@@ -32,9 +32,7 @@ class Inference():
         scaler:     List of scaler
                     (structure as _regmod)
         """
-        self._xi = np.array(xi)
-        self._regmod = regmod
-        self._scaler = scaler
+
 
     def predict(self, testvariant,
                 scale=True,
