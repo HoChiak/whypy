@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from whypy import steadystate
-from whypy import transient
-from whypy import load
+from . import steadystate
+from . import transient
+from . import load

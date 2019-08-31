@@ -90,7 +90,7 @@ def polyreg(degree=2):
         """
         Function to get polynomial features but no interactions
         """
-        return(np.hstack((X**(i) for i in range(4+1))))
-    regmod = make_pipeline(FunctionTransformer(polyfeatures),
+        return(np.hstack([X**(i) for i in range(4+1)]))
+    regmod = make_pipeline(FunctionTransformer(polyfeatures, validate=True),
                            RidgeCV())
     return(regmod)
