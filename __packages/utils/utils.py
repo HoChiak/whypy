@@ -16,7 +16,7 @@ import pandas as pd
 
 
 ###############################################################################
-def trans_nestedlist_to_tuple(nestedlist):
+def nestedlist2nestedtuple(nestedlist):
     """
     Function to transform nested list to a tuple of tuple.
     """
@@ -25,7 +25,7 @@ def trans_nestedlist_to_tuple(nestedlist):
     return(tupletuple)
 
 
-def trans_object_to_list(object1, n, dcopy=False):
+def object2list(object1, n, dcopy=False):
     """
     Fuunction to expand one object to a list of length n from this object.
     """
@@ -36,15 +36,15 @@ def trans_object_to_list(object1, n, dcopy=False):
     return(objectn)
 
 
-def trans_tuple_to_scalar(array):
-    """
-    Function to turn a np.array([scalar]) into scalar, if possible.
-    """
-    if array.size == 1:
-        scalar = array.item()
-        return(scalar)
-    else:
-        return(array)
+# def tuple2scalar(array):
+#     """
+#     Function to turn a np.array([scalar]) into scalar, if possible.
+#     """
+#     if array.size == 1:
+#         scalar = array.item()
+#         return(scalar)
+#     else:
+#         return(array)
 
 
 def check_inf_nan(value):

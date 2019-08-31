@@ -21,7 +21,7 @@ from whypy.__packages.utils import stats
 ###############################################################################
 class RunANM():
     """
-    Class for "Additive Noise Model" Methods.
+    Class for running the calculations of "Additive Noise Model" methods.
     Please be aware of the assumptions for models of these categorie.
     """
     attr_method = 'anm'
@@ -40,7 +40,7 @@ class RunANM():
         self._results = {}
         self._results_df = {}
 
-    def get_combination_objects(self, combi, tdep, tindeps, ids_list):
+    def get_combi(self, combi, tdep, tindeps, ids_list):
         """
         Method to return [X, Y and the regarding model], controlled by index
         combi, where i is in (0, number_of_combinations, 1).
@@ -50,94 +50,103 @@ class RunANM():
         scaling.
         """
         model = self._regmods[combi]
-        Y_data = np.copy(self._obs[ids_list, tdep]).reshape(-1, 1)
+        ydata = np.copy(self._obs[ids_list, tdep]).reshape(-1, 1)
         # TBD check if there is a better solution to index over two axis
-        X_data = np.copy(self._obs[:, tindeps][ids_list, :]).reshape(-1, len(tindeps))
-        return(model, X_data, Y_data)
+        xdata = np.copy(self._obs[:, tindeps][ids_list, :])
+        xdata = xdata.reshape(-1, len(tindeps))
+        return(model, xdata, ydata)
 
-    def fit_model2xi(self, combi, tdep, tindeps, model, X_data, Y_data):
+    def fit_model2xi(self, combi, tdep, tindeps, model, xdata, ydata):
         """
-        Method to fit model to Xi in the two variable case
+        Method to fit model regarding to combi, which defines tdep, tindep,
+        model, xdata and Ydata.
         """
         # Scale data forward
         if self._config['scale'] is True:
-            X_data = self.scaler_transform(X_data, tindeps)
-            Y_data = self.scaler_transform(Y_data, tdep)
-        # Use gridsearch instead of fit if model is pyGAM
+            xdata = self.scaler_transform(xdata, tindeps)
+            ydata = self.scaler_transform(ydata, tdep)
+        # Reshape Data (optimized for fit)
+        x_shape = xdata.shape
+        y_shape = ydata.shape
+        xdata = xdata.reshape(-1, len(tindeps))
+        ydata = ydata.reshape(-1,)
+        # Use gridsearch instead of fit
         if self._kwargs['gridsearch'] is True:
             if 'pygam' in str(self._regmods[0].__class__):
-                model.gridsearch(X_data.reshape(-1, len(tindeps)), Y_data)
+                model.gridsearch(xdata, ydata)
             else:
                 grid_search = GridSearchCV(model, self._kwargs['param_grid'])
-                grid_search.fit(X_data.reshape(-1, len(tindeps)),
-                                Y_data.reshape(-1,))
+                grid_search.fit(xdata, ydata)
                 # TBD check if redundant
                 model.set_params(**grid_search.best_params_)
-                model.fit(X_data.reshape(-1, len(tindeps)),
-                          Y_data.reshape(-1,))
-                # Clean up
+                model.fit(xdata, ydata)
+                # Clean up (otherwise memory might overload)
                 del grid_search
         else:
-            model.fit(X_data.reshape(-1, len(tindeps)), Y_data)
+            model.fit(xdata, ydata)
+        # Shape data back
+        xdata = xdata.reshape(x_shape)
+        ydata = ydata.reshape(y_shape)
         # Scale data back
         if self._config['scale'] is True:
-            X_data = self.scaler_inverse_transform(X_data, tindeps)
-            Y_data = self.scaler_inverse_transform(Y_data, tdep)
+            xdata = self.scaler_inverse_transform(xdata, tindeps)
+            ydata = self.scaler_inverse_transform(ydata, tdep)
 
-    def predict_model(self, combi, tdep, tindeps, model, X_data, Y_data):
+    def predict_model(self, combi, tdep, tindeps, model, xdata, ydata):
         """
         Method to create further information on a fit. Returns a list for each
         fit including the following values:
         X_model:    # X values in linspace to plot the fitted model
         Y_model:    # Y values in linspace to plot the fitted model
-        Y_predict:  predicted values of y given x
-        Residuals:  Y_data - Y_predict
+        (If Holdout is True: ids for "fit" are used)
         """
         # Scale data forward
         if self._config['scale'] is True:
-            X_data = self.scaler_transform(X_data, tindeps)
-            Y_data = self.scaler_transform(Y_data, tdep)
+            xdata = self.scaler_transform(xdata, tindeps)
+            ydata = self.scaler_transform(ydata, tdep)
         # Get independent model data
         modelpts = self._kwargs['modelpts']
-        X_model = self.get_Xmodel(X_data, modelpts)
+        X_model = self.get_Xmodel(xdata, modelpts)
         # Do Prediction
         Y_model = model.predict(X_model).reshape(-1, 1)
         # Scale data back
         if self._config['scale'] is True:
-            X_data = self.scaler_inverse_transform(X_data, tindeps)
-            Y_data = self.scaler_inverse_transform(Y_data, tdep)
+            xdata = self.scaler_inverse_transform(xdata, tindeps)
+            ydata = self.scaler_inverse_transform(ydata, tdep)
             X_model = self.scaler_inverse_transform(X_model, tindeps)
             Y_model = self.scaler_inverse_transform(Y_model, tdep)
+        # Add information to self._results
         self._results['%i' % (self._runi)][combi]['X_model'] = X_model
         self._results['%i' % (self._runi)][combi]['Y_model'] = Y_model
 
-    def predict_residuals(self, combi, tdep, tindeps, model, X_data, Y_data):
+    def predict_residuals(self, combi, tdep, tindeps, model, xdata, ydata):
         """
         Method to create further information on a fit. Returns a list for each
         fit including the following values:
-        X_model:    # X values in linspace to plot the fitted model
-        Y_model:    # Y values in linspace to plot the fitted model
         Y_predict:  predicted values of y given x
-        Residuals:  Y_data - Y_predict
+        Residuals:  ydata - Y_predict
+        (If Holdout is True: ids for "test" are used)
         """
         # Scale data forward
         if self._config['scale'] is True:
-            X_data = self.scaler_transform(X_data, tindeps)
+            xdata = self.scaler_transform(xdata, tindeps)
         # Do Prediction
-        Y_predict = model.predict(X_data).reshape(-1, 1)
+        Y_predict = model.predict(xdata).reshape(-1, 1)
         # Scale data back
         if self._config['scale'] is True:
-            X_data = self.scaler_inverse_transform(X_data, tindeps)
+            xdata = self.scaler_inverse_transform(xdata, tindeps)
             Y_predict = self.scaler_inverse_transform(Y_predict, tdep)
         # Get residuals
-        Residuals = Y_data - Y_predict
+        Residuals = ydata - Y_predict
+        # Add information to self._results
         self._results['%i' % (self._runi)][combi]['Y_predict'] = Y_predict
         self._results['%i' % (self._runi)][combi]['Residuals'] = Residuals
 
     def do_statistics(self, combi, obs_name, test_stat, obs1, obs2=None):
         """
-        Method to comprehense statistical tests
+        Method to summarize statistical tests
         """
+        # Do statistics depending on the key_word "test_stat"
         if test_stat is 'Normality':
             tr = stats.normality(obs1)
         elif test_stat is 'LikelihoodVariance':
@@ -152,79 +161,86 @@ class RunANM():
             tr = stats.hsic_gam(obs1, obs2)
         else:
             print('Given test_stat argument is not defined.')
+        # Add information to self._results
         self._results['%i' % (self._runi)][combi]['%s' % (obs_name)] = tr
 
-    def test_statistics(self, combi, tdep, tindeps, model, X_data, Y_data):
+    def test_statistics(self, combi, tdep, tindeps, model, xdata, ydata):
         """
         Method to perform statistical tests on the given and predicted data.
         """
+        # Get Data for combination i
+        Residuals = self._results['%i' % (self._runi)][combi]['Residuals']
+        Y_predict = self._results['%i' % (self._runi)][combi]['Y_predict']
         for tindepi, tindepv in enumerate(tindeps):
-            # Normality Test on X_data
+            # Get Data for independent variable i
+            obs_tindepi = xdata[:, tindepi]
+            # Normality Test on xdata
             self.do_statistics(combi,
-                               'Normality_X_data_%i' % (tindepv),
+                               'Normality_xdata_%i' % (tindepv),
                                'Normality',
-                               obs1=X_data[:, tindepi],
+                               obs1=obs_tindepi,
                                obs2=None)
             # Test Independence of Residuals
             self.do_statistics(combi,
                                'IndepResiduals_%i' % (tindepv),
                                self._config['testtype'],
-                               obs1=self._results['%i' % (self._runi)][combi]['Residuals'],
-                               obs2=X_data[:, tindepi])
+                               obs1=Residuals,
+                               obs2=obs_tindepi)
         # Normality Test on Residuals
         self.do_statistics(combi,
                            'Normality_Residuals',
                            'Normality',
-                           obs1=self._results['%i' % (self._runi)][combi]['Residuals'],
+                           obs1=Residuals,
                            obs2=None)
-        # Normality Test on Y_data
+        # Normality Test on ydata
         self.do_statistics(combi,
-                           'Normality_Y_data',
+                           'Normality_ydata',
                            'Normality',
-                           obs1=Y_data,
+                           obs1=ydata,
                            obs2=None)
         # Test Goodness of Fit
         self.do_statistics(combi,
                            'GoodnessFit',
                            self._config['testtype'],
-                           obs1=self._results['%i' % (self._runi)][combi]['Y_predict'],
-                           obs2=Y_data)
+                           obs1=Y_predict,
+                           obs2=ydata)
 
     def run_inference(self):
         """
-        Method to do the math. Run trough all possible 2V combinations of
-        observations and calculate the inference.
+        Method to do the math. Run trough all given combinations
         """
-        # Fit Scaler
+        # fit scaler
         if self._config['scale'] is True:
             self.scaler_fit()
-        # Initialize empty list to be filled
-        self._results['%i' % (self._runi)] = utils.trans_object_to_list(None, len(self._combs), dcopy=True)
+        # initialize empty list to be filled
+        empty_list = utils.object2list(None, len(self._combs), dcopy=True)
+        self._results['%i' % (self._runi)] = empty_list
         # Fit (scaled) models and do statistical tests
         for combi in range(len(self._combs)):
-            # Initialize empty dictionary to be filled
+            # initialize empty dictionary to be filled
             self._results['%i' % (self._runi)][combi] = {}
-            # Get Constants
+            # get objects
             tdep, tindeps = self.get_tINdeps(combi)
-            # Get Constants
-            model, X_data, Y_data = self.get_combination_objects(combi, tdep, tindeps, self._ids_fit)
+            # get objects
+            model, xdata, ydata = self.get_combi(combi, tdep, tindeps,
+                                                 self._ids_fit)
             # fit regmod on observations
-            self.fit_model2xi(combi, tdep, tindeps, model, X_data, Y_data)
+            self.fit_model2xi(combi, tdep, tindeps, model, xdata, ydata)
             # predict model points
-            self.predict_model(combi, tdep, tindeps, model, X_data, Y_data)
-            # Get Constants
-            model, X_data, Y_data = self.get_combination_objects(combi, tdep, tindeps, self._ids_test)
+            self.predict_model(combi, tdep, tindeps, model, xdata, ydata)
+            # get objects
+            model, xdata, ydata = self.get_combi(combi, tdep, tindeps,
+                                                 self._ids_test)
             # predict residuals
-            self.predict_residuals(combi, tdep, tindeps, model, X_data, Y_data)
+            self.predict_residuals(combi, tdep, tindeps, model, xdata, ydata)
             # do statistical tests
-            self.test_statistics(combi, tdep, tindeps, model, X_data, Y_data)
+            self.test_statistics(combi, tdep, tindeps, model, xdata, ydata)
 
 
 ###############################################################################
 class PlotANM():
     """
-    Class for "Additive Noise Model" Methods.
-    Please be aware of the assumptions for models of these categorie.
+    Class for plotting the inference of RunANM methods.
     """
 
     def __init__(self):
@@ -232,42 +248,46 @@ class PlotANM():
         Class constructor.
         """
 
-    def get_std_txt(self, combi, tdep, tindeps):
-        """
-        Libary of some standard text phrases
-        """
-        txt = r'X_{%i} ~ f(X_{%combi}, E_X)' % (tdep, tindeps)
-        return(txt)
+    # def get_std_txt(self, combi, tdep, tindeps):
+    #     """
+    #     Libary of some standard text phrases
+    #     """
+    #     txt = r'X_{%i} ~ f(X_{%combi}, E_X)' % (tdep, tindeps)
+    #     return(txt)
 
-    def get_math_txt(self, combi, tdep, tindeps):
+    def get_math_txt(self, combi, tdep, tindepv):
         """
         Libary of some standard text phrases
         """
-        txt = r'X_{%i} \approx f\left( X_{%i}, E_{X}\right)' % (tdep, tindeps)
+        txt = r'%s \sim f\left(%s, E_{X}\right)' % (self._obs_name[tdep],
+                                                    self._obs_name[tindepv])
         return(txt)
 
     def plt_PairGrid(self):
         """
-        Method to plot a PairGrid scatter of the observations.
+        Method to scatter a PairGrid of all observations.
         """
-        # Differentiate between holdout case
+        # differentiate between holdout cases
         if self._config['holdout'] is True:
-            # Get Holdout for hue
+            # get hue for holdout is true
             hue = np.zeros((self._obs.shape[0], ))
             hue[self._ids_fit] = 1
             hue = hue.tolist()
             hue = ['test' if i == 0 else 'fit' for i in hue]
         else:
+            # get hue if holdout is false
             hue = ['fit/test' for i in range(self._obs.shape[0])]
+        # create datframe for easy use of seaborn pairgrid
         df = pd.DataFrame(self._obs)
-        df.columns = [r'$X_{%i}$' % (i) for i in range(self._obs.shape[1])]
+        df.columns = self._obs_name
         df = pd.concat([df, pd.DataFrame(hue, columns=['holdout'])], axis=1)
-        g = sns.PairGrid(df, hue='holdout');
+        # seaborn pairgrid scatter
+        g = sns.PairGrid(df, hue='holdout')
         g = g.map_diag(plt.hist, edgecolor="w")
         g = g.map_offdiag(plt.scatter, edgecolor="w", s=40, alpha=0.5)
         g = g.add_legend()
         g.fig.set_size_inches(self._figsize)
-        plt.show();
+        plt.show()
 
     def plt_1model_adv(self, combi, tdep, tindepi, tindepv):
         """
@@ -297,11 +317,13 @@ class PlotANM():
             legend = [r'$Model\ %s$' % (txt),
                       r'$Observations\ for\ Fit$',
                       r'$Observations\ for\ Test$',
-                      r'$Residuals\ (X_{%i}-\hatX_{%i})$' % (tdep, tdep)]
+                      r'$Residuals\ (%s-\hat{%s})$' % (self._obs_name[tdep],
+                                                       self._obs_name[tdep])]
         else:
             legend = [r'$Model\ %s$' % (txt),
                       r'$Observations\ for\ Fit/Test$',
-                      r'$Residuals\ (X_{%i}-\hatX_{%i})$' % (tdep, tdep)]
+                      r'$Residuals\ (%s-\hat{%s})$' % (self._obs_name[tdep],
+                                                       self._obs_name[tdep])]
         # Scatter of Residuals
         plt.scatter(self._obs[self._ids_test, tindepv],
                     self._results['%i' % (self._runi)][combi]['Residuals'],
@@ -309,10 +331,10 @@ class PlotANM():
                     c=self._colors[2])
         # Further Plot Options
         plt.legend(legend)
-        plt.xlabel(r'$X_{%i}$' % (tindepv))
-        plt.ylabel(r'$X_{%i}$' % (tdep))
+        plt.xlabel(self._obs_name[tindepv])
+        plt.ylabel(self._obs_name[tdep])
         g.plot_marginals(sns.distplot, kde=True)
-        plt.show();
+        plt.show()
 
     def plt_hist_IndepResiduals(self, combi, tdep, tindepi, tindepv):
         """
@@ -333,11 +355,14 @@ class PlotANM():
         sns.distplot(self._results['%i' % (self._runi)][combi]['Residuals'],
                      norm_hist=True,
                      color=self._colors[2])
-        plt.legend([r'$X_{%i}$' % (tindepv),
-                    r'$Residuals\ (X_{%i}-\hatX_{%i})$' % (tdep, tdep)])
+        plt.legend([r'$%s$' % (self._obs_name[tindepv]),
+                    r'$Residuals\ (%s-\hat{%s})$' % (self._obs_name[tdep],
+                                                     self._obs_name[tdep])])
         plt.title(r'$\bf{Independence\ of\ Residuals:\ %s}$' % (txt))
-        plt.xlabel(r'$X_{i}$')
-        plt.ylabel(r'$p\left(X_{i}\right)$')
+        plt.xlabel(r'$%s,\ %s$' % (self._obs_name[tindepv],
+                                   self._obs_name[tdep]))
+        plt.ylabel(r'$p\left(%s,\ %s\right)$' % (self._obs_name[tindepv],
+                                                 self._obs_name[tdep]))
         plt.show()
 
     def plt_hist_GoodnessFit(self, combi, tdep, tindepi, tindepv):
@@ -357,11 +382,11 @@ class PlotANM():
                      hist_kws={"alpha": 0.7},
                      color=self._colors[0],
                      kde_kws={"linestyle": "--"})
-        plt.legend([r'$X_{%i}$' % (tdep),
-                    r'$\hatX_{%i}$' % (tdep)])
+        plt.legend([r'$%s$' % (self._obs_name[tdep]),
+                    r'$\hat{%s}$' % (self._obs_name[tdep])])
         plt.title(r'$\bf{Goodness\ of\ Fit:\ %s}$' % (txt))
-        plt.xlabel(r'$X_{%i}$' % (tdep))
-        plt.ylabel(r'$p\left(X_{i}\right)$')
+        plt.xlabel(r'$%s$' % (self._obs_name[tdep]))
+        plt.ylabel(r'$p\left(%s\right)$' % (self._obs_name[tdep]))
         plt.show()
 
     def plot_inference(self):
@@ -385,7 +410,7 @@ class PlotANM():
                                               tdep=tdep, tindepv=tindepv)
                 self.plt_1model_adv(combi, tdep, tindepi, tindepv)
                 self.plt_hist_IndepResiduals(combi, tdep, tindepi, tindepv)
-            self.plt_hist_GoodnessFit(combi, tdep, tindepi, tindepv)
+                self.plt_hist_GoodnessFit(combi, tdep, tindepi, tindepv)
 
 
 ###############################################################################
@@ -444,11 +469,11 @@ class ResultsANM():
                 df_dict['tindep'] = tindepv
                 # Get Mean and Variance Value out of all bootstrap examples
                 df_dict = self.boots_to_med_sd(combi,
-                                               'Normality_X_data_%i' % (tindepv),
+                                               'Normality_xdata_%i' % (tindepv),
                                                df_dict,
                                                'Normality Indep. Variable')
                 df_dict = self.boots_to_med_sd(combi,
-                                               'Normality_Y_data',
+                                               'Normality_ydata',
                                                df_dict,
                                                'Normality Depen. Variable')
                 df_dict = self.boots_to_med_sd(combi,
@@ -694,7 +719,7 @@ class ANM(RunANM, PlotANM, ResultsANM):
                 utils.display_text_predefined(what='count bootstrap',
                                               current=boot_i, sum=bootstrap)
                 # Init fresh _regmod from regmod -> otherwise fit will fail
-                self._regmods = utils.trans_object_to_list(self.regmod,
+                self._regmods = utils.object2list(self.regmod,
                                                           len(self._combs),
                                                           dcopy=True)
                 # Do the Bootstrap

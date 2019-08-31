@@ -38,7 +38,7 @@ class Bivariate():
         comb_ary = np.array(comb) + 1
         sort_order = np.argsort(np.multiply(comb_ary[:, 0], comb_ary[:, 1]))
         comb = [comb[i] for i in sort_order]
-        self._combs = utils.trans_nestedlist_to_tuple(comb)
+        self._combs = utils.nestedlist2nestedtuple(comb)
 
     def check_combinations(self):
         """
@@ -55,7 +55,7 @@ class Bivariate():
             self.get_all_combinations()
         else:
             self._combs = deepcopy(self.combs)
-            self._combs = utils.trans_nestedlist_to_tuple(self._combs)
+            self._combs = utils.nestedlist2nestedtuple(self._combs)
 
 
 ###############################################################################
@@ -101,7 +101,7 @@ class Mvariate():
                 comb_sel = np.any(np.array(comb_sel), axis=0)
                 comb = comb_ary[comb_sel].tolist()
             combs.extend(comb)
-        self._combs = utils.trans_nestedlist_to_tuple(combs)
+        self._combs = utils.nestedlist2nestedtuple(combs)
 
     def check_combinations(self):
         """
@@ -117,6 +117,6 @@ class Mvariate():
             self.get_all_combinations()
         else:
             self._combs = deepcopy(self.combs)
-            self._combs = utils.trans_nestedlist_to_tuple(self._combs)
+            self._combs = utils.nestedlist2nestedtuple(self._combs)
 
 ###############################################################################

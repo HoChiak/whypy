@@ -30,7 +30,8 @@ class Model(parent0, parent1, parent2, parent3):
                  'HSIC': 'unknown'
                  }
 
-    def __init__(self, obs=None, combinations='all', regmod=None, scaler=None):
+    def __init__(self, obs=None, combinations='all', regmod=None, scaler=None,
+                 obs_name=None):
         """
         Class constructor for causal inference methods.
 
@@ -59,9 +60,11 @@ class Model(parent0, parent1, parent2, parent3):
         self.combs = combinations
         self.regmod = regmod
         self.scaler = scaler
+        self.obs_name = obs_name
         self._obs = None
         self._combs = None
         self._regmods = None
         self._scaler = None
+        self._obs_name = None
 
 ###############################################################################

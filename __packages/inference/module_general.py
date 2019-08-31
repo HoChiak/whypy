@@ -8,6 +8,7 @@ from warnings import warn
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
+from pandas import DataFrame
 
 # import local libarys
 from whypy.__packages.utils import utils
@@ -36,8 +37,8 @@ class General():
         Method to check the instance attributes
         """
         assert self.obs is not None, 'Observations are None type'
-        assert not(np.isnan(self.obs).any()), 'Observations contain np.nan'
-        assert not(np.isinf(self.obs).any()), 'Observations contain np.inf'
+        assert not(np.isnan(np.array(self.obs)).any()), 'Observations contain np.nan'
+        assert not(np.isinf(np.array(self.obs)).any()), 'Observations contain np.inf'
         assert self.regmod is not None, 'Regression Model is None type'
         assert hasattr(self.regmod, 'fit'), 'Regression Model has no attribute "fit"'
         assert hasattr(self.regmod, 'predict'), 'Regression Model has no attribute "predict"'
@@ -60,15 +61,18 @@ class General():
         # Get Combinations of dependent and independent variable if not given
         self.init_combinations()
         # Init Observations
-        self._obs = deepcopy(self.obs)
+        self._obs = np.array(deepcopy(self.obs))
         # Initiate a regmod for each combination
         no_combs = len(self._combs)
-        self._regmods = utils.trans_object_to_list(self.regmod, no_combs,
-                                                  dcopy=True)
+        self._regmods = utils.object2list(self.regmod, no_combs, dcopy=True)
         # Initiate a scaler for each variable
         no_var = self._obs.shape[1]
-        self._scaler = utils.trans_object_to_list(self.scaler, no_var,
-                                                  dcopy=True)
+        self._scaler = utils.object2list(self.scaler, no_var, dcopy=True)
+        # Init observation names
+        if self.obs_name is None:
+            self._obs_name = [r'X%i' % (i) for i in range(no_var)]
+        else:
+            self._obs_name = deepcopy(self.obs_name)
 
     def check_and_init_arg_run(self, testtype, bootstrap, holdout):
         """
