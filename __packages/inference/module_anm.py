@@ -451,6 +451,8 @@ class ResultsANM():
         for combi in range(len(self._combs)):
             tdep, tindeps = self.get_tINdeps(combi)
             tdep = tdep[0]
+            tindeps_list = [self._obs_name[tindepv2] for tindepv2 in tindeps]
+            tindeps_str = ', '.join(tindeps_list)
             # Iterate over bivariate comparisons
             for tindepi, tindepv in enumerate(tindeps):
                 # Init new dict
@@ -458,12 +460,16 @@ class ResultsANM():
                 # Differ between bivariate and mvariate for fitted combination
                 if self.attr_variate is 'bivariate':
                     if tdep < tindepv:
-                        df_dict['Fitted Combination'] = r'$X_{%i}, X_{%s}$' % (tdep, tindepv)
+                        df_dict['Fitted Combination'] = r'$%s,\ %s$' % (self._obs_name[tdep],
+                                                                        self._obs_name[tindepv])
                     elif tdep >= tindepv:
-                        df_dict['Fitted Combination'] = r'$X_{%s}, X_{%i}$' % (tindepv, tdep)
+                        df_dict['Fitted Combination'] = r'$%s,\ %s$' % (self._obs_name[tindepv],
+                                                                        self._obs_name[tdep])
                 elif self.attr_variate is 'mvariate':
-                    df_dict['Fitted Combination'] = r'$X_{%i} \sim f(X_{%s})$' % (tdep, tindeps)
-                df_dict['Bivariate Comparison'] = r'$X_{%i} \sim f(X_{%s})$' % (tdep, tindepv)
+                    df_dict['Fitted Combination'] = r'$%s \sim f(%s)$' % (self._obs_name[tdep],
+                                                                          tindeps_str)
+                df_dict['Bivariate Comparison'] = r'$%s \sim f(%s)$' % (self._obs_name[tdep],
+                                                                        self._obs_name[tindepv])
                 df_dict['tdep'] = tdep
                 df_dict['tindeps'] = jdump(tindeps)
                 df_dict['tindep'] = tindepv
