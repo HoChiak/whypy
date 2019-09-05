@@ -112,18 +112,18 @@ align="center">
 <body>
 
 <div style="background-color:grey;color:white;padding:4px;" align="center">
-<h3>Fitted Combination: X<sub>%i</sub> ~ f(X<sub>%s</sub>)</h3>
+<h3>Fitted Combination: %s ~ f(%s)</h3>
 </div>
 </body>
 </html>
-                """ % (kwargs['tdep'], str(kwargs['tindeps']))
+                """ % (kwargs['tdep'], kwargs['tindeps'])
     elif 'combination minor header' in what:
         text = r"""
 <html>
 <body>
 <div style="background-color:lightgrey;color:black;padding:0px;"
 align="center">
-<h4>2D Visualisation for: X<sub>%i</sub> ~ f(X<sub>%s</sub>)</h4>
+<h4>2D Visualisation for: %s ~ f(%s)</h4>
 </div>
 </body>
 </html>

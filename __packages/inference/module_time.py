@@ -21,6 +21,13 @@ class SteadyState():
         independent of time). Assigns steady state specific methods to the
         inference model.
         """
+        self._t = 0
+
+    def adjust4time(self):
+        """
+        Method to adjust combinations and TBD for time shift. For steadystate
+        no action is required.
+        """
 
 
 class Transient():

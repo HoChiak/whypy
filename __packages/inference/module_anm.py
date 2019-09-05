@@ -32,6 +32,7 @@ class RunANM():
         """
         self._results = {}
         self._results_df = {}
+        self.results = []
 
     def __del__(self):
         """
@@ -39,6 +40,7 @@ class RunANM():
         """
         self._results = {}
         self._results_df = {}
+        self.results = []
 
     def get_combi(self, combi, tdep, tindeps, ids_list):
         """
@@ -236,7 +238,6 @@ class RunANM():
             # do statistical tests
             self.test_statistics(combi, tdep, tindeps, model, xdata, ydata)
 
-
 ###############################################################################
 class PlotANM():
     """
@@ -401,13 +402,20 @@ class PlotANM():
         for combi in range(len(self._combs)):
             tdep, tindeps = self.get_tINdeps(combi)
             tdep = tdep[0]
+            # Independent Variable Names to string
+            tindeps_list = [self._obs_name[tindepv2] for tindepv2 in tindeps]
+            tindeps_str = ', '.join(tindeps_list)
+            # Displau the mvariate combination to be plotted
             utils.display_text_predefined(what='combination major header',
-                                          tdep=tdep, tindeps=tindeps)
+                                          tdep=self._obs_name[tdep],
+                                          tindeps=tindeps_str)
             # Iterate over independent variables
             for tindepi, tindepv in enumerate(tindeps):
                 # Plot tindeps vs Tdep
+                # Displau the mvariate combination to be plotted
                 utils.display_text_predefined(what='combination minor header',
-                                              tdep=tdep, tindepv=tindepv)
+                                          tdep=self._obs_name[tdep],
+                                          tindepv=self._obs_name[tindepv])
                 self.plt_1model_adv(combi, tdep, tindepi, tindepv)
                 self.plt_hist_IndepResiduals(combi, tdep, tindepi, tindepv)
                 self.plt_hist_GoodnessFit(combi, tdep, tindepi, tindepv)
@@ -416,88 +424,13 @@ class PlotANM():
 ###############################################################################
 class ResultsANM():
     """
-    Class for "Additive Noise Model" Methods.
-    Please be aware of the assumptions for models of these categorie.
+    Class to display the results ### TBD
     """
 
     def __init__(self):
         """
         Class constructor.
         """
-
-    def boots_to_med_sd(self, combi, namekey, dict, dictkey):
-        """
-        Method to get mean and variance from bootstrap runs
-        """
-        for testi in self._results['0'][combi][namekey].keys():
-            newlist = list()
-            for booti in self._results.keys():
-                newlist.append(self._results[booti][combi][namekey][testi])
-            newarray = np.array(newlist).flatten()
-            medianarray = np.median(newarray)
-            vararray = np.std(newarray)
-            dict[dictkey+' '+str(testi)+' [List]'] = jdump(newlist)
-            dict[dictkey+' '+str(testi)+' [Median]'] = medianarray
-            dict[dictkey+' '+str(testi)+' [SD]'] = vararray
-        return(dict)
-
-    def restructure_results(self):
-        """
-        Method to extract a readable DataFrame from the self._results attribute
-        """
-        # Init new DataFrame
-        results_df = pd.DataFrame()
-        # Iterate over all possible combinations
-        for combi in range(len(self._combs)):
-            tdep, tindeps = self.get_tINdeps(combi)
-            tdep = tdep[0]
-            tindeps_list = [self._obs_name[tindepv2] for tindepv2 in tindeps]
-            tindeps_str = ', '.join(tindeps_list)
-            # Iterate over bivariate comparisons
-            for tindepi, tindepv in enumerate(tindeps):
-                # Init new dict
-                df_dict = {}
-                # Differ between bivariate and mvariate for fitted combination
-                if self.attr_variate is 'bivariate':
-                    if tdep < tindepv:
-                        df_dict['Fitted Combination'] = r'$%s,\ %s$' % (self._obs_name[tdep],
-                                                                        self._obs_name[tindepv])
-                    elif tdep >= tindepv:
-                        df_dict['Fitted Combination'] = r'$%s,\ %s$' % (self._obs_name[tindepv],
-                                                                        self._obs_name[tdep])
-                elif self.attr_variate is 'mvariate':
-                    df_dict['Fitted Combination'] = r'$%s \sim f(%s)$' % (self._obs_name[tdep],
-                                                                          tindeps_str)
-                df_dict['Bivariate Comparison'] = r'$%s \sim f(%s)$' % (self._obs_name[tdep],
-                                                                        self._obs_name[tindepv])
-                df_dict['tdep'] = tdep
-                df_dict['tindeps'] = jdump(tindeps)
-                df_dict['tindep'] = tindepv
-                # Get Mean and Variance Value out of all bootstrap examples
-                df_dict = self.boots_to_med_sd(combi,
-                                               'Normality_xdata_%i' % (tindepv),
-                                               df_dict,
-                                               'Normality Indep. Variable')
-                df_dict = self.boots_to_med_sd(combi,
-                                               'Normality_ydata',
-                                               df_dict,
-                                               'Normality Depen. Variable')
-                df_dict = self.boots_to_med_sd(combi,
-                                               'Normality_Residuals',
-                                               df_dict,
-                                               'Normality Residuals')
-                df_dict = self.boots_to_med_sd(combi,
-                                               'IndepResiduals_%i' % (tindepv),
-                                               df_dict,
-                                               'Dependence: Indep. Variable - Residuals')
-                df_dict = self.boots_to_med_sd(combi,
-                                               'GoodnessFit',
-                                               df_dict,
-                                               'Dependence: Depen. Variable - Prediction (GoF)')
-                # Append current bivariate comparison to DF
-                results_df = pd.concat([results_df, pd.Series(df_dict)],
-                                       ignore_index=False, axis=1, sort=False)
-            self._results_df = results_df.T
 
     def get_df_normality(self, testkey):
         """
@@ -678,6 +611,90 @@ class ANM(RunANM, PlotANM, ResultsANM):
         PlotANM.__init__(self)
         ResultsANM.__init__(self)
 
+    def boots2stats(self, combi, namekey, dict, dictkey):
+        """
+        Method to get mean and variance from bootstrap runs
+        """
+        for testi in self._results['0'][combi][namekey].keys():
+            newlist = list()
+            for booti in self._results.keys():
+                newlist.append(self._results[booti][combi][namekey][testi])
+            newarray = np.array(newlist).flatten()
+            medianarray = np.median(newarray)
+            vararray = np.std(newarray)
+            dict[dictkey+' '+str(testi)+' [List]'] = jdump(newlist)
+            dict[dictkey+' '+str(testi)+' [Median]'] = medianarray
+            dict[dictkey+' '+str(testi)+' [SD]'] = vararray
+        return(dict)
+
+    def restructure_results(self):
+        """
+        Method to extract a readable DataFrame from the self._results attribute
+        """
+        # Init new DataFrame
+        results_df = pd.DataFrame()
+        # Iterate over all possible combinations
+        for combi in range(len(self._combs)):
+            tdep, tindeps = self.get_tINdeps(combi)
+            tdep = tdep[0]
+            tindeps_list = [self._obs_name[tindepv2] for tindepv2 in tindeps]
+            tindeps_str = ', '.join(tindeps_list)
+            # Iterate over bivariate comparisons
+            for tindepi, tindepv in enumerate(tindeps):
+                # Init new dict
+                df_dict = {}
+                # Differ between bivariate and mvariate for fitted combination
+                if self.attr_variate is 'bivariate':
+                    if tdep < tindepv:
+                        txt = r'$%s,\ %s$' % (self._obs_name[tdep],
+                                              self._obs_name[tindepv])
+                        df_dict['Fitted Combination'] = txt
+                    elif tdep >= tindepv:
+                        txt = r'$%s,\ %s$' % (self._obs_name[tindepv],
+                                              self._obs_name[tdep])
+                        df_dict['Fitted Combination'] = txt
+                elif self.attr_variate is 'mvariate':
+                    txt = r'$%s \sim f(%s)$' % (self._obs_name[tdep],
+                                                tindeps_str)
+                    df_dict['Fitted Combination'] = txt
+                txt = r'$%s \sim f(%s)$' % (self._obs_name[tdep],
+                                            self._obs_name[tindepv])
+                df_dict['Bivariate Comparison'] = txt
+                df_dict['tdep'] = tdep
+                df_dict['tindeps'] = jdump(tindeps)
+                df_dict['tindep'] = tindepv
+                # Get Mean and Variance Value out of all bootstrap examples
+                txt = 'Normality Indep. Variable'
+                df_dict = self.boots2stats(combi,
+                                           'Normality_xdata_%i' % (tindepv),
+                                           df_dict,
+                                           txt)
+                txt = 'Normality Depen. Variable'
+                df_dict = self.boots2stats(combi,
+                                           'Normality_ydata',
+                                           df_dict,
+                                           txt)
+                txt = 'Normality Residuals'
+                df_dict = self.boots2stats(combi,
+                                           'Normality_Residuals',
+                                           df_dict,
+                                           txt)
+                txt = 'Dependence: Indep. Variable - Residuals'
+                df_dict = self.boots2stats(combi,
+                                           'IndepResiduals_%i' % (tindepv),
+                                           df_dict,
+                                           txt)
+                txt = 'Dependence: Depen. Variable - Prediction (GoF)'
+                df_dict = self.boots2stats(combi,
+                                           'GoodnessFit',
+                                           df_dict,
+                                           txt)
+                # Append current bivariate comparison to DF
+                results_df = pd.concat([results_df, pd.Series(df_dict)],
+                                       ignore_index=False, axis=1, sort=False)
+        results_df = results_df.T.reset_index()
+        self._results_df = results_df
+
     def run(self,
             testtype='LikelihoodVariance',
             scale=True,
@@ -735,6 +752,8 @@ class ANM(RunANM, PlotANM, ResultsANM):
             self._runi = boot_i
             # Do the math
             self.run_inference()
+        # Restructure results to make them more accesible
+        self.restructure_results()
         # Plot the math of inference
         if plot_inference is True:
             self.plot_inference()
