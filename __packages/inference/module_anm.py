@@ -34,8 +34,6 @@ class RunANM():
         self._results_df = {}
         self.results = []
 
-
-
     def __del__(self):
         """
         Class deconstructor.
