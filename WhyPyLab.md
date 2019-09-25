@@ -56,7 +56,6 @@ os.chdir(work_dir)
 
 
 <b>whypy.load.observational</b>(<i>parameters</i>)
-<p style="margin-left: 40px">
     This is a short explanation
     <br><br>
     <mark>parameters:</mark><br>
@@ -67,7 +66,6 @@ os.chdir(work_dir)
     <br><br>
     <mark>returns:</mark><br>
     <u>observations:</u> Numpy Array (# observations, # variables)<br>
-</p>
 
 
 ```python
