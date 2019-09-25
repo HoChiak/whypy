@@ -531,7 +531,7 @@ class ResultsANM():
             plt.xscale('log')
             lbl = r'$dependence \leftarrow\ p-value\ \rightarrow independence$'
         elif 'likelihood-ratio' in self.attr_dict[self._config['testtype']]:
-            lbl = r'$not favored \leftarrow\ likelihood-ratio\ \rightarrow favored$'
+            lbl = r'$not \ favored \leftarrow\ likelihood-ratio\ \rightarrow favored$'
         # Background Color different bivariate cases from same combinations
         for i, combi in enumerate(combis):
             facecolor = self._cmap(combi_unique[combi]/(len(combi_unique)))
