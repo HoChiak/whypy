@@ -62,6 +62,8 @@ class General():
         self.init_combinations()
         # Init Observations
         self._obs = np.array(deepcopy(self.obs))
+        ### tbd for given list of regmods
+
         # Initiate a regmod for each combination if not already a list is given
         no_combs = len(self._combs)
         self._regmods = utils.object2list(self.regmod, no_combs, dcopy=True)

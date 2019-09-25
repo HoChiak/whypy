@@ -20,7 +20,7 @@ def get_desc(modelclass, no_var, cl_func, cl_Noise, SCM):
 table td, table th, table tr {text-align:left !important;}
 </style>
 <div style="background-color:lightgrey;color:black;padding:0px;" align="center">
-<h4>Description</h4>
+<h4>Observations Description</h4>
 </div>
 <table>
 <tr>
@@ -252,7 +252,7 @@ def observations(modelclass, no_obs=100, seed=None):
     display(HTML(desc))
     display(HTML("""
     <div style="background-color:lightgrey;color:black;padding:0px;" align="center">
-    <h4>Causal Graph</h4>
+    <h4>Observations - Ground Truth Causal Graph</h4>
     </div>"""))
     utils.plot_DAG(Edge_list, Node_list)
     return(xi)
