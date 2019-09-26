@@ -31,7 +31,7 @@ class Model(parent0, parent1, parent2, parent3):
                  }
 
     def __init__(self, obs=None, combinations='all', regmod=None, scaler=None,
-                 obs_name=None):
+                 obs_name=None, t0=None, stride=None):
         """
         Class constructor for causal inference methods.
 
@@ -53,7 +53,7 @@ class Model(parent0, parent1, parent2, parent3):
                     transform and inverse_transform.
         """
         parent0.__init__(self)
-        parent1.__init__(self)
+        parent1.__init__(self, t0, stride)
         parent2.__init__(self)
         parent3.__init__(self)
         self.obs = obs

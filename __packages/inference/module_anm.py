@@ -42,7 +42,7 @@ class RunANM():
         self._results_df = {}
         self.results = []
 
-    def get_combi(self, combi, tdep, tindeps, ids_list):
+    def get_combi(self, combi, tdep, tindeps, ids_tdep, ids_tindep):
         """
         Method to return [X, Y and the regarding model], controlled by index
         combi, where i is in (0, number_of_combinations, 1).
@@ -52,9 +52,9 @@ class RunANM():
         scaling.
         """
         model = self._regmods[combi]
-        ydata = np.copy(self._obs[ids_list, tdep]).reshape(-1, 1)
+        ydata = np.copy(self._obs[ids_tdep, tdep]).reshape(-1, 1)
         # TBD check if there is a better solution to index over two axis
-        xdata = np.copy(self._obs[:, tindeps][ids_list, :])
+        xdata = np.copy(self._obs[:, tindeps][ids_tindep, :])
         xdata = xdata.reshape(-1, len(tindeps))
         return(model, xdata, ydata)
 
@@ -225,14 +225,16 @@ class RunANM():
             tdep, tindeps = self.get_tINdeps(combi)
             # get objects
             model, xdata, ydata = self.get_combi(combi, tdep, tindeps,
-                                                 self._ids_fit)
+                                                 self._ids_fit_tdep,
+                                                 self._ids_fit_tindep)
             # fit regmod on observations
             self.fit_model2xi(combi, tdep, tindeps, model, xdata, ydata)
             # predict model points
             self.predict_model(combi, tdep, tindeps, model, xdata, ydata)
             # get objects
             model, xdata, ydata = self.get_combi(combi, tdep, tindeps,
-                                                 self._ids_test)
+                                                 self._ids_test_tdep,
+                                                 self._ids_test_tindep)
             # predict residuals
             self.predict_residuals(combi, tdep, tindeps, model, xdata, ydata)
             # do statistical tests
@@ -275,15 +277,17 @@ class PlotANM():
             hue[self._ids_fit] = 1
             hue = hue.tolist()
             hue = ['test' if i == 0 else 'fit' for i in hue]
+            hue_order = ['fit', 'test']
         else:
             # get hue if holdout is false
             hue = ['fit/test' for i in range(self._obs.shape[0])]
+            hue_order = ['fit/test']
         # create datframe for easy use of seaborn pairgrid
         df = pd.DataFrame(self._obs)
         df.columns = self._obs_name
         df = pd.concat([df, pd.DataFrame(hue, columns=['holdout'])], axis=1)
         # seaborn pairgrid scatter
-        g = sns.PairGrid(df, hue='holdout')
+        g = sns.PairGrid(df, hue='holdout', hue_order=hue_order)
         g = g.map_diag(plt.hist, edgecolor="w")
         g = g.map_offdiag(plt.scatter, edgecolor="w", s=40, alpha=0.5)
         g = g.add_legend()
@@ -297,8 +301,8 @@ class PlotANM():
         """
         txt = self.get_math_txt(combi, tdep, tindepv)
         # Jointgrid of Observations for Fit
-        g = sns.JointGrid(self._obs[self._ids_fit, tindepv],
-                          self._obs[self._ids_fit, tdep],
+        g = sns.JointGrid(self._obs[self._ids_fit_tindep, tindepv],
+                          self._obs[self._ids_fit_tdep, tdep],
                           height=self._figsize[0]*5/6,
                           ratio=int(5)
                           )
@@ -311,8 +315,8 @@ class PlotANM():
         # Differentiate between holdout case
         if self._config['holdout'] is True:
             # Scatter of Observations for Test
-            plt.scatter(self._obs[self._ids_test, tindepv],
-                        self._obs[self._ids_test, tdep],
+            plt.scatter(self._obs[self._ids_test_tindep, tindepv],
+                        self._obs[self._ids_test_tdep, tdep],
                         marker='s', edgecolor="w", s=40, alpha=0.5,
                         c=self._colors[1])
             legend = [r'$Model\ %s$' % (txt),
@@ -326,7 +330,7 @@ class PlotANM():
                       r'$Residuals\ (%s-\hat{%s})$' % (self._obs_name[tdep],
                                                        self._obs_name[tdep])]
         # Scatter of Residuals
-        plt.scatter(self._obs[self._ids_test, tindepv],
+        plt.scatter(self._obs[self._ids_test_tindep, tindepv],
                     self._results['%i' % (self._runi)][combi]['Residuals'],
                     marker='D', edgecolor="w", s=40, alpha=0.8,
                     c=self._colors[2])
@@ -729,22 +733,25 @@ class ANM(RunANM, PlotANM, ResultsANM):
                         }
         # Check and Init Kwargs
         self.check_init_kwargs(kwargs)
-        # Check and Init Holdout Lists
-        self.check_init_holdout_ids()
         # Check and display warnings
         self.check_warnings()
+        # Init ids based depending on SteadyState and Transient case
+        self.ids_init4time()
         # Display Start of Causal Inference
-        utils.display_text_predefined(what='inference header')
+        if ((plot_inference is True) or (plot_results is True)):
+            utils.display_text_predefined(what='inference header')
         # TBD Add Time shift / Adress different environments
         for boot_i, _ in enumerate(self._bootstrap):
+            # Check and Init ids (based on holdout if True)
+            if ((holdout is True) or (boot_i == 0)):
+                self.ids_init4holdout()
             if bootstrap > 0:
                 # Display the current bootstrap number
-                utils.display_text_predefined(what='count bootstrap',
-                                              current=boot_i, sum=bootstrap)
+                utils.prgr_bar(boot_i+1, bootstrap, txt='Bootstrap')
                 # Init fresh _regmod from regmod -> otherwise fit will fail
                 self._regmods = utils.object2list(self.regmod,
-                                                          len(self._combs),
-                                                          dcopy=True)
+                                                  len(self._combs),
+                                                  dcopy=True)
                 # Do the Bootstrap
                 self._obs = resample(deepcopy(self.obs), replace=True,
                                     n_samples=int(self.obs.shape[0] * self._kwargs['bootstrap_ratio']),

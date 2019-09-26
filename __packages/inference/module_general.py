@@ -52,6 +52,11 @@ class General():
             assert not(hasattr(type(self.scaler), '__iter__')), 'Scaler Model should be passed as single object. Attribute __iter__ detected.'
         if self.combs is not 'all':
             self.check_combinations()
+        if self.attr_time is 'transient':
+            assert self._t0 is not None, 'In transient model parameter t0 must be defined'
+            assert self._stride is not None, 'In transient model parameter stride must be defined'
+            assert isinstance(self._t0, int), 'Parameter t0 must be type int'
+            assert (isinstance(self._stride, int) and (self._stride > 0)), 'Parameter stride must be type int and >0'
 
     def init_instance_model_attr(self):
         """
@@ -113,8 +118,8 @@ class General():
         if self._config['holdout'] > 0:
             self.check_kwargs_declaration(key='holdout_ratio', default=0.2)
             assert 0 < self._kwargs['holdout_ratio'] <= 1, 'Holdout Ratio must be in range [0, 1]'
-            self.check_kwargs_declaration(key='holdout_seed', default=1)
-            assert isinstance(self._kwargs['holdout_seed'], int), 'Holdout Seed must be integer'
+            self.check_kwargs_declaration(key='holdout_seed', default=None)
+            assert (isinstance(self._kwargs['holdout_seed'], int) or (self._kwargs['holdout_seed'] is None)), 'Holdout Seed must be integer or None type'
         # Check Other Kwargs
         self.check_kwargs_declaration(key='modelpts', default=50)
         assert isinstance(self._kwargs['modelpts'], int), 'Modelpts must be Int'
@@ -149,21 +154,57 @@ class General():
                 if (self._kwargs['holdout_ratio']) * self.obs.shape[0] < 50:
                     warn('WARNING: Less than 50 values remaining to estimate the test statistics, from holdout_ratio')
 
-    def check_init_holdout_ids(self):
+    def get_seed(self):
         """
-        Method to get indexes of fit and test split ordered. Based on length of
-        current self._obs
+        Method to get a consistent seed for dependent and indpendent split.
+        """
+        if self._kwargs['holdout_seed'] is not None:
+            seed = elf._kwargs['holdout_seed']
+        else:
+            seed = np.random.randint(low=0, high=999999999, size=1)[0]
+        return(seed)
+
+    def ids_split(self, ids, seed):
+        """
+        Method to split in regress and test set, with keeping index order.
+        Based on given Holout Parameters
+        """
+        # Holdout for dependent variables
+        fit, test = train_test_split(ids,
+                                     test_size=self._kwargs['holdout_ratio'],
+                                     random_state=seed,
+                                     shuffle=True)
+        fit = np.sort(fit).tolist()
+        test = np.sort(test).tolist()
+        return(fit, test)
+
+    def ids_init4holdout(self):
+        """
+        Method to init ids based on holdout parameters. Split ids in regress
+        and test set, ordered sequence.
         """
         if self._config['holdout'] is True:
-            ids_fit, ids_test = train_test_split(np.arange(0, self._obs.shape[0], 1),
-                                                 test_size = self._kwargs['holdout_ratio'],
-                                                 random_state = self._kwargs['holdout_seed'],
-                                                 shuffle = True)
-            ids_fit = np.sort(ids_fit).tolist()
-            ids_test = np.sort(ids_test).tolist()
+            # Get a consistent seed for dependent and indpendent split
+            seed = self.get_seed()
+            ids_fit_tdep, ids_test_tdep = self.ids_split(self._ids_tdep,
+                                                         seed)
+            ids_fit_tindep, ids_test_tindep = self.ids_split(self._ids_tindep,
+                                                             seed)
         else:
-            ids_fit = np.arange(0, self._obs.shape[0], 1).tolist()
-            ids_test = ids_fit
+            ids_fit_tdep = self._ids_tdep
+            ids_test_tdep = self._ids_tdep
+            ids_fit_tindep = self._ids_tindep
+            ids_test_tindep = self._ids_tindep
+        # Get shared fit and test ids
+        ids_fit = np.concatenate([ids_fit_tdep, ids_fit_tindep], axis=0)
+        ids_fit = np.unique(ids_fit)
+        ids_test = np.concatenate([ids_test_tdep, ids_test_tindep], axis=0)
+        ids_test = np.unique(ids_test)
+        # Assign to instance Attributes
+        self._ids_fit_tdep = ids_fit_tdep
+        self._ids_test_tdep = ids_test_tdep
+        self._ids_fit_tindep = ids_fit_tindep
+        self._ids_test_tindep = ids_test_tindep
         self._ids_fit = ids_fit
         self._ids_test = ids_test
 

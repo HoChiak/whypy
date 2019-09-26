@@ -3,7 +3,7 @@
 # import built in libarys
 
 # import 3rd party libarys
-
+from numpy import arange as np_arange
 # import local libarys
 from whypy.__packages.utils import utils
 
@@ -15,19 +15,22 @@ class SteadyState():
     """
     attr_time = 'steadystate'
 
-    def __init__(self):
+    def __init__(self, t0, stride):
         """
         Class constructor for the steady state case (observations are
         independent of time). Assigns steady state specific methods to the
         inference model.
         """
-        self._t = [0]
+        # self._t0 = 0
+        # self._stride = 1
 
-    def adjust4time(self):
+    def ids_init4time(self):
         """
-        Method to adjust combinations and TBD for time shift. For steadystate
-        no action is required.
+        Method to init the ids for dependent and independent variable. For
+        steadystate no further modification is required.
         """
+        self._ids_tdep = np_arange(0, self._obs.shape[0], 1)
+        self._ids_tindep = np_arange(0, self._obs.shape[0], 1)
 
 
 class Transient():
@@ -36,10 +39,23 @@ class Transient():
     """
     attr_time = 'transient'
 
-    def __init__(self):
+    def __init__(self, t0, stride):
         """
         Class constructor for the transient case (observations are
         dependent of time). Assigns transient specific methods to the
         inference model.
         """
-        self._t = [0]
+        self._t0 = t0
+        self._stride = stride
+
+    def ids_init4time(self):
+        """
+        Method to init the ids for dependent and independent variable. For
+        steadystate no further modification is required.
+        """
+        self._ids_tdep = np_arange(self._t0,
+                                   self._obs.shape[0],
+                                   self._stride)
+        self._ids_tindep = np_arange(0,
+                                     self._obs.shape[0]-self._t0,
+                                     self._stride)

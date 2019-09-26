@@ -2,7 +2,7 @@
 
 # import built in libarys
 from copy import deepcopy
-
+import sys
 
 # import 3rd party libarys
 import numpy as np
@@ -308,3 +308,26 @@ def plot_DAG(Edge_list, Node_list=None):
                                          font_size=12,
                                          font_color='black')
     plt.show()
+
+
+def prgr_bar(curr_state, no_states, txt=''):
+    """
+    Method to plot a prgr bar.
+    """
+    # Standard width of bar
+    bar_width = 80
+    # One state equals one increment
+    prgr_increment = bar_width / float(no_states)
+    # Add prgr done
+    prgr_done = int(round(prgr_increment * curr_state))
+    prgr_bar = '=' * prgr_done
+    # Add devider
+    if curr_state < (no_states-1):
+        prgr_bar += '>'
+    # Add prgr to be done
+    prgr_tbd = int(round(prgr_increment * (no_states - curr_state)))
+    prgr_bar += ' ' * prgr_tbd
+    # Write Output
+    sys.stdout.write('[%s] %s/%s %s\r' % (prgr_bar, curr_state,
+                                          no_states, txt))
+    sys.stdout.flush()
