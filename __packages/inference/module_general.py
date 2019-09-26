@@ -14,8 +14,9 @@ from pandas import DataFrame
 from whypy.__packages.utils import utils
 from whypy.__packages.utils import stats
 
-
 ###############################################################################
+
+
 class General():
     """
     General Causal Inference methods.
@@ -271,7 +272,6 @@ class General():
         # Init empty Array of Shape Modelpoints, Number Variables
         X_model = np.ndarray(shape=(modelpts, X_data.shape[1]))
         # Iter over all variables in
-        # TBD, is there a vectorized version?
         for i in range(X_data.shape[1]):
             X_model[:, i] = np.linspace(X_min[i] - (X_range[i] * 0.05),
                                         X_max[i] + (X_range[i] * 0.05),

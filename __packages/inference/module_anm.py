@@ -17,8 +17,9 @@ from sklearn.utils import resample
 from whypy.__packages.utils import utils
 from whypy.__packages.utils import stats
 
-
 ###############################################################################
+
+
 class RunANM():
     """
     Class for running the calculations of "Additive Noise Model" methods.
@@ -53,7 +54,6 @@ class RunANM():
         """
         model = self._regmods[combi]
         ydata = np.copy(self._obs[ids_tdep, tdep]).reshape(-1, 1)
-        # TBD check if there is a better solution to index over two axis
         xdata = np.copy(self._obs[:, tindeps][ids_tindep, :])
         xdata = xdata.reshape(-1, len(tindeps))
         return(model, xdata, ydata)
@@ -239,8 +239,9 @@ class RunANM():
             self.predict_residuals(combi, tdep, tindeps, model, xdata, ydata)
             # do statistical tests
             self.test_statistics(combi, tdep, tindeps, model, xdata, ydata)
-
 ###############################################################################
+
+
 class PlotANM():
     """
     Class for plotting the inference of RunANM methods.
@@ -418,17 +419,17 @@ class PlotANM():
                 # Plot tindeps vs Tdep
                 # Displau the mvariate combination to be plotted
                 utils.display_text_predefined(what='combination minor header',
-                                          tdep=self._obs_name[tdep],
-                                          tindepv=self._obs_name[tindepv])
+                                              tdep=self._obs_name[tdep],
+                                              tindepv=self._obs_name[tindepv])
                 self.plt_1model_adv(combi, tdep, tindepi, tindepv)
                 self.plt_hist_IndepResiduals(combi, tdep, tindepi, tindepv)
                 self.plt_hist_GoodnessFit(combi, tdep, tindepi, tindepv)
-
-
 ###############################################################################
+
+
 class ResultsANM():
     """
-    Class to display the results ### TBD
+    Class to display the results of RunANM methods.
     """
 
     def __init__(self):
@@ -438,7 +439,7 @@ class ResultsANM():
 
     def get_df_normality(self, testkey):
         """
-        Method to return the DF summarizing the normality test
+        Method to return a DF summarizing the normality test
         """
         columns = ['Fitted Combination',
                    'Bivariate Comparison',
@@ -479,7 +480,7 @@ class ResultsANM():
 
     def get_df_dependence(self, testkey, removeList=True):
         """
-        Method to return the DF summarizing the normality test
+        Method to return a DF summarizing the normality test
         """
         columns = ['Fitted Combination',
                    'Bivariate Comparison',
@@ -515,7 +516,7 @@ class ResultsANM():
 
     def plt_combinations_boxplot(self, testkey):
         """
-        Method to plot the results of the independence test.
+        Method to plot the results of the independence test as BoxPlot.
         """
         # Get Dictionary
         df_dependence = self.get_df_dependence(testkey, removeList=False)
@@ -555,10 +556,9 @@ class ResultsANM():
         plt.xlabel(lbl)
         plt.show()
 
-    def plot_results(self, number_run=False):
+    def plot_results(self):
         """
-        Method to display the results of the interference. If number_run is
-        False the current run will be plotted
+        Method to display the results of the interference.
         """
         # Create self._results_df to get results in a handy way
         self.restructure_results()
@@ -587,9 +587,9 @@ class ResultsANM():
         utils.display_text_predefined(what='thirdlevel', key=key)
         utils.display_df(self.get_df_dependence('Residuals'))
         self.plt_combinations_boxplot('Residuals')
-
-
 ###############################################################################
+
+
 class ANM(RunANM, PlotANM, ResultsANM):
     """
     Causal Inference methods for the two variable case. General SCMs are not
@@ -740,7 +740,7 @@ class ANM(RunANM, PlotANM, ResultsANM):
         # Display Start of Causal Inference
         if ((plot_inference is True) or (plot_results is True)):
             utils.display_text_predefined(what='inference header')
-        # TBD Add Time shift / Adress different environments
+        # Bootstrap
         for boot_i, _ in enumerate(self._bootstrap):
             # Check and Init ids (based on holdout if True)
             if ((holdout is True) or (boot_i == 0)):
@@ -771,6 +771,4 @@ class ANM(RunANM, PlotANM, ResultsANM):
         # Plot results
         if plot_results is True:
             self.plot_results()
-
-
 ###############################################################################

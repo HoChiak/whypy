@@ -4,11 +4,13 @@
 
 # import 3rd party libarys
 from numpy import arange as np_arange
+
 # import local libarys
 from whypy.__packages.utils import utils
 
-
 ###############################################################################
+
+
 class SteadyState():
     """
     Class for the steady state case (independence of time).
@@ -31,6 +33,7 @@ class SteadyState():
         """
         self._ids_tdep = np_arange(0, self._obs.shape[0], 1)
         self._ids_tindep = np_arange(0, self._obs.shape[0], 1)
+###############################################################################
 
 
 class Transient():
@@ -59,3 +62,4 @@ class Transient():
         self._ids_tindep = np_arange(0,
                                      self._obs.shape[0]-self._t0,
                                      self._stride)
+###############################################################################

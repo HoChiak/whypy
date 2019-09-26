@@ -12,8 +12,9 @@ from .module_anm import ANM as parent3
 
 from whypy.__packages.utils import utils
 
-
 ###############################################################################
+
+
 class Model(parent0, parent1, parent2, parent3):
     """
     Parent Class for Causal Inference Methods. Different Cases
@@ -66,5 +67,4 @@ class Model(parent0, parent1, parent2, parent3):
         self._regmods = None
         self._scaler = None
         self._obs_name = None
-
 ###############################################################################

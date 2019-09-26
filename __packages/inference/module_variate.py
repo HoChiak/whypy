@@ -11,8 +11,9 @@ import numpy as np
 from whypy.__packages.utils import utils
 from whypy.__packages.utils import stats
 
-
 ###############################################################################
+
+
 class Bivariate():
     """
     Causal Inference methods for the two variable case. General SCMs are not
@@ -56,9 +57,9 @@ class Bivariate():
         else:
             self._combs = deepcopy(self.combs)
             self._combs = utils.nestedlist2nestedtuple(self._combs)
-
-
 ###############################################################################
+
+
 class Mvariate():
     """
     Causal Inference methods for the two variable case. General SCMs are not
@@ -76,7 +77,7 @@ class Mvariate():
 
     def get_all_combinations(self):
         """
-        Method to get a list of combinations for the Mvariate Case. TBD
+        Method to get a list of combinations for the Multivariate Case.
         """
         var_names = np.arange(self.obs.shape[1]).tolist()
         combs = []
@@ -91,7 +92,7 @@ class Mvariate():
             # Remove i>2 combinations with equal tindeps
             else:
                 comb_ary = np.array(comb)
-                comb_unique = np.sort(comb_ary[:,1:], axis=1)
+                comb_unique = np.sort(comb_ary[:, 1:], axis=1)
                 comb_unique = np.unique(comb_unique, axis=0)
                 comb_sel = []
                 for i in range(comb_unique.shape[0]):
@@ -118,5 +119,4 @@ class Mvariate():
         else:
             self._combs = deepcopy(self.combs)
             self._combs = utils.nestedlist2nestedtuple(self._combs)
-
 ###############################################################################

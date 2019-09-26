@@ -11,11 +11,11 @@ import matplotlib.pyplot as plt
 from IPython.display import display, HTML
 import pandas as pd
 
-
 # import local libarys
 
-
 ###############################################################################
+
+
 def nestedlist2nestedtuple(nestedlist):
     """
     Function to transform nested list to a tuple of tuple.
@@ -331,3 +331,4 @@ def prgr_bar(curr_state, no_states, txt=''):
     sys.stdout.write('[%s] %s/%s %s\r' % (prgr_bar, curr_state,
                                           no_states, txt))
     sys.stdout.flush()
+###############################################################################
