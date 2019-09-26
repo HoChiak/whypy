@@ -36,20 +36,31 @@ class General():
         """
         Method to check the instance attributes
         """
+        # Check Observations
         assert self.obs is not None, 'Observations are None type'
         assert not(np.isnan(np.array(self.obs)).any()), 'Observations contain np.nan'
         assert not(np.isinf(np.array(self.obs)).any()), 'Observations contain np.inf'
+        # Check Regression Model
         assert self.regmod is not None, 'Regression Model is None type'
-        assert hasattr(self.regmod, 'fit'), 'Regression Model has no attribute "fit"'
-        assert hasattr(self.regmod, 'predict'), 'Regression Model has no attribute "predict"'
-        assert not(hasattr(type(self.regmod), '__iter__')), 'Regression Model should be passed as single object. Attribute __iter__ detected.'
+        # Differ wheter a list of regmod or a single regmod is given
+        if hasattr(type(self.regmod), '__iter__'):
+            assert hasattr(self.regmod[0], 'fit'), 'Regression Model has no attribute "fit"'
+            assert hasattr(self.regmod[0], 'predict'), 'Regression Model has no attribute "predict"'
+        else:
+            assert hasattr(self.regmod, 'fit'), 'Regression Model has no attribute "fit"'
+            assert hasattr(self.regmod, 'predict'), 'Regression Model has no attribute "predict"'
+        # Check Scaler
         assert isinstance(scale, bool), 'Scale must be Bool'
         if scale is True:
             assert self.scaler is not None, 'If scale is True, a scaler must be assigned'
-            assert hasattr(self.scaler, 'fit'), 'Scaler Model has no attribute "fit"'
-            assert hasattr(self.scaler, 'transform'), 'Scaler Model has no attribute "transform"'
-            assert hasattr(self.scaler, 'inverse_transform'), 'Scaler Model has no attribute "inverse_transform"'
-            assert not(hasattr(type(self.scaler), '__iter__')), 'Scaler Model should be passed as single object. Attribute __iter__ detected.'
+            if hasattr(type(self.scaler), '__iter__'):
+                assert hasattr(self.scaler[0], 'fit'), 'Scaler Model has no attribute "fit"'
+                assert hasattr(self.scaler[0], 'transform'), 'Scaler Model has no attribute "transform"'
+                assert hasattr(self.scaler[0], 'inverse_transform'), 'Scaler Model has no attribute "inverse_transform"'
+            else:
+                assert hasattr(self.scaler, 'fit'), 'Scaler Model has no attribute "fit"'
+                assert hasattr(self.scaler, 'transform'), 'Scaler Model has no attribute "transform"'
+                assert hasattr(self.scaler, 'inverse_transform'), 'Scaler Model has no attribute "inverse_transform"'
         if self.combs is not 'all':
             self.check_combinations()
         if self.attr_time is 'transient':
@@ -67,14 +78,20 @@ class General():
         self.init_combinations()
         # Init Observations
         self._obs = np.array(deepcopy(self.obs))
-        ### tbd for given list of regmods
-
         # Initiate a regmod for each combination if not already a list is given
-        no_combs = len(self._combs)
-        self._regmods = utils.object2list(self.regmod, no_combs, dcopy=True)
-        # Initiate a scaler for each variable
+        if hasattr(type(self.regmod), '__iter__'):
+            # Make deepcopy to ensure independence
+            self._regmods = [deepcopy(regmod) for regmod in self.regmod]
+        else:
+            no_combs = len(self._combs)
+            self._regmods = utils.object2list(self.regmod, no_combs, dcopy=True)
+        # Initiate a scaler for each variable if not already a list is given
         no_var = self._obs.shape[1]
-        self._scaler = utils.object2list(self.scaler, no_var, dcopy=True)
+        if hasattr(type(self.scaler), '__iter__'):
+            # Make deepcopy to ensure independence
+            self._scaler = [deepcopy(scaler) for scaler in self.scaler]
+        else:
+            self._scaler = utils.object2list(self.scaler, no_var, dcopy=True)
         # Init observation names
         if self.obs_name is None:
             self._obs_name = [r'X%i' % (i) for i in range(no_var)]

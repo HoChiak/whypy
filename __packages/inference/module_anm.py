@@ -749,9 +749,13 @@ class ANM(RunANM, PlotANM, ResultsANM):
                 # Display the current bootstrap number
                 utils.prgr_bar(boot_i+1, bootstrap, txt='Bootstrap')
                 # Init fresh _regmod from regmod -> otherwise fit will fail
-                self._regmods = utils.object2list(self.regmod,
-                                                  len(self._combs),
-                                                  dcopy=True)
+                if hasattr(type(self.regmod), '__iter__'):
+                    # Make deepcopy to ensure independence
+                    self._regmods = [deepcopy(regmod) for regmod in self.regmod]
+                else:
+                    no_combs = len(self._combs)
+                    self._regmods = utils.object2list(self.regmod,
+                                                      no_combs, dcopy=True)
                 # Do the Bootstrap
                 self._obs = resample(deepcopy(self.obs), replace=True,
                                     n_samples=int(self.obs.shape[0] * self._kwargs['bootstrap_ratio']),
