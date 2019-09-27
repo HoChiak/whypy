@@ -1,3 +1,6 @@
+<!DOCTYPE html>
+<html>
+<body>
 <div style="background-color:RGB(0,81,158);color:RGB(255,255,255);padding:10px;">
 <h1> <a name="whypy"></a>WhyPy</h1>
 </div>
@@ -37,11 +40,11 @@ Within the WhyPy Toolbox four possible models are distinguished
 
    ![MultiVariate-SteadyState](__pictures/cause-effect-mvariate-steadystate.pdf)
 
-3. The data producing process is **transient** (<img src="https://latex.codecogs.com/gif.latex?t_0" ></img>: offset, <img src="https://latex.codecogs.com/gif.latex?s" ></img>: stride)+ The model is **multi variate** (one independent variable)
+3. The data producing process is **transient** ($t_0$: offset, $s$: stride)+ The model is **multi variate** (one independent variable)
 
    ![BiVariate-Transient](__pictures/cause-effect-bivariate-transient.pdf)
 
-4. The data producing process is **transient** (<img src="https://latex.codecogs.com/gif.latex?t_0" ></img>: offset, <img src="https://latex.codecogs.com/gif.latex?s" ></img>: stride)+ The model is **multi variate** (n independent variable)
+4. The data producing process is **transient** ($t_0$: offset, $s$: stride)+ The model is **multi variate** (n independent variable)
 
    ![MultiVariate-Transient](__pictures/cause-effect-mvariate-transient.pdf)
 
@@ -53,69 +56,69 @@ Within the WhyPy Toolbox four possible models are distinguished
 </div>
 
 <!-- #region -->
-The most elementary question of causality is the one asking whether "<img src="https://latex.codecogs.com/gif.latex?X" ></img> causes <img src="https://latex.codecogs.com/gif.latex?Y" ></img> or vice versa". An often discussed example is the question if smoking (<img src="https://latex.codecogs.com/gif.latex?X" ></img>) causes cancer (<img src="https://latex.codecogs.com/gif.latex?Y" ></img>). At this point the question about causal relationships is already getting more complex. Beside the possibility that <img src="https://latex.codecogs.com/gif.latex?X" ></img> causes <img src="https://latex.codecogs.com/gif.latex?Y" ></img> (<img src="https://latex.codecogs.com/gif.latex?X\rightarrowY" ></img>), there are other possible causal relationships. One is that a third Variable <img src="https://latex.codecogs.com/gif.latex?Z" ></img> is confounding both <img src="https://latex.codecogs.com/gif.latex?X" ></img> and <img src="https://latex.codecogs.com/gif.latex?Y" ></img> (<img src="https://latex.codecogs.com/gif.latex?X \leftarrow Z \rightarrow Y" ></img>). In the confounding case, only looking at <img src="https://latex.codecogs.com/gif.latex?X" ></img> and <img src="https://latex.codecogs.com/gif.latex?Y" ></img>, might show a correlation due to the confounder even though they are not causaly related. [[1]](#Pearl), [[2]](#Mooji)
+The most elementary question of causality is the one asking whether "$X$ causes $Y$ or vice versa". An often discussed example is the question if smoking ($X$) causes cancer ($Y$). At this point the question about causal relationships is already getting more complex. Beside the possibility that $X$ causes $Y$ ($X \rightarrow Y$), there are other possible causal relationships. One is that a third Variable $Z$ is confounding both $X$ and $Y$ ($X \leftarrow Z \rightarrow Y$). In the confounding case, only looking at $X$ and $Y$, might show a correlation due to the confounder even though they are not causaly related. [[1]](#Pearl), [[2]](#Mooji)
 
 ![Cause-Effect-Confounded](__pictures/cause-effect-confounded.pdf)
 
 Causal Inference is the task of learning causal relationships from purely observational data. This task is a fundamental problem in science. A variety of causal inference methods are available that were claimed to be able to solve this task under certain assumptions. These assumptions are for example no confounding, no feedback loops or no selection bias. Be aware, that results given by causal inference are only valid under the methods assumptions. ITo draw causal conclusions, these methods are exploiting the complexety of the underlying models of the observational data in genearal. [[2]](#Mooji), [[3]](#Schoelkopf)
 
-The family of causal inference methods to used here are Additive Noise Models (ANMs). In ANMs the influence of noise is restricted to be Additive (<img src="https://latex.codecogs.com/gif.latex?Y \sim f(X) + \textbf{N}_Y" ></img>). Methods in these class are either based on **independence of residuals** or **maximum likelihood**. The procedure in the **WhyPy Toolbox** is the following:
+The family of causal inference methods to used here are Additive Noise Models (ANMs). In ANMs the influence of noise is restricted to be Additive ($Y \sim f(X) + \textbf{N}_Y$). Methods in these class are either based on **independence of residuals** or **maximum likelihood**. The procedure in the **WhyPy Toolbox** is the following:
 
 ---
 1. **Input:**
 
-   Observations: <img src="https://latex.codecogs.com/gif.latex?X" ></img>, <img src="https://latex.codecogs.com/gif.latex?Y" ></img>
+   Observations: $X$, $Y$
 
-   Regression Model: <img src="https://latex.codecogs.com/gif.latex?M" ></img>
+   Regression Model: $M$
 
-   Scaler (optional): <img src="https://latex.codecogs.com/gif.latex?n_\gamma(\cdot)" ></img>
+   Scaler (optional): $n_\gamma(\cdot)$
 
 2. **Normalization (optional):**
 
-   Calculate <img src="https://latex.codecogs.com/gif.latex?X^{\star} = n_x(X)" ></img>
+   Calculate $X^{\star} = n_x(X)$
 
-   Calculate <img src="https://latex.codecogs.com/gif.latex?Y^{\star} = n_y(Y)" ></img>
+   Calculate $Y^{\star} = n_y(Y)$
 
 3. **Boostrap (optional):**
 
-   Get Bootstrap Sample of Observations: <img src="https://latex.codecogs.com/gif.latex?X^{\star}" ></img>, <img src="https://latex.codecogs.com/gif.latex?Y^{\star}" ></img>
+   Get Bootstrap Sample of Observations: $X^{\star}$, $Y^{\star}$
 
 4. **Time Shift (if model is transient):**
 
-   a) Shift <img src="https://latex.codecogs.com/gif.latex?X^{\star} = X^{\star}[0:-i:s], Y^{\star} = Y^{\star}[i::s]" ></img>
+   a) Shift $X^{\star} = X^{\star}[0:-i:s], Y^{\star} = Y^{\star}[i::s]$
 
-   b) Shift <img src="https://latex.codecogs.com/gif.latex?Y^{\star} = Y^{\star}[0:-i:s], X^{\star} = X^{\star}[i::s]" ></img>
+   b) Shift $Y^{\star} = Y^{\star}[0:-i:s], X^{\star} = X^{\star}[i::s]$
 
 5. **Holdout (optional):**
 
-   Split <img src="https://latex.codecogs.com/gif.latex?X^{\star} \rightarrow X^{\star}_{regress}, X^{\star}_{test}" ></img>
+   Split $X^{\star} \rightarrow X^{\star}_{regress}, X^{\star}_{test}$
 
-   Split <img src="https://latex.codecogs.com/gif.latex?Y^{\star} \rightarrow Y^{\star}_{regress}, Y^{\star}_{test}" ></img>
+   Split $Y^{\star} \rightarrow Y^{\star}_{regress}, Y^{\star}_{test}$
 
 6. **Fit Regression Model:**
 
-   a) Fit <img src="https://latex.codecogs.com/gif.latex?M_{X^{\star}_{regress} \rightarrow Y^{\star}_{regress}}" ></img>
+   a) Fit $M_{X^{\star}_{regress} \rightarrow Y^{\star}_{regress}}$
 
-   b) Fit <img src="https://latex.codecogs.com/gif.latex?M_{Y^{\star}_{regress} \rightarrow X^{\star}_{regress}}" ></img>
+   b) Fit $M_{Y^{\star}_{regress} \rightarrow X^{\star}_{regress}}$
 
 7. **Predict based on Regression Model:**
 
-   a) Regress <img src="https://latex.codecogs.com/gif.latex?\hat{Y^{\star}}_{test} = M_{X^{\star}_{regress} \rightarrow Y^{\star}_{regress}}(X^{\star}_{test})" ></img>
+   a) Regress $\hat{Y^{\star}}_{test} = M_{X^{\star}_{regress} \rightarrow Y^{\star}_{regress}}(X^{\star}_{test})$
 
-   b) Regress <img src="https://latex.codecogs.com/gif.latex?\hat{X^{\star}}_{test} = M_{Y^{\star}_{regress} \rightarrow X^{\star}_{regress}}(Y^{\star}_{test})" ></img>
+   b) Regress $\hat{X^{\star}}_{test} = M_{Y^{\star}_{regress} \rightarrow X^{\star}_{regress}}(Y^{\star}_{test})$
 
 8. **Get Residuals:**
 
-   a) Calculate <img src="https://latex.codecogs.com/gif.latex?\epsilon_{X^{\star}_{test} \rightarrow Y^{\star}_{test}} = \hat{Y^{\star}}_{test} - Y^{\star}_{test}" ></img>
+   a) Calculate $\epsilon_{X^{\star}_{test} \rightarrow Y^{\star}_{test}} = \hat{Y^{\star}}_{test} - Y^{\star}_{test}$
 
-   b) Calculate <img src="https://latex.codecogs.com/gif.latex?\epsilon_{Y^{\star}_{test} \rightarrow X^{\star}_{test}} = \hat{X^{\star}}_{test} - X^{\star}_{test}" ></img>
+   b) Calculate $\epsilon_{Y^{\star}_{test} \rightarrow X^{\star}_{test}} = \hat{X^{\star}}_{test} - X^{\star}_{test}$
 
 
 9. **Evaluation Test:**
 
-   a) Test <img src="https://latex.codecogs.com/gif.latex?\epsilon_{X^{\star}_{test} \rightarrow Y^{\star}_{test}}" ></img> vs. <img src="https://latex.codecogs.com/gif.latex?X^{\star}" ></img>
+   a) Test $\epsilon_{X^{\star}_{test} \rightarrow Y^{\star}_{test}}$ vs. $X^{\star}$
 
-   b) Test <img src="https://latex.codecogs.com/gif.latex?\epsilon_{Y^{\star}_{test} \rightarrow X^{\star}_{test}}" ></img> vs. <img src="https://latex.codecogs.com/gif.latex?Y^{\star}" ></img>
+   b) Test $\epsilon_{Y^{\star}_{test} \rightarrow X^{\star}_{test}}$ vs. $Y^{\star}$
 
 10. **Interpretation:**
 
@@ -214,7 +217,7 @@ whypy.steadystate.mvariate.Model(obs, combinations, regmod, obs_name, scaler)
 
 ---
 
-3. The data producing process is **transient** (<img src="https://latex.codecogs.com/gif.latex?t_0" ></img>: offset, <img src="https://latex.codecogs.com/gif.latex?s" ></img>: stride)+ The model is **multi variate** (one independent variable)
+3. The data producing process is **transient** ($t_0$: offset, $s$: stride)+ The model is **multi variate** (one independent variable)
 
 ```python
 whypy.transient.bivariate.Model(obs, combinations, regmod, obs_name, scaler, t0, stride)
@@ -222,7 +225,7 @@ whypy.transient.bivariate.Model(obs, combinations, regmod, obs_name, scaler, t0,
 
 ---
 
-4. The data producing process is **transient** (<img src="https://latex.codecogs.com/gif.latex?t_0" ></img>: offset, <img src="https://latex.codecogs.com/gif.latex?s" ></img>: stride)+ The model is **multi variate** (n independent variable)
+4. The data producing process is **transient** ($t_0$: offset, $s$: stride)+ The model is **multi variate** (n independent variable)
 
 ```python
 whypy.transient.mvariate.Model(obs, combs, regmod, obs_name, scaler, t0, stride)
@@ -270,11 +273,11 @@ To run causal inference a model instance must be initialized with the following 
 
 ><a name="t0"></a>t0 (required in transient models):
 * Type: Integer
-* Description: Offset <img src="https://latex.codecogs.com/gif.latex?Y[t_0::] \sim f(X[:-t_0:])" ></img>
+* Description: Offset $Y[t_0::] \sim f(X[:-t_0:])$
 
 ><a name="stride"></a>stride (required in transient models):
 * Type: Integer
-* Description: <img src="https://latex.codecogs.com/gif.latex?Y[::stride] \sim f(X[::stride])" ></img>
+* Description: $Y[::stride] \sim f(X[::stride])$
 
 
 ---
@@ -661,3 +664,5 @@ Displays a short summary of the loaded scaler model.
 
 [[return to start]](#whypy)
 <!-- #endregion -->
+</body>
+</html>
