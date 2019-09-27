@@ -130,8 +130,8 @@ class General():
         if self._config['bootstrap'] > 0:
             self.check_kwargs_declaration(key='bootstrap_ratio', default=1)
             assert 0 < self._kwargs['bootstrap_ratio'] <= 1, 'Bootstrap Ratio must be in range [0, 1]'
-            self.check_kwargs_declaration(key='bootstrap_seed', default=1)
-            assert isinstance(self._kwargs['bootstrap_seed'], int), 'Bootstrap Seed must be integer'
+            self.check_kwargs_declaration(key='bootstrap_seed', default=None)
+            assert (isinstance(self._kwargs['bootstrap_seed'], int) or (self._kwargs['bootstrap_seed'] is None)), 'Bootstrap Seed must be integer or None type'
         # Check Holdout Kwargs
         if self._config['holdout'] > 0:
             self.check_kwargs_declaration(key='holdout_ratio', default=0.2)
@@ -172,12 +172,12 @@ class General():
                 if (self._kwargs['holdout_ratio']) * self.obs.shape[0] < 50:
                     warn('WARNING: Less than 50 values remaining to estimate the test statistics, from holdout_ratio')
 
-    def get_seed(self):
+    def get_seed(self, seed=None):
         """
         Method to get a consistent seed for dependent and indpendent split.
         """
-        if self._kwargs['holdout_seed'] is not None:
-            seed = elf._kwargs['holdout_seed']
+        if seed is not None:
+            seed = seed
         else:
             seed = np.random.randint(low=0, high=999999999, size=1)[0]
         return(seed)
@@ -203,7 +203,7 @@ class General():
         """
         if self._config['holdout'] is True:
             # Get a consistent seed for dependent and indpendent split
-            seed = self.get_seed()
+            seed = self.get_seed(self._kwargs['holdout_seed'])
             ids_fit_tdep, ids_test_tdep = self.ids_split(self._ids_tdep,
                                                          seed)
             ids_fit_tindep, ids_test_tindep = self.ids_split(self._ids_tindep,

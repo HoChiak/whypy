@@ -757,14 +757,17 @@ class ANM(RunANM, PlotANM, ResultsANM):
                     self._regmods = utils.object2list(self.regmod,
                                                       no_combs, dcopy=True)
                 # Do the Bootstrap
+                seed = self.get_seed(self._kwargs['bootstrap_seed'])
                 self._obs = resample(deepcopy(self.obs), replace=True,
                                     n_samples=int(self.obs.shape[0] * self._kwargs['bootstrap_ratio']),
-                                    random_state=self._kwargs['bootstrap_seed']+boot_i)
+                                    random_state=seed)
             self._runi = boot_i
             # Do the math
             self.run_inference()
         # Restructure results to make them more accesible
         self.restructure_results()
+        # Pass restructered results to attribute results
+        self.results = deepcopy(self._results_df)
         # Plot the math of inference
         if plot_inference is True:
             self.plot_inference()
