@@ -14,8 +14,11 @@
    viewBox="0 0 100 50"
    version="1.1"
    id="svg8"
-   inkscape:version="0.92.2 5c3e80d, 2017-08-06"
-   sodipodi:docname="cause-effect-confounded.svg">
+   sodipodi:docname="cause-effect-confounded.svg"
+   inkscape:export-filename="/Users/markhenss/Documents/GitHub/whypy/__pictures/cause-effect-confounded.png"
+   inkscape:export-xdpi="400"
+   inkscape:export-ydpi="400"
+   inkscape:version="0.92.2 5c3e80d, 2017-08-06">
   <defs
      id="defs2">
     <marker
@@ -85,7 +88,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="2.02"
-     inkscape:cx="178.19428"
+     inkscape:cx="177.69923"
      inkscape:cy="105.43937"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
