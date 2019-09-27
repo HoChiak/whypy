@@ -151,13 +151,13 @@ Further reading:
 <h1> <a name="quick"></a>Quick Start</h1>
 </div>
 
-```python hl_lines="1 3"
+```python 
 import whypy
 ```
 
 ### 1. Load predefined templates of observations, regression model and scaler:
 
-```python hl_lines="1 3"
+```python
 obs = whypy.load.observations(modelclass=2, no_obs=500, seed=1)
 regmod = whypy.load.model_lingam(term='spline')
 scaler = whypy.load.scaler_standard()
@@ -168,13 +168,13 @@ scaler = whypy.load.scaler_standard()
 
 ### 2. Initialize a bivariate steadystate ANM-Model:
 
-```python hl_lines="1 3"
+```python
 mymodel = whypy.steadystate.bivariate.Model(obs=obs, combinations='all', regmod=regmod, scaler=scaler)
 ```
 
 ### 3. Run Causal Inference
 
-```python hl_lines="1 3"
+```python
 mymodel.run(testtype='LikelihoodVariance',
             scale=True,
             bootstrap=100,
@@ -221,7 +221,7 @@ mymodel.run(testtype='LikelihoodVariance',
 
 Import Whypy Toolbox
 
-```python hl_lines="1 3"
+```python
 import whypy
 ```
 
@@ -229,7 +229,7 @@ import whypy
 
 1. The data producing process is **steady state** + The model is **bivariate** (one independent variable)
 
-```python hl_lines="1 3"
+```python
 whypy.steadystate.bivariate.Model(obs, combinations, regmod, obs_name, scaler)
 ```
 
@@ -237,7 +237,7 @@ whypy.steadystate.bivariate.Model(obs, combinations, regmod, obs_name, scaler)
 
 2. The data producing process is **steady state** + The model is **bivariate** (n independent variable)
 
-```python hl_lines="1 3"
+```python
 whypy.steadystate.mvariate.Model(obs, combinations, regmod, obs_name, scaler)
 ```
 
@@ -245,7 +245,7 @@ whypy.steadystate.mvariate.Model(obs, combinations, regmod, obs_name, scaler)
 
 3. The data producing process is **transient** (<i>t<sub>0</sub></i>: offset, <i>s</i>: stride)+ The model is **multi variate** (one independent variable)
 
-```python hl_lines="1 3"
+```python
 whypy.transient.bivariate.Model(obs, combinations, regmod, obs_name, scaler, t0, stride)
 ```
 
@@ -253,7 +253,7 @@ whypy.transient.bivariate.Model(obs, combinations, regmod, obs_name, scaler, t0,
 
 4. The data producing process is **transient** (<i>t<sub>0</sub></i>: offset, <i>s</i>: stride)+ The model is **multi variate** (n independent variable)
 
-```python hl_lines="1 3"
+```python
 whypy.transient.mvariate.Model(obs, combs, regmod, obs_name, scaler, t0, stride)
 ```
 
@@ -316,7 +316,7 @@ To run causal inference a model instance must be initialized with the following 
 
 **<a name="run"></a>model.run():** Do Causal Inference
 
-```python hl_lines="1 3"
+```python
 model.run(testtype='LikelihoodVariance', scale=True, bootstrap=False, holdout=False, plot_inference=True, plot_results=True, **kwargs)
 ```
 ><a name="testtype"></a>testtype:
@@ -375,7 +375,7 @@ model.run(testtype='LikelihoodVariance', scale=True, bootstrap=False, holdout=Fa
 
 **model.plot_inference():** Equal to Method "run" Parameter [plot_inference](#plot_inference)
 
-```python hl_lines="1 3"
+```python
 model.plot_inference()
 ```
 
@@ -383,7 +383,7 @@ model.plot_inference()
 
 **model.plot_results():** Equal to Method "run" Parameter [plot_results](#plot_results)
 
-```python hl_lines="1 3"
+```python
 model.plot_results()
 ```
 
@@ -391,7 +391,7 @@ model.plot_results()
 
 **<a name="get_combs"></a>model.get_combs():** Returns the Nested List of Combinations used in [model.run()](#run)
 
-```python hl_lines="1 3"
+```python
 model.get_combs()
 ```
 
@@ -399,7 +399,7 @@ model.get_combs()
 
 **<a name="get_regmod"></a>model.get_regmod():** Returns the List of Regression Models used in [model.run()](#run)
 
-```python hl_lines="1 3"
+```python
 model.get_regmod()
 ```
 
@@ -407,7 +407,7 @@ model.get_regmod()
 
 **<a name="get_scaler"></a>model.get_scaler():** Returns the List of Scalers used in [model.run()](#run)
 
-```python hl_lines="1 3"
+```python
 model.get_scaler()
 ```
 
@@ -415,7 +415,7 @@ model.get_scaler()
 
 **<a name="get_obs_name"></a>model.get_obs_name():** Returns the List of Observation Names assigned in [model.run()](#run)
 
-```python hl_lines="1 3"
+```python
 model.get_obs_name()
 ```
 
@@ -429,7 +429,7 @@ model.get_obs_name()
 
 **model.results:** DataFrame containing all results.
 
-```python hl_lines="1 3"
+```python
 model.results
 ```
 
@@ -500,7 +500,7 @@ model.results
 ---
 
 **model.obs:** [see above](#obs)
-```python hl_lines="1 3"
+```python
 model.obs
 ```
 
@@ -508,42 +508,42 @@ model.obs
 
 **model.combs:** [see above](#combs), if 'all' is passed see also [model.get_combs()](#get_combs)
 
-```python hl_lines="1 3"
+```python
 model.combs
 ```
 
 ---
 
 **model.regmod:** [see above](#regmod), if single Object is passed see also [model.get_regmod()](#get_regmod)
-```python hl_lines="1 3"
+```python
 model.regmod
 ```
 
 ---
 
 **model.obs_name (optional):** [see above](#obs_name), if None is passed see also [model.get_obs_name()](#get_obs_name)
-```python hl_lines="1 3"
+```python
 model.obs_name
 ```
 
 ---
 
 **model.scaler (optional):** [see above](#scaler), if single Object is passed see also [model.get_scaler()](#get_scaler)
-```python hl_lines="1 3"
+```python
 model.scaler
 ```
 
 ---
 
 **model.t0 (required in transient models):** [see above](#t0)
-```python hl_lines="1 3"
+```python
 model.t0
 ```
 
 ---
 
 **model.stride (required in transient models):** [see above](#stride)
-```python hl_lines="1 3"
+```python
 model.stride
 ```
 
@@ -562,7 +562,7 @@ There are various Regression Models, Scalers and Observational datasets availabl
 
 **whypy.load.observations():** Load Observational Datasets
 
-```python hl_lines="1 3"
+```python
 whypy.load.observations(modelclass, no_obs=100, seed=None)
 ```
 
@@ -595,7 +595,7 @@ Displays a short summary of the loaded dataset and the underlying causal graph.
 
 **whypy.load.model_lingam():** Load a [Linear GAM](https://pygam.readthedocs.io/en/latest/api/lineargam.html) Regression Model.
 
-```python hl_lines="1 3"
+```python
 whypy.load.model_lingam(term='spline')
 ```
 
@@ -615,7 +615,7 @@ Displays a short summary of the loaded regression model.
 
 **whypy.load.model_svr():** Load a [Support Vector Regression](http://scikit-learn.org/stable/modules/generated/sklearn.svm.SVR.html) Model.
 
-```python hl_lines="1 3"
+```python
 whypy.load.observations(term='poly4')
 ```
 
@@ -635,7 +635,7 @@ Displays a short summary of the loaded regression model.
 
 **whypy.load.model_polynomial_lr():** Load a Linear Regression Model based on Polynomial Features.
 
-```python hl_lines="1 3"
+```python
 whypy.load.model_polynomial_lr(degree=2)
 ```
 
@@ -660,7 +660,7 @@ Displays a short summary of the loaded regression model.
 
 **whypy.load.scaler_minmax():** Load a [MinMaxScaler](https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MinMaxScaler.html) Model, scaling to feature_range=(0, 1).
 
-```python hl_lines="1 3"
+```python
 whypy.load.scaler_minmax()
 ```
 
@@ -676,7 +676,7 @@ Displays a short summary of the loaded scaler model.
 
 **whypy.load.scaler_standard():** Load a [StandardScaler](https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html) Model.
 
-```python hl_lines="1 3"
+```python
 whypy.load.scaler_standard()
 ```
 
