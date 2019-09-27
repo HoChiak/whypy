@@ -40,7 +40,7 @@ Within the WhyPy Toolbox four possible models are distinguished
 
    ![MultiVariate-SteadyState](__pictures/cause-effect-mvariate-steadystate.pdf)
 
-3. The data producing process is **transient** ($t_0$: offset, $s$: stride)+ The model is **multi variate** (one independent variable)
+3. The data producing process is **transient** (<i>t<sup>0</sup></i>: offset, $s$: stride)+ The model is **multi variate** (one independent variable)
 
    ![BiVariate-Transient](__pictures/cause-effect-bivariate-transient.pdf)
 
