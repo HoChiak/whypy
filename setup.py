@@ -4,9 +4,9 @@ import setuptools
 
 setuptools.setup(
     name="WhyPy",
-    version="0.0.7",
+    version="0.1.0",
     author="HoChiak",
-    author_email="mark.henss@gmx.de",
+    author_email="hochiak.whypy@gmail.com",
     description="Toolbox for Causal Inference with Additive Noise Models",
     long_description="See [GitHub](https://github.com/HoChiak/whypy) for long description",
     long_description_content_type="text/markdown",
