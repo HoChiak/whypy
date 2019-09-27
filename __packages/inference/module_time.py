@@ -31,8 +31,14 @@ class SteadyState():
         Method to init the ids for dependent and independent variable. For
         steadystate no further modification is required.
         """
-        self._ids_tdep = np_arange(0, self._obs.shape[0], 1)
-        self._ids_tindep = np_arange(0, self._obs.shape[0], 1)
+        # Get number of observations including bootstrap_ratio
+        if self._config['bootstrap'] > 0:
+            no_obs = int(self.obs.shape[0] * self._kwargs['bootstrap_ratio'])
+        else:
+            no_obs = self.obs.shape[0]
+        # Get ids
+        self._ids_tdep = np_arange(0, no_obs, 1)
+        self._ids_tindep = np_arange(0, no_obs, 1)
 ###############################################################################
 
 
@@ -56,10 +62,12 @@ class Transient():
         Method to init the ids for dependent and independent variable. For
         steadystate no further modification is required.
         """
-        self._ids_tdep = np_arange(self._t0,
-                                   self._obs.shape[0],
-                                   self._stride)
-        self._ids_tindep = np_arange(0,
-                                     self._obs.shape[0]-self._t0,
-                                     self._stride)
+        # Get number of observations including bootstrap_ratio
+        if self._config['bootstrap'] > 0:
+            no_obs = int(self.obs.shape[0] * self._kwargs['bootstrap_ratio'])
+        else:
+            no_obs = self.obs.shape[0]
+        # Get ids
+        self._ids_tdep = np_arange(self._t0, no_obs, self._stride)
+        self._ids_tindep = np_arange(0, no_obs-self._t0, self._stride)
 ###############################################################################
