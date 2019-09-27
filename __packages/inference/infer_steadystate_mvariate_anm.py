@@ -1,31 +1,29 @@
 # -*- coding: utf-8 -*-
 
 # import built in libarys
-from copy import deepcopy
 
 # import 3rd party libarys
-import numpy as np
-from sklearn.utils import resample
-
 
 # import local libarys
-from whypy.__packages.inference.module_general import General as parent0
-from whypy.__packages.inference.module_steadystate import SteadyState as parent1
-from whypy.__packages.inference.module_mvariate import Mvariate as parent2
-from whypy.__packages.inference.module_anm import RunANM as parent3
-from whypy.__packages.inference.module_anm import PlotANM as parent4
-from whypy.__packages.inference.module_anm import ResultsANM as parent5
+from .module_general import General as parent0
+from .module_time import SteadyState as parent1
+from .module_variate import Mvariate as parent2
+from .module_anm import ANM as parent3
 
 from whypy.__packages.utils import utils
 
-
 ###############################################################################
-class Model(parent0, parent1, parent2, parent3, parent4, parent5):
+
+
+class Model(parent0, parent1, parent2, parent3):
     """
-    Causal Inference methods for the two variable case. General SCMs are not
-    identifiable in the two variable case. Additional Assumptions are required,
-    given by the modelclass restrictions. Only acyclic graphs are considered.
+    Parent Class for Causal Inference Methods. Different Cases
+    (Bivariate <-> Multivariate | SteadyState <-> Transient) are defined by
+    parent1 and parent2. The additive noise model causal inference Methods
+    are loaded by parent3. Other imports are the general class (using
+    class and instance attributes) and functions loaded by utils.
     """
+    # Global dictionary
     attr_dict = {'LikelihoodVariance': 'likelihood-ratio',
                  'LikelihoodEntropy': 'likelihood-ratio',
                  'KolmogorovSmirnoff': 'p-value',
@@ -33,104 +31,40 @@ class Model(parent0, parent1, parent2, parent3, parent4, parent5):
                  'HSIC': 'unknown'
                  }
 
-    def __init__(self, xi=None, combinations='all', regmod=None, scaler=None):
+    def __init__(self, obs=None, combinations='all', regmod=None, scaler=None,
+                 obs_name=None, t0=None, stride=None):
         """
-        Child class constructor for causal inference methods in the 2 variable
-        case. Xi may consist of an abritary number of variables, but only one
-        variable is mapped to one other
+        Class constructor for causal inference methods.
 
-        INPUT (Inherent from parent):
-        Xi:         observations (data)
-                    (columns are variables)
-        model:      List of regression models.
-                    model[i][j] maps Xi[i] ~ f(Xi[j])
-                    while i is the dependent and j is the independent variable
-                    (must be callable with model.fit() and model.predict())
-        scaler:     List of scaler.
-
-        INPUT (Child specific):
-        dict_2V:    needed to store additional information for each mapping
-                    dict_2V[i][j] maps Xi[i] ~ f(Xi[j])
-
+        INPUT (inherent from parent):
+        obs:        observations (data) as pandas DataFrame or numpy array.
+                    shape -> (observations, variables)
+        combs:      nested list of combinations or codeword. List logic
+                    regarding the following rule [comb1, comb2, ... combn],
+                    where combi is another list. To test x2 = f(x1, x5) the
+                    combi list is defined as follows: [x2, x1, x5]. The first
+                    variable is always the dependent variable extended by an
+                    abritary number of independent variables (to be tested).
+        model:      model for regression, must be callable with model.fit()
+                    and model.predict(). Can be single object or list of
+                    objects. If List is given, models should be independent
+                    initialized and list must have length according to the
+                    number n of combinations: [model1, model2, ... model_n]
+        scaler:     single scaler object (optional), must be callable with
+                    transform and inverse_transform.
         """
         parent0.__init__(self)
-        parent1.__init__(self)
+        parent1.__init__(self, t0, stride)
         parent2.__init__(self)
         parent3.__init__(self)
-        parent4.__init__(self)
-        parent5.__init__(self)
-        self.xi = np.array(xi)
-        self.comb = combinations
+        self.obs = obs
+        self.combs = combinations
         self.regmod = regmod
         self.scaler = scaler
-        self._xi = None
-        self._comb = None
-        self._regmod = None
+        self.obs_name = obs_name
+        self._obs = None
+        self._combs = None
+        self._regmods = None
         self._scaler = None
-
-    def run(self,
-            testtype='LikelihoodVariance',
-            scale=True,
-            bootstrap=False,
-            holdout=False,
-            plot_inference=True,
-            plot_results=True,
-            **kwargs):
-        """
-        Method to test independence of residuals.
-        Theorem: In causal direction, the noise is independent of the input
-        Valid for Additive Noise Models e.g. LiNGAM, NonLinear GaussianAM
-        """
-        # Count Number of runs +1
-        self._norun = 0
-        # Check and Initialisation of Attributes
-        self.check_instance_model_attr(scale)
-        self.init_instance_model_attr()
-        # Clear Arguments from previous caclulations
-        parent3.__del__(self)
-        # Check Method "Run" Arguments
-        self.check_and_init_arg_run(testtype, bootstrap, holdout)
-        # Add information to config
-        self._config = {'testtype': testtype,
-                        'scale': scale,
-                        'bootstrap': bootstrap,
-                        'holdout': holdout,
-                        'shape_observations': self._xi.shape,
-                        'shape_combinations': np.array(self._comb).shape,
-                        'regression_model': str(self._regmod[0]),
-                        'scaler_model': str(self._scaler[0]),
-                        }
-        # Check and Init Kwargs
-        self.check_init_kwargs(kwargs)
-        # Check and Init Holdout Lists
-        self.check_init_holdout_ids()
-        # Check and display warnings
-        self.check_warnings()
-        # Display Start of Causal Inference
-        utils.display_text_predefined(what='inference header')
-        # TBD Add Time shift / Adress different environments
-        for boot_i, _ in enumerate(self._bootstrap):
-            if bootstrap > 0:
-                # Display the current bootstrap number
-                utils.display_text_predefined(what='count bootstrap',
-                                              current=boot_i, sum=bootstrap)
-                # Init fresh _regmod from regmod -> otherwise fit will fail
-                self._regmod = utils.trans_object_to_list(self.regmod,
-                                                          len(self._comb),
-                                                          dcopy=True)
-                # Do the Bootstrap
-                self._xi = resample(deepcopy(self.xi), replace=True,
-                                    n_samples=int(self.xi.shape[0] * self._kwargs['bootstrap_ratio']),
-                                    random_state=self._kwargs['bootstrap_seed']+boot_i)
-            self._norun = boot_i
-            # Do the math
-            self.run_inference()
-        # Plot the math of inference
-        if plot_inference is True:
-            self.plot_inference()
-        # Plot results
-        if plot_results is True:
-            self.plot_results()
-
-
+        self._obs_name = None
 ###############################################################################

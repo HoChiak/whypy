@@ -6,8 +6,8 @@
 
 # import local libarys
 from .module_general import General as parent0
-from .module_time import SteadyState as parent1
-from .module_variate import Bivariate as parent2
+from .module_time import Transient as parent1
+from .module_variate import Mvariate as parent2
 from .module_anm import ANM as parent3
 
 from whypy.__packages.utils import utils

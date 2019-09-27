@@ -2,7 +2,7 @@
 
 # import built in libarys
 from copy import deepcopy
-
+import sys
 
 # import 3rd party libarys
 import numpy as np
@@ -11,12 +11,12 @@ import matplotlib.pyplot as plt
 from IPython.display import display, HTML
 import pandas as pd
 
-
 # import local libarys
 
-
 ###############################################################################
-def trans_nestedlist_to_tuple(nestedlist):
+
+
+def nestedlist2nestedtuple(nestedlist):
     """
     Function to transform nested list to a tuple of tuple.
     """
@@ -25,7 +25,7 @@ def trans_nestedlist_to_tuple(nestedlist):
     return(tupletuple)
 
 
-def trans_object_to_list(object1, n, dcopy=False):
+def object2list(object1, n, dcopy=False):
     """
     Fuunction to expand one object to a list of length n from this object.
     """
@@ -36,15 +36,15 @@ def trans_object_to_list(object1, n, dcopy=False):
     return(objectn)
 
 
-def trans_tuple_to_scalar(array):
-    """
-    Function to turn a np.array([scalar]) into scalar, if possible.
-    """
-    if array.size == 1:
-        scalar = array.item()
-        return(scalar)
-    else:
-        return(array)
+# def tuple2scalar(array):
+#     """
+#     Function to turn a np.array([scalar]) into scalar, if possible.
+#     """
+#     if array.size == 1:
+#         scalar = array.item()
+#         return(scalar)
+#     else:
+#         return(array)
 
 
 def check_inf_nan(value):
@@ -112,22 +112,22 @@ align="center">
 <body>
 
 <div style="background-color:grey;color:white;padding:4px;" align="center">
-<h3>Fitted Combination: X<sub>%i</sub> ~ f(X<sub>%s</sub>)</h3>
+<h3>Fitted Combination: %s ~ f(%s)</h3>
 </div>
 </body>
 </html>
-                """ % (kwargs['tdep'], str(kwargs['tindeps']))
+                """ % (kwargs['tdep'], kwargs['tindeps'])
     elif 'combination minor header' in what:
         text = r"""
 <html>
 <body>
 <div style="background-color:lightgrey;color:black;padding:0px;"
 align="center">
-<h4>2D Visualisation for: X<sub>%i</sub> ~ f(X<sub>%s</sub>)</h4>
+<h4>2D Visualisation for: %s ~ f(%s)</h4>
 </div>
 </body>
 </html>
-                """ % (kwargs['tdep'], kwargs['tindeps'])
+                """ % (kwargs['tdep'], kwargs['tindepv'])
     elif 'result header' in what:
         text = r"""
 <html>
@@ -265,8 +265,8 @@ def plot_DAG(Edge_list, Node_list=None):
         Labels = None
     # Extract Node_list from Edge_list, if not given
     if Node_list is None:
-        Node_list = Edge_list[['Node1', 'Node2']].values.ravel()
-        Node_list = pd.unique(Node_list)
+        Node_list = Edges.reshape(-1,)
+        Node_list = pd.unique(Node_list).tolist()
     # Get length of list
     list_len = len(Node_list)
     # Multiply colors for all entrys in list
@@ -308,3 +308,27 @@ def plot_DAG(Edge_list, Node_list=None):
                                          font_size=12,
                                          font_color='black')
     plt.show()
+
+
+def prgr_bar(curr_state, no_states, txt=''):
+    """
+    Method to plot a prgr bar.
+    """
+    # Standard width of bar
+    bar_width = 80
+    # One state equals one increment
+    prgr_increment = bar_width / float(no_states)
+    # Add prgr done
+    prgr_done = int(round(prgr_increment * curr_state))
+    prgr_bar = '=' * prgr_done
+    # Add devider
+    if curr_state < (no_states-1):
+        prgr_bar += '>'
+    # Add prgr to be done
+    prgr_tbd = int(round(prgr_increment * (no_states - curr_state)))
+    prgr_bar += ' ' * prgr_tbd
+    # Write Output
+    sys.stdout.write('[%s] %s/%s %s\r' % (prgr_bar, curr_state,
+                                          no_states, txt))
+    sys.stdout.flush()
+###############################################################################
