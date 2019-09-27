@@ -162,6 +162,8 @@ obs = whypy.load.observations(modelclass=2, no_obs=500, seed=1)
 regmod = whypy.load.model_lingam(term='spline')
 scaler = whypy.load.scaler_standard()
 ```
+
+```output
 <html>
 <body>
 <style>
@@ -192,6 +194,7 @@ table td, table th, table tr {text-align:left !important;}
 </table>
 </body>
 </html>
+```
 
 ### 2. Initialize a bivariate steadystate ANM-Model:
 
