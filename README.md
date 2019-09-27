@@ -1,24 +1,9 @@
----
-jupyter:
-  jupytext:
-    formats: ipynb,md
-    text_representation:
-      extension: .md
-      format_name: markdown
-      format_version: '1.1'
-      jupytext_version: 1.2.4
-  kernelspec:
-    display_name: Python 3
-    language: python
-    name: python3
----
-
 <div style="background-color:RGB(0,81,158);color:RGB(255,255,255);padding:10px;">
 <h1> <a name="whypy"></a>WhyPy</h1>
 </div>
 
 <!-- #region -->
-A python repository for **causal inference**. 
+A python repository for **causal inference**.
 
 Currently available approaches in this repository are based on **Additive Noise Models (ANMs)**.
 
@@ -80,17 +65,17 @@ The family of causal inference methods to used here are Additive Noise Models (A
 1. **Input:**
 
    Observations: $X$, $Y$
-   
+
    Regression Model: $M$
-   
+
    Scaler (optional): $n_\gamma(\cdot)$
 
 2. **Normalization (optional):**
 
    Calculate $X^{\star} = n_x(X)$
-   
+
    Calculate $Y^{\star} = n_y(Y)$
-   
+
 3. **Boostrap (optional):**
 
    Get Bootstrap Sample of Observations: $X^{\star}$, $Y^{\star}$
@@ -98,48 +83,48 @@ The family of causal inference methods to used here are Additive Noise Models (A
 4. **Time Shift (if model is transient):**
 
    a) Shift $X^{\star} = X^{\star}[0:-i:s], Y^{\star} = Y^{\star}[i::s]$
-   
+
    b) Shift $Y^{\star} = Y^{\star}[0:-i:s], X^{\star} = X^{\star}[i::s]$
-   
+
 5. **Holdout (optional):**
 
    Split $X^{\star} \rightarrow X^{\star}_{regress}, X^{\star}_{test}$
-   
+
    Split $Y^{\star} \rightarrow Y^{\star}_{regress}, Y^{\star}_{test}$
 
 6. **Fit Regression Model:**
 
    a) Fit $M_{X^{\star}_{regress} \rightarrow Y^{\star}_{regress}}$
-   
+
    b) Fit $M_{Y^{\star}_{regress} \rightarrow X^{\star}_{regress}}$
 
 7. **Predict based on Regression Model:**
 
    a) Regress $\hat{Y^{\star}}_{test} = M_{X^{\star}_{regress} \rightarrow Y^{\star}_{regress}}(X^{\star}_{test})$
-   
+
    b) Regress $\hat{X^{\star}}_{test} = M_{Y^{\star}_{regress} \rightarrow X^{\star}_{regress}}(Y^{\star}_{test})$
 
 8. **Get Residuals:**
 
    a) Calculate $\epsilon_{X^{\star}_{test} \rightarrow Y^{\star}_{test}} = \hat{Y^{\star}}_{test} - Y^{\star}_{test}$
-   
+
    b) Calculate $\epsilon_{Y^{\star}_{test} \rightarrow X^{\star}_{test}} = \hat{X^{\star}}_{test} - X^{\star}_{test}$
 
 
 9. **Evaluation Test:**
 
    a) Test $\epsilon_{X^{\star}_{test} \rightarrow Y^{\star}_{test}}$ vs. $X^{\star}$
-   
+
    b) Test $\epsilon_{Y^{\star}_{test} \rightarrow X^{\star}_{test}}$ vs. $Y^{\star}$
 
 10. **Interpretation:**
 
    a) Please refer to the given literature
-   
+
    b) Please refer to the given literature
-   
+
 ---  
-   
+
 Further reading:
 
 <table>
@@ -165,6 +150,9 @@ Further reading:
 <h1> <a name="quick"></a>Quick Start</h1>
 </div>
 
+```python
+import whypy
+```
 
 ### 1. Load predefined templates of observations, regression model and scaler:
 
@@ -248,12 +236,12 @@ whypy.transient.mvariate.Model(obs, combs, regmod, obs_name, scaler, t0, stride)
 ## <a name="model-parameters"></a>Instance-Parameters
 To run causal inference a model instance must be initialized with the following attributes:
 
-><a name="obs"></a>obs: 
+><a name="obs"></a>obs:
 * Type: Numpy Array of shape(m, n)
    * m: number of observations
    * n: number of variables
 * Description: All variables to be tested in different combinations.
-   
+
 ><a name="combs"></a>combs:
 * Type: 'all' default or nested list
 * Logic: First number is number of dependent variable, following numbers are numbers of independent variable:
@@ -262,7 +250,7 @@ To run causal inference a model instance must be initialized with the following 
    * Combination j:   ... ,
    * Combination k:  [...]]
 * Description: Combinations of dependent and independent varialbes to be tested.
-   
+
 ><a name="regmod"></a>regmod:
 * Type: Model Object or List of Model Objects
    * Condition: Models must be callable with "fit" and "predict"
@@ -273,17 +261,17 @@ To run causal inference a model instance must be initialized with the following 
 * Type: List with name strings of shape(n)
    * n: number of variables
 * Description: Variable Naming, default is X1, X2, ... Xn
-   
-><a name="scaler"></a>scaler (optional): 
+
+><a name="scaler"></a>scaler (optional):
 * Type: Model Object or List of Model Objects
    * Condition: Models must be callable with "fit", "transform" and "inverse_transform"
    * If list of models is given, list must have same length as number k of combinations
 * Description: Models to scale observations before regression.
-   
+
 ><a name="t0"></a>t0 (required in transient models):
 * Type: Integer
 * Description: Offset $Y[t_0::] \sim f(X[:-t_0:])$
-   
+
 ><a name="stride"></a>stride (required in transient models):
 * Type: Integer
 * Description: $Y[::stride] \sim f(X[::stride])$
@@ -309,7 +297,7 @@ model.run(testtype='LikelihoodVariance', scale=True, bootstrap=False, holdout=Fa
 ><a name="scale"></a>scale:
    * Type: True (default) or False
    * Description: If True scale observations before regression.
-   
+
 ><a name="bootstrap"></a>bootstrap:
    * Type: True or False (default)
    * Description: Whether to bootstrap over the observations or not (see also bootstrap_ratio and bootstrap_seed)
@@ -321,7 +309,7 @@ model.run(testtype='LikelihoodVariance', scale=True, bootstrap=False, holdout=Fa
 ><a name="plot_inference"></a> plot_inference:
    * Type: True (default) or False
    * Description: Plot various visualisations of the inference (Pairgrid of observations, 2D Regression, Histogramms)
-   
+
 ><a name="plot_results"></a>plot_results:
    * Type: True (default) or False
    * Description: Plot DataFrames of Normality Tests, Goodness of Fit, Independence Test and BoxPlot of test results.
@@ -333,7 +321,7 @@ model.run(testtype='LikelihoodVariance', scale=True, bootstrap=False, holdout=Fa
 ><a name="bootstrap_seed"></a>bootstrap_seed:
    * Type: None (default) or int
    * Description: Seed the generator for bootstraping.
-   
+
 ><a name="holdout_ratio"></a>holdout_ratio:
    * Type: Float, should be between 0.0 and 1.0 - 0.2 (default)
    * Description: Ratio of the original observations number m to be used to holdout for test.
@@ -345,7 +333,7 @@ model.run(testtype='LikelihoodVariance', scale=True, bootstrap=False, holdout=Fa
 ><a name="modelpts"></a>modelpts:
    * Type: integer - 50 (default)
    * Description: Number of points used to visualize the regression model.
-   
+
 ><a name="gridsearch"></a>gridsearch:
    * Type: True or False (default)
    * Description: Wheter or not a gridsearch should be performed to find the regmods hyperparameters. If gridsearch is True and model is not pygam, a param_grid parameter must be passed.
@@ -415,11 +403,11 @@ model.get_obs_name()
 ```python
 model.results
 ```
-  
+
 >model.results['Fitted Combination']:
    * Type: String
    * Description: One String listing all Observation Names tested in the given [Combination](#combinations)
-   
+
 >model.results['Bivariate Comparison']:
    * Type: String
    * Description: One String describing a Bivariate Case out of the above combination.
@@ -431,11 +419,11 @@ model.results
 >model.results['tindeps']:
    * Type: List
    * Description: List of all independent Variables in the Combination.
-   
+
 >model.results['tindep']:
    * Type: Int
    * Description: Independent Variable in the Bivariate Case.
-   
+
 >model.results['Normality Indep. Variable SW_pvalue [List]'], ['... [Median]'], ['... [SD]']:
    * Type: <a name="listmedsd-explanation"></a>[List] -> dumped json | [Median] -> mean of all results given in list (float)| [SD] -> standard deviation of all results given in list (float)
    * Description: Normality Test on Independent Variable based on [scipy.stats.shapiro()](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.shapiro.html)
@@ -443,7 +431,7 @@ model.results
 >model.results['Normality Indep. Variable Pearson_pvalue [List]'], ['... [Median]'], ['... [SD]']:
    * Type: [see above](#listmedsd-explanation)
    * Description: Normality Test on Independent Variable based on [scipy.stats.normaltest()](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.normaltest.html)
-   
+
 >model.results['Normality Indep. Variable Combined_pvalue [List]'], ['... [Median]'], ['... [SD]']:
    * Type: [see above](#listmedsd-explanation)
    * Description: Normality Test on Independent Variable based on [scipy.stats.combine_pvalues()](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.combine_pvalues.html)
@@ -451,27 +439,27 @@ model.results
 >model.results['Normality Depen. Variable SW_pvalue [List]'], ['... [Median]'], ['... [SD]']:
    * Type: [see above](#listmedsd-explanation)
    * Description: Normality Test on Dependent Variable based on [scipy.stats.shapiro()](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.shapiro.html)
-   
+
 >model.results['Normality Depen. Variable Pearson_pvalue [List]'], ['... [Median]'], ['... [SD]']:
    * Type: [see above](#listmedsd-explanation)
    * Description: Normality Test on Dependent Variable based on [scipy.stats.normaltest()](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.normaltest.html)
-   
+
 >model.results['Normality Depen. Variable Combined_pvalue [List]'], ['... [Median]'], ['... [SD]']:
    * Type: [see above](#listmedsd-explanation)
    * Description: Normality Test on Dependent Variable based on [scipy.stats.combine_pvalues()](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.combine_pvalues.html)
-   
+
 >model.results['Normality Residuals SW_pvalue [List]'], ['... [Median]'], ['... [SD]']:
    * Type: [see above](#listmedsd-explanation)
    * Description: Normality Test on Residuals Variable based on [scipy.stats.shapiro()](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.shapiro.html)
-   
+
 >model.results['Normality Residuals Pearson_pvalue [List]'], ['... [Median]'], ['... [SD]']:
    * Type: [see above](#listmedsd-explanation)
    * Description: Normality Test on Residuals Variable based on [scipy.stats.normaltest()](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.normaltest.html)
-   
+
 >model.results['Normality Residuals Combined_pvalue [List]'], ['... [Median]'], ['... [SD]']:
    * Type: [see above](#listmedsd-explanation)
    * Description: Normality Test on Residuals Variable based on [scipy.stats.combine_pvalues()](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.combine_pvalues.html)
-   
+
 >model.results['Dependence: Indep. Variable - Residuals LikelihoodVariance [List]'], ['... [Median]'], ['... [SD]']:
    * Type: [see above](#listmedsd-explanation)
    * Description: Test dependence between Independent Variable and Residuals based on selected [testype](#testtype)
@@ -487,7 +475,7 @@ model.results
 model.obs
 ```
 
---- 
+---
 
 **model.combs:** [see above](#combs), if 'all' is passed see also [model.get_combs()](#get_combs)
 
@@ -524,7 +512,7 @@ model.t0
 ```
 
 ---
-   
+
 **model.stride (required in transient models):** [see above](#stride)
 ```python
 model.stride
@@ -548,11 +536,11 @@ There are various Regression Models, Scalers and Observational datasets availabl
 ```python
 whypy.load.observations(modelclass, no_obs=100, seed=None)
 ```
-  
+
 >modelclass:
    * Type: Integer, should be between 1 and 10
    * Description: Each modelclass is defined by No. of Variables, Class of Functions and Class of Noise Distribution. Load Observations to get short summary of description.
-   
+
 >no_obs:
    * Type: Integer > 0 - 100 (default)
    * Description: Number of observations m assigned to each variable.
@@ -581,7 +569,7 @@ Displays a short summary of the loaded dataset and the underlying causal graph.
 ```python
 whypy.load.model_lingam(term='spline')
 ```
-  
+
 >term:
    * Type: 'linear', 'spline' (default) or 'factor'
    * Description: [see PyGAM Documentation](https://pygam.readthedocs.io/en/latest/api/lineargam.html)
@@ -596,12 +584,12 @@ Displays a short summary of the loaded regression model.
 
 ---
 
-**whypy.load.model_svr():** Load a [Support Vector Regression](http://scikit-learn.org/stable/modules/generated/sklearn.svm.SVR.html) Model. 
+**whypy.load.model_svr():** Load a [Support Vector Regression](http://scikit-learn.org/stable/modules/generated/sklearn.svm.SVR.html) Model.
 
 ```python
 whypy.load.observations(term='poly4')
 ```
-  
+
 >modelclass:
    * Type: 'linear', 'poly2' or 'poly4' (default)
    * Description: [see sklearn Documentation](http://scikit-learn.org/stable/modules/generated/sklearn.svm.SVR.html)
@@ -621,10 +609,10 @@ Displays a short summary of the loaded regression model.
 ```python
 whypy.load.model_polynomial_lr(degree=2)
 ```
-  
+
 >degree:
    * Type: Integer > 0, Degree of polynomial feature space
-   * Description: Model is a Pipeline containing a [Function Transformer](https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.FunctionTransformer.html) mapping observations to polynomial feature space of given degree (without interactions) and a [RidgeCV](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.RidgeCV.html) Regression Model. 
+   * Description: Model is a Pipeline containing a [Function Transformer](https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.FunctionTransformer.html) mapping observations to polynomial feature space of given degree (without interactions) and a [RidgeCV](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.RidgeCV.html) Regression Model.
 
 <u> Returns:</u>
 
@@ -662,7 +650,7 @@ Displays a short summary of the loaded scaler model.
 ```python
 whypy.load.scaler_standard()
 ```
-  
+
 <u> Returns:</u>
 
 Displays a short summary of the loaded scaler model.
