@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="whypy-HoChiak",
+    name="WhyPy",
     version="0.0.7",
     author="HoChiak",
     author_email="mark.henss@gmx.de",
