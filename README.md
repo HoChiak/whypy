@@ -71,7 +71,7 @@ The family of causal inference methods to used here are Additive Noise Models (A
 
    Regression Model: <i>M</i>
 
-   Scaler (optional): <i>n<sub>&gamma;</sub>(&cdot;)</i>
+   Scaler (optional): <i>n<sub>&gamma;</sub>(&sdot;)</i>
 
 2. **Normalization (optional):**
 
@@ -122,9 +122,7 @@ The family of causal inference methods to used here are Additive Noise Models (A
 
 10. **Interpretation:**
 
-   a) Please refer to the given literature
-
-   b) Please refer to the given literature
+    Please refer to the given literature
 
 ---
 
