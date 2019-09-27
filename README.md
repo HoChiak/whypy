@@ -34,19 +34,19 @@ Within the WhyPy Toolbox four possible models are distinguished
 
 1. The data producing process is **steady state** + The model is **bivariate** (one independent variable)
 
-   ![BiVariate-SteadyState](__pictures/cause-effect-bivariate-steadystate.pdf)
+   ![BiVariate-SteadyState](__pictures/cause-effect-bivariate-steadystate.png)
 
 2. The data producing process is **steady state** + The model is **bivariate** (n independent variable)
 
-   ![MultiVariate-SteadyState](__pictures/cause-effect-mvariate-steadystate.pdf)
+   ![MultiVariate-SteadyState](__pictures/cause-effect-mvariate-steadystate.png)
 
 3. The data producing process is **transient** (<i>t<sub>0</sub></i>: offset, <i>s</i>: stride)+ The model is **multi variate** (one independent variable)
 
-   ![BiVariate-Transient](__pictures/cause-effect-bivariate-transient.pdf)
+   ![BiVariate-Transient](__pictures/cause-effect-bivariate-transient.png)
 
 4. The data producing process is **transient** (<i>t<sub>0</sub></i>: offset, <i>s</i>: stride)+ The model is **multi variate** (n independent variable)
 
-   ![MultiVariate-Transient](__pictures/cause-effect-mvariate-transient.pdf)
+   ![MultiVariate-Transient](__pictures/cause-effect-mvariate-transient.png)
 
 
 <!-- #endregion -->
@@ -58,7 +58,7 @@ Within the WhyPy Toolbox four possible models are distinguished
 <!-- #region -->
 The most elementary question of causality is the one asking whether "<i>X</i> causes <i>Y</i> or vice versa". An often discussed example is the question if smoking (<i>X</i>) causes cancer (<i>Y</i>). At this point the question about causal relationships is already getting more complex. Beside the possibility that <i>X</i> causes <i>Y</i> (<i>X &rarr; Y</i>), there are other possible causal relationships. One is that a third Variable <i>Z</i> is confounding both <i>X</i> and <i>Y</i> (<i>X &larr; Z &rarr; Y</i>). In the confounding case, only looking at <i>X</i> and <i>Y</i>, might show a correlation due to the confounder even though they are not causaly related. [[1]](#Pearl), [[2]](#Mooji)
 
-![Cause-Effect-Confounded](__pictures/cause-effect-confounded.pdf)
+![Cause-Effect-Confounded](__pictures/cause-effect-confounded.png)
 
 Causal Inference is the task of learning causal relationships from purely observational data. This task is a fundamental problem in science. A variety of causal inference methods are available that were claimed to be able to solve this task under certain assumptions. These assumptions are for example no confounding, no feedback loops or no selection bias. Be aware, that results given by causal inference are only valid under the methods assumptions. ITo draw causal conclusions, these methods are exploiting the complexety of the underlying models of the observational data in genearal. [[2]](#Mooji), [[3]](#Schoelkopf)
 
