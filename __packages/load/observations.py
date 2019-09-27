@@ -85,8 +85,8 @@ def observations(modelclass, no_obs=100, seed=None):
         desc = get_desc(modelclass, no_var=2,
                         cl_func = 'Non-Linear',
                         cl_Noise = 'Gaussian, Additive, Non-Equivalent',
-                        SCM = """<p>X<sub>0</sub> ~ [ <strong><i>N</i></strong> (5, 0.25) ]</p>
-                                 <p>X<sub>1</sub> ~ [ X<sub>0</sub><sup>3</sup> + <strong><i>N</i></strong> (0, 2.25) ]</p>""")
+                        SCM = """<p>X<sub>0</sub> ~ [ <strong><i>N</i></strong> (1.5, 1.0) ]</p>
+                                 <p>X<sub>1</sub> ~ [ X<sub>0</sub><sup>2</sup> + <strong><i>N</i></strong> (0, 1.5) ]</p>""")
         Edge_list = [[0, 1]]
         X0 = np.array(1.5 + 1.0 * np.random.randn(no_obs))
         X1 = np.array(X0**2 + 1.5 * np.random.randn(no_obs))
