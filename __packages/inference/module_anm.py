@@ -615,6 +615,25 @@ class ANM(RunANM, PlotANM, ResultsANM):
         PlotANM.__init__(self)
         ResultsANM.__init__(self)
 
+    def bootstrap_obs(self):
+        """
+        Method to bootstrap observations.
+        """
+        # Get bootstrap seed
+        seed = self.get_seed(self._kwargs['bootstrap_seed'])
+        # Get bootstrap number of n_samples
+        n_samples = int(self.obs.shape[0] * self._kwargs['bootstrap_ratio'])
+        # Get ids of observations
+        ids = np.arange(0, self.obs.shape[0], 1)
+        # Bootstrap ids
+        bids = resample(ids, replace=True, n_samples=n_samples,
+                        random_state=seed)
+        # Order sequence if transient case
+        if self.attr_time is 'transient':
+            bids = np.sort(bids)
+        # Assign bootstraped observations
+        self._obs = deepcopy(self.obs[bids])
+
     def boots2stats(self, combi, namekey, dict, dictkey):
         """
         Method to get mean and variance from bootstrap runs
@@ -740,7 +759,7 @@ class ANM(RunANM, PlotANM, ResultsANM):
         # Display Start of Causal Inference
         if ((plot_inference is True) or (plot_results is True)):
             utils.display_text_predefined(what='inference header')
-        # Bootstrap
+        # Bootstrap | If False, run only once
         for boot_i, _ in enumerate(self._bootstrap):
             # Check and Init ids (based on holdout if True)
             if ((holdout is True) or (boot_i == 0)):
@@ -757,10 +776,7 @@ class ANM(RunANM, PlotANM, ResultsANM):
                     self._regmods = utils.object2list(self.regmod,
                                                       no_combs, dcopy=True)
                 # Do the Bootstrap
-                seed = self.get_seed(self._kwargs['bootstrap_seed'])
-                self._obs = resample(deepcopy(self.obs), replace=True,
-                                    n_samples=int(self.obs.shape[0] * self._kwargs['bootstrap_ratio']),
-                                    random_state=seed)
+                self.bootstrap_obs()
             self._runi = boot_i
             # Do the math
             self.run_inference()
