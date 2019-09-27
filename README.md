@@ -40,11 +40,11 @@ Within the WhyPy Toolbox four possible models are distinguished
 
    ![MultiVariate-SteadyState](__pictures/cause-effect-mvariate-steadystate.pdf)
 
-3. The data producing process is **transient** (<i>t<sup>0</sup></i>: offset, $s$: stride)+ The model is **multi variate** (one independent variable)
+3. The data producing process is **transient** (<i>t<sup>0</sup></i>: offset, <i>s</i>: stride)+ The model is **multi variate** (one independent variable)
 
    ![BiVariate-Transient](__pictures/cause-effect-bivariate-transient.pdf)
 
-4. The data producing process is **transient** ($t_0$: offset, $s$: stride)+ The model is **multi variate** (n independent variable)
+4. The data producing process is **transient** (<i>t_0</i>: offset, <i>s</i>: stride)+ The model is **multi variate** (n independent variable)
 
    ![MultiVariate-Transient](__pictures/cause-effect-mvariate-transient.pdf)
 
@@ -56,69 +56,69 @@ Within the WhyPy Toolbox four possible models are distinguished
 </div>
 
 <!-- #region -->
-The most elementary question of causality is the one asking whether "$X$ causes $Y$ or vice versa". An often discussed example is the question if smoking ($X$) causes cancer ($Y$). At this point the question about causal relationships is already getting more complex. Beside the possibility that $X$ causes $Y$ ($X \rightarrow Y$), there are other possible causal relationships. One is that a third Variable $Z$ is confounding both $X$ and $Y$ ($X \leftarrow Z \rightarrow Y$). In the confounding case, only looking at $X$ and $Y$, might show a correlation due to the confounder even though they are not causaly related. [[1]](#Pearl), [[2]](#Mooji)
+The most elementary question of causality is the one asking whether "<i>X</i> causes <i>Y</i> or vice versa". An often discussed example is the question if smoking (<i>X</i>) causes cancer (<i>Y</i>). At this point the question about causal relationships is already getting more complex. Beside the possibility that <i>X</i> causes <i>Y</i> (<i>X &rarr Y</i>), there are other possible causal relationships. One is that a third Variable <i>Z</i> is confounding both <i>X</i> and <i>Y</i> (<i>X &larr Z &rarr Y</i>). In the confounding case, only looking at <i>X</i> and <i>Y</i>, might show a correlation due to the confounder even though they are not causaly related. [[1]](#Pearl), [[2]](#Mooji)
 
 ![Cause-Effect-Confounded](__pictures/cause-effect-confounded.pdf)
 
 Causal Inference is the task of learning causal relationships from purely observational data. This task is a fundamental problem in science. A variety of causal inference methods are available that were claimed to be able to solve this task under certain assumptions. These assumptions are for example no confounding, no feedback loops or no selection bias. Be aware, that results given by causal inference are only valid under the methods assumptions. ITo draw causal conclusions, these methods are exploiting the complexety of the underlying models of the observational data in genearal. [[2]](#Mooji), [[3]](#Schoelkopf)
 
-The family of causal inference methods to used here are Additive Noise Models (ANMs). In ANMs the influence of noise is restricted to be Additive ($Y \sim f(X) + \textbf{N}_Y$). Methods in these class are either based on **independence of residuals** or **maximum likelihood**. The procedure in the **WhyPy Toolbox** is the following:
+The family of causal inference methods to used here are Additive Noise Models (ANMs). In ANMs the influence of noise is restricted to be Additive (<i>Y \sim f(X) + \textbf{N}_Y</i>). Methods in these class are either based on **independence of residuals** or **maximum likelihood**. The procedure in the **WhyPy Toolbox** is the following:
 
 ---
 1. **Input:**
 
-   Observations: $X$, $Y$
+   Observations: <i>X</i>, <i>Y</i>
 
-   Regression Model: $M$
+   Regression Model: <i>M</i>
 
-   Scaler (optional): $n_\gamma(\cdot)$
+   Scaler (optional): <i>n_\gamma(\cdot)</i>
 
 2. **Normalization (optional):**
 
-   Calculate $X^{\star} = n_x(X)$
+   Calculate <i>X^{\star} = n_x(X)</i>
 
-   Calculate $Y^{\star} = n_y(Y)$
+   Calculate <i>Y^{\star} = n_y(Y)</i>
 
 3. **Boostrap (optional):**
 
-   Get Bootstrap Sample of Observations: $X^{\star}$, $Y^{\star}$
+   Get Bootstrap Sample of Observations: <i>X^{\star}</i>, <i>Y^{\star}</i>
 
 4. **Time Shift (if model is transient):**
 
-   a) Shift $X^{\star} = X^{\star}[0:-i:s], Y^{\star} = Y^{\star}[i::s]$
+   a) Shift <i>X^{\star} = X^{\star}[0:-i:s], Y^{\star} = Y^{\star}[i::s]</i>
 
-   b) Shift $Y^{\star} = Y^{\star}[0:-i:s], X^{\star} = X^{\star}[i::s]$
+   b) Shift <i>Y^{\star} = Y^{\star}[0:-i:s], X^{\star} = X^{\star}[i::s]</i>
 
 5. **Holdout (optional):**
 
-   Split $X^{\star} \rightarrow X^{\star}_{regress}, X^{\star}_{test}$
+   Split <i>X^{\star} &rarr X^{\star}_{regress}, X^{\star}_{test}</i>
 
-   Split $Y^{\star} \rightarrow Y^{\star}_{regress}, Y^{\star}_{test}$
+   Split <i>Y^{\star} &rarr Y^{\star}_{regress}, Y^{\star}_{test}</i>
 
 6. **Fit Regression Model:**
 
-   a) Fit $M_{X^{\star}_{regress} \rightarrow Y^{\star}_{regress}}$
+   a) Fit <i>M_{X^{\star}_{regress} &rarr Y^{\star}_{regress}}</i>
 
-   b) Fit $M_{Y^{\star}_{regress} \rightarrow X^{\star}_{regress}}$
+   b) Fit <i>M_{Y^{\star}_{regress} &rarr X^{\star}_{regress}}</i>
 
 7. **Predict based on Regression Model:**
 
-   a) Regress $\hat{Y^{\star}}_{test} = M_{X^{\star}_{regress} \rightarrow Y^{\star}_{regress}}(X^{\star}_{test})$
+   a) Regress <i>\hat{Y^{\star}}_{test} = M_{X^{\star}_{regress} &rarr Y^{\star}_{regress}}(X^{\star}_{test})</i>
 
-   b) Regress $\hat{X^{\star}}_{test} = M_{Y^{\star}_{regress} \rightarrow X^{\star}_{regress}}(Y^{\star}_{test})$
+   b) Regress <i>\hat{X^{\star}}_{test} = M_{Y^{\star}_{regress} &rarr X^{\star}_{regress}}(Y^{\star}_{test})</i>
 
 8. **Get Residuals:**
 
-   a) Calculate $\epsilon_{X^{\star}_{test} \rightarrow Y^{\star}_{test}} = \hat{Y^{\star}}_{test} - Y^{\star}_{test}$
+   a) Calculate <i>\epsilon_{X^{\star}_{test} &rarr Y^{\star}_{test}} = \hat{Y^{\star}}_{test} - Y^{\star}_{test}</i>
 
-   b) Calculate $\epsilon_{Y^{\star}_{test} \rightarrow X^{\star}_{test}} = \hat{X^{\star}}_{test} - X^{\star}_{test}$
+   b) Calculate <i>\epsilon_{Y^{\star}_{test} &rarr X^{\star}_{test}} = \hat{X^{\star}}_{test} - X^{\star}_{test}</i>
 
 
 9. **Evaluation Test:**
 
-   a) Test $\epsilon_{X^{\star}_{test} \rightarrow Y^{\star}_{test}}$ vs. $X^{\star}$
+   a) Test <i>\epsilon_{X^{\star}_{test} &rarr Y^{\star}_{test}}</i> vs. <i>X^{\star}</i>
 
-   b) Test $\epsilon_{Y^{\star}_{test} \rightarrow X^{\star}_{test}}$ vs. $Y^{\star}$
+   b) Test <i>\epsilon_{Y^{\star}_{test} &rarr X^{\star}_{test}}</i> vs. <i>Y^{\star}</i>
 
 10. **Interpretation:**
 
@@ -217,7 +217,7 @@ whypy.steadystate.mvariate.Model(obs, combinations, regmod, obs_name, scaler)
 
 ---
 
-3. The data producing process is **transient** ($t_0$: offset, $s$: stride)+ The model is **multi variate** (one independent variable)
+3. The data producing process is **transient** (<i>t_0</i>: offset, <i>s</i>: stride)+ The model is **multi variate** (one independent variable)
 
 ```python
 whypy.transient.bivariate.Model(obs, combinations, regmod, obs_name, scaler, t0, stride)
@@ -225,7 +225,7 @@ whypy.transient.bivariate.Model(obs, combinations, regmod, obs_name, scaler, t0,
 
 ---
 
-4. The data producing process is **transient** ($t_0$: offset, $s$: stride)+ The model is **multi variate** (n independent variable)
+4. The data producing process is **transient** (<i>t_0</i>: offset, <i>s</i>: stride)+ The model is **multi variate** (n independent variable)
 
 ```python
 whypy.transient.mvariate.Model(obs, combs, regmod, obs_name, scaler, t0, stride)
@@ -273,11 +273,11 @@ To run causal inference a model instance must be initialized with the following 
 
 ><a name="t0"></a>t0 (required in transient models):
 * Type: Integer
-* Description: Offset $Y[t_0::] \sim f(X[:-t_0:])$
+* Description: Offset <i>Y[t_0::] \sim f(X[:-t_0:])</i>
 
 ><a name="stride"></a>stride (required in transient models):
 * Type: Integer
-* Description: $Y[::stride] \sim f(X[::stride])$
+* Description: <i>Y[::stride] \sim f(X[::stride])</i>
 
 
 ---
