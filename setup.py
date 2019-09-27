@@ -10,7 +10,7 @@ setuptools.setup(
     version="0.0.7",
     author="HoChiak",
     author_email="mark.henss@gmx.de",
-    description="Package for Causal Inference with Additive Noise Models",
+    description="Toolbox for Causal Inference with Additive Noise Models",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/HoChiak/whypy",
