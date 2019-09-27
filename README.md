@@ -10,10 +10,6 @@ A python repository for **causal inference**.
 
 Currently available approaches in this repository are based on **Additive Noise Models (ANMs)**.
 
-<u>Install:</u>
-```
-pip install whypy
-```
 
 <u>Content:</u>
 1. [A short introduction into the theory of causal inference](#theory)
