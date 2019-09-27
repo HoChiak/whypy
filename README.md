@@ -162,6 +162,36 @@ obs = whypy.load.observations(modelclass=2, no_obs=500, seed=1)
 regmod = whypy.load.model_lingam(term='spline')
 scaler = whypy.load.scaler_standard()
 ```
+<html>
+<body>
+<style>
+table td, table th, table tr {text-align:left !important;}
+</style>
+<div style=\background-color:lightgrey;color:black;padding:0px;\ align=\center\>
+<h4>Observations Description</h4>
+</div>
+<table>
+<tr>
+<td><b>Modelclass:</b></td> <td>2</td>
+</tr>
+<tr>
+<td><b>No. of Variables:</b></td> <td>2</td>
+</tr>
+<tr>
+<td><b>Class of Functions:</b></td> <td>Non-Linear</td>
+</tr>
+<tr>
+<td><b>Class of Noise Distribution:</b></td> <td>Gaussian, Additive, Non-Equivalent</td>
+</tr>
+<tr>
+<td><b>SCM</b></td> <td>
+<p>X<sub>0</sub> ~ [ <strong><i>N</i></strong> (1.5, 1.0) ]</p>
+                                 <p>X<sub>1</sub> ~ [ X<sub>0</sub><sup>2</sup> + <strong><i>N</i></strong> (0, 1.5) ]</p>
+</td>
+</tr>
+</table>
+</body>
+</html>
 
 ### 2. Initialize a bivariate steadystate ANM-Model:
 
