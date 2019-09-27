@@ -56,7 +56,7 @@ Within the WhyPy Toolbox four possible models are distinguished
 </div>
 
 <!-- #region -->
-The most elementary question of causality is the one asking whether "<i>X</i> causes <i>Y</i> or vice versa". An often discussed example is the question if smoking (<i>X</i>) causes cancer (<i>Y</i>). At this point the question about causal relationships is already getting more complex. Beside the possibility that <i>X</i> causes <i>Y</i> (<i>X <p>&rarr</p> Y</i>), there are other possible causal relationships. One is that a third Variable <i>Z</i> is confounding both <i>X</i> and <i>Y</i> (<i>X <p>&larr</p> Z <p>&rarr</p> Y</i>). In the confounding case, only looking at <i>X</i> and <i>Y</i>, might show a correlation due to the confounder even though they are not causaly related. [[1]](#Pearl), [[2]](#Mooji)
+The most elementary question of causality is the one asking whether "<i>X</i> causes <i>Y</i> or vice versa". An often discussed example is the question if smoking (<i>X</i>) causes cancer (<i>Y</i>). At this point the question about causal relationships is already getting more complex. Beside the possibility that <i>X</i> causes <i>Y</i> (<i>X &rarr; Y</i>), there are other possible causal relationships. One is that a third Variable <i>Z</i> is confounding both <i>X</i> and <i>Y</i> (<i>X &larr; Z &rarr; Y</i>). In the confounding case, only looking at <i>X</i> and <i>Y</i>, might show a correlation due to the confounder even though they are not causaly related. [[1]](#Pearl), [[2]](#Mooji)
 
 ![Cause-Effect-Confounded](__pictures/cause-effect-confounded.pdf)
 
@@ -91,34 +91,34 @@ The family of causal inference methods to used here are Additive Noise Models (A
 
 5. **Holdout (optional):**
 
-   Split <i>X^{\star} <p>&rarr</p> X^{\star}_{regress}, X^{\star}_{test}</i>
+   Split <i>X^{\star} &rarr; X^{\star}_{regress}, X^{\star}_{test}</i>
 
-   Split <i>Y^{\star} <p>&rarr</p> Y^{\star}_{regress}, Y^{\star}_{test}</i>
+   Split <i>Y^{\star} &rarr; Y^{\star}_{regress}, Y^{\star}_{test}</i>
 
 6. **Fit Regression Model:**
 
-   a) Fit <i>M_{X^{\star}_{regress} <p>&rarr</p> Y^{\star}_{regress}}</i>
+   a) Fit <i>M_{X^{\star}_{regress} &rarr; Y^{\star}_{regress}}</i>
 
-   b) Fit <i>M_{Y^{\star}_{regress} <p>&rarr</p> X^{\star}_{regress}}</i>
+   b) Fit <i>M_{Y^{\star}_{regress} &rarr; X^{\star}_{regress}}</i>
 
 7. **Predict based on Regression Model:**
 
-   a) Regress <i>\hat{Y^{\star}}_{test} = M_{X^{\star}_{regress} <p>&rarr</p> Y^{\star}_{regress}}(X^{\star}_{test})</i>
+   a) Regress <i>\hat{Y^{\star}}_{test} = M_{X^{\star}_{regress} &rarr; Y^{\star}_{regress}}(X^{\star}_{test})</i>
 
-   b) Regress <i>\hat{X^{\star}}_{test} = M_{Y^{\star}_{regress} <p>&rarr</p> X^{\star}_{regress}}(Y^{\star}_{test})</i>
+   b) Regress <i>\hat{X^{\star}}_{test} = M_{Y^{\star}_{regress} &rarr; X^{\star}_{regress}}(Y^{\star}_{test})</i>
 
 8. **Get Residuals:**
 
-   a) Calculate <i>\epsilon_{X^{\star}_{test} <p>&rarr</p> Y^{\star}_{test}} = \hat{Y^{\star}}_{test} - Y^{\star}_{test}</i>
+   a) Calculate <i>\epsilon_{X^{\star}_{test} &rarr; Y^{\star}_{test}} = \hat{Y^{\star}}_{test} - Y^{\star}_{test}</i>
 
-   b) Calculate <i>\epsilon_{Y^{\star}_{test} <p>&rarr</p> X^{\star}_{test}} = \hat{X^{\star}}_{test} - X^{\star}_{test}</i>
+   b) Calculate <i>\epsilon_{Y^{\star}_{test} &rarr; X^{\star}_{test}} = \hat{X^{\star}}_{test} - X^{\star}_{test}</i>
 
 
 9. **Evaluation Test:**
 
-   a) Test <i>\epsilon_{X^{\star}_{test} <p>&rarr</p> Y^{\star}_{test}}</i> vs. <i>X^{\star}</i>
+   a) Test <i>\epsilon_{X^{\star}_{test} &rarr; Y^{\star}_{test}}</i> vs. <i>X^{\star}</i>
 
-   b) Test <i>\epsilon_{Y^{\star}_{test} <p>&rarr</p> X^{\star}_{test}}</i> vs. <i>Y^{\star}</i>
+   b) Test <i>\epsilon_{Y^{\star}_{test} &rarr; X^{\star}_{test}}</i> vs. <i>Y^{\star}</i>
 
 10. **Interpretation:**
 
