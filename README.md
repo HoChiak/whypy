@@ -163,8 +163,8 @@ regmod = whypy.load.model_lingam(term='spline')
 scaler = whypy.load.scaler_standard()
 ```
 
-![Output_loading_01](__pictures/load_01.pdf)
-![Output_loading_02](__pictures/load_02.pdf)
+![Output_loading_01](__pictures/load_01.png)
+![Output_loading_02](__pictures/load_02.png)
 
 ### 2. Initialize a bivariate steadystate ANM-Model:
 
@@ -183,18 +183,30 @@ mymodel.run(testtype='LikelihoodVariance',
             plot_results=True,
             )
 ```
-![Output_run_01](__pictures/run_01.pdf)
-![Output_run_02](__pictures/run_02.pdf)
-![Output_run_03](__pictures/run_03.pdf)
-![Output_run_04](__pictures/run_04.pdf)
-![Output_run_05](__pictures/run_05.pdf)
-![Output_run_06](__pictures/run_06.pdf)
-![Output_run_07](__pictures/run_07.pdf)
-![Output_run_08](__pictures/run_08.pdf)
-![Output_run_09](__pictures/run_09.pdf)
-![Output_run_10](__pictures/run_10.pdf)
-![Output_run_11](__pictures/run_11.pdf)
-![Output_run_12](__pictures/run_12.pdf)
+
+![Output_run_01](__pictures/run_01.png)
+
+![Output_run_02](__pictures/run_02.png)
+
+![Output_run_03](__pictures/run_03.png)
+
+![Output_run_04](__pictures/run_04.png)
+
+![Output_run_05](__pictures/run_05.png)
+
+![Output_run_06](__pictures/run_06.png)
+
+![Output_run_07](__pictures/run_07.png)
+
+![Output_run_08](__pictures/run_08.png)
+
+![Output_run_09](__pictures/run_09.png)
+
+![Output_run_10](__pictures/run_10.png)
+
+![Output_run_11](__pictures/run_11.png)
+
+![Output_run_12](__pictures/run_12.png)
 
 
 [[return to start]](#whypy)
