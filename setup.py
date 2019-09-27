@@ -6,9 +6,9 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="example-pkg-your-username",
-    version="0.0.1",
-    author="Mark Henss",
+    name="whypy-HoChiak",
+    version="0.0.7",
+    author="HoChiak",
     author_email="mark.henss@gmx.de",
     description="Package for Causal Inference with Additive Noise Models",
     long_description=long_description,
