@@ -62,7 +62,7 @@ The most elementary question of causality is the one asking whether "<i>X</i> ca
 
 Causal Inference is the task of learning causal relationships from purely observational data. This task is a fundamental problem in science. A variety of causal inference methods are available that were claimed to be able to solve this task under certain assumptions. These assumptions are for example no confounding, no feedback loops or no selection bias. Be aware, that results given by causal inference are only valid under the methods assumptions. ITo draw causal conclusions, these methods are exploiting the complexety of the underlying models of the observational data in genearal. [[2]](#Mooji), [[3]](#Schoelkopf)
 
-The family of causal inference methods to used here are Additive Noise Models (ANMs). In ANMs the influence of noise is restricted to be Additive (<i>Y \sim f(X) + \textbf{N}_Y</i>). Methods in these class are either based on **independence of residuals** or **maximum likelihood**. The procedure in the **WhyPy Toolbox** is the following:
+The family of causal inference methods to used here are Additive Noise Models (ANMs). In ANMs the influence of noise is restricted to be Additive (<i>Y &sim; f(X) + <b>N</b><sub>Y</sub></i>). Methods in these class are either based on **independence of residuals** or **maximum likelihood**. The procedure in the **WhyPy Toolbox** is the following:
 
 ---
 1. **Input:**
@@ -71,54 +71,54 @@ The family of causal inference methods to used here are Additive Noise Models (A
 
    Regression Model: <i>M</i>
 
-   Scaler (optional): <i>n_\gamma(\cdot)</i>
+   Scaler (optional): <i>n<sub>&gamma;</sub>(&cdot;)</i>
 
 2. **Normalization (optional):**
 
-   Calculate <i>X^{\star} = n_x(X)</i>
+   Calculate <i>X<sup>&#8902;</sup> = n<sub>x</sub>(X)</i>
 
-   Calculate <i>Y^{\star} = n_y(Y)</i>
+   Calculate <i>Y<sup>&#8902;</sup> = n<sub>y</sub>(Y)</i>
 
 3. **Boostrap (optional):**
 
-   Get Bootstrap Sample of Observations: <i>X^{\star}</i>, <i>Y^{\star}</i>
+   Get Bootstrap Sample of Observations: <i>X<sup>&#8902;</sup></i>, <i>Y<sup>&#8902;</sup></i>
 
 4. **Time Shift (if model is transient):**
 
-   a) Shift <i>X^{\star} = X^{\star}[0:-i:s], Y^{\star} = Y^{\star}[i::s]</i>
+   a) Shift <i>X<sup>&#8902;</sup> = X<sup>&#8902;</sup>[0:-i:s], Y<sup>&#8902;</sup> = Y<sup>&#8902;</sup>[i::s]</i>
 
-   b) Shift <i>Y^{\star} = Y^{\star}[0:-i:s], X^{\star} = X^{\star}[i::s]</i>
+   b) Shift <i>Y<sup>&#8902;</sup> = Y<sup>&#8902;</sup>[0:-i:s], X<sup>&#8902;</sup> = X<sup>&#8902;</sup>[i::s]</i>
 
 5. **Holdout (optional):**
 
-   Split <i>X^{\star} &rarr; X^{\star}_{regress}, X^{\star}_{test}</i>
+   Split <i>X<sup>&#8902;</sup> &rarr; X<sup>&#8902;</sup><sub>regress</sub>, X<sup>&#8902;</sup><sub>test</sub</i>
 
-   Split <i>Y^{\star} &rarr; Y^{\star}_{regress}, Y^{\star}_{test}</i>
+   Split <i>Y<sup>&#8902;</sup> &rarr; Y<sup>&#8902;</sup><sub>regress</sub>, Y<sup>&#8902;</sup><sub>test</sub></i>
 
 6. **Fit Regression Model:**
 
-   a) Fit <i>M_{X^{\star}_{regress} &rarr; Y^{\star}_{regress}}</i>
+   a) Fit <i>M<sub>X<sup>&#8902;</sup><sub>regress</sub> &rarr; Y<sup>&#8902;</sup><sub>regress</sub></i>
 
-   b) Fit <i>M_{Y^{\star}_{regress} &rarr; X^{\star}_{regress}}</i>
+   b) Fit <i>M<sub>Y<sup>&#8902;</sup><sub>regress</sub> &rarr; X<sup>&#8902;</sup><sub>regress</sub></i>
 
 7. **Predict based on Regression Model:**
 
-   a) Regress <i>\hat{Y^{\star}}_{test} = M_{X^{\star}_{regress} &rarr; Y^{\star}_{regress}}(X^{\star}_{test})</i>
+   a) Regress <i>Y&#770;<sup>&#8902;</sup><sub>test</sub> = M<sub>X<sup>&#8902;</sup><sub>regress</sub> &rarr; Y<sup>&#8902;</sup><sub>regress</sub>(X<sup>&#8902;</sup><sub>test</sub>)</i>
 
-   b) Regress <i>\hat{X^{\star}}_{test} = M_{Y^{\star}_{regress} &rarr; X^{\star}_{regress}}(Y^{\star}_{test})</i>
+   b) Regress <i>X&#770;<sup>&#8902;</sup><sub>test</sub> = M<sub>Y<sup>&#8902;</sup><sub>regress</sub> &rarr; X<sup>&#8902;</sup><sub>regress</sub>(Y<sup>&#8902;</sup><sub>test</sub>)</i>
 
 8. **Get Residuals:**
 
-   a) Calculate <i>\epsilon_{X^{\star}_{test} &rarr; Y^{\star}_{test}} = \hat{Y^{\star}}_{test} - Y^{\star}_{test}</i>
+   a) Calculate <i>&#904;<sub>X<sup>&#8902;</sup><sub>test</sub> &rarr; Y<sup>&#8902;</sup><sub>test</sub> = Y&#770;<sup>&#8902;</sup><sub>test</sub> - Y<sup>&#8902;</sup><sub>test</sub></i>
 
-   b) Calculate <i>\epsilon_{Y^{\star}_{test} &rarr; X^{\star}_{test}} = \hat{X^{\star}}_{test} - X^{\star}_{test}</i>
+   b) Calculate <i>&#904;<sub>Y<sup>&#8902;</sup><sub>test</sub> &rarr; X<sup>&#8902;</sup><sub>test</sub> = X&#770;<sup>&#8902;</sup><sub>test</sub> - X<sup>&#8902;</sup><sub>test</sub></i>
 
 
 9. **Evaluation Test:**
 
-   a) Test <i>\epsilon_{X^{\star}_{test} &rarr; Y^{\star}_{test}}</i> vs. <i>X^{\star}</i>
+   a) Test <i>&#904;<sub>X<sup>&#8902;</sup><sub>test</sub> &rarr; Y<sup>&#8902;</sup><sub>test</sub></i> vs. <i>X<sup>&#8902;</sup></i>
 
-   b) Test <i>\epsilon_{Y^{\star}_{test} &rarr; X^{\star}_{test}}</i> vs. <i>Y^{\star}</i>
+   b) Test <i>&#904;<sub>Y<sup>&#8902;</sup><sub>test</sub> &rarr; X<sup>&#8902;</sup><sub>test</sub></i> vs. <i>Y<sup>&#8902;</sup></i>
 
 10. **Interpretation:**
 
@@ -126,7 +126,7 @@ The family of causal inference methods to used here are Additive Noise Models (A
 
    b) Please refer to the given literature
 
----  
+---
 
 Further reading:
 
@@ -217,7 +217,7 @@ whypy.steadystate.mvariate.Model(obs, combinations, regmod, obs_name, scaler)
 
 ---
 
-3. The data producing process is **transient** (<i>t_0</i>: offset, <i>s</i>: stride)+ The model is **multi variate** (one independent variable)
+3. The data producing process is **transient** (<i>t<sub>0</sub></i>: offset, <i>s</i>: stride)+ The model is **multi variate** (one independent variable)
 
 ```python
 whypy.transient.bivariate.Model(obs, combinations, regmod, obs_name, scaler, t0, stride)
@@ -225,7 +225,7 @@ whypy.transient.bivariate.Model(obs, combinations, regmod, obs_name, scaler, t0,
 
 ---
 
-4. The data producing process is **transient** (<i>t_0</i>: offset, <i>s</i>: stride)+ The model is **multi variate** (n independent variable)
+4. The data producing process is **transient** (<i>t<sub>0</sub></i>: offset, <i>s</i>: stride)+ The model is **multi variate** (n independent variable)
 
 ```python
 whypy.transient.mvariate.Model(obs, combs, regmod, obs_name, scaler, t0, stride)
@@ -273,11 +273,11 @@ To run causal inference a model instance must be initialized with the following 
 
 ><a name="t0"></a>t0 (required in transient models):
 * Type: Integer
-* Description: Offset <i>Y[t_0::] \sim f(X[:-t_0:])</i>
+* Description: Offset <i>Y[t<sub>0</sub>::] &sim; f(X[:-t<sub>0</sub>:])</i>
 
 ><a name="stride"></a>stride (required in transient models):
 * Type: Integer
-* Description: <i>Y[::stride] \sim f(X[::stride])</i>
+* Description: <i>Y[::stride] &sim; f(X[::stride])</i>
 
 
 ---
