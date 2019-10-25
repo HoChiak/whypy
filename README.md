@@ -200,7 +200,7 @@ mymodel.run(testtype='LikelihoodVariance',
 
 ![Output_run_08](__pictures/run_08.png)
 
-![Output_run_09](__pictures/run_09.png)
+<!--- ![Output_run_09](__pictures/run_09.png) -->
 
 ![Output_run_10](__pictures/run_10.png)
 
