@@ -282,7 +282,7 @@ To run causal inference a model instance must be initialized with the following 
 
 ><a name="regmod"></a>regmod:
 * Type: Model Object or List of Model Objects
-   * Condition: Models must be callable with "fit" and "predict"
+   * Requirement: Models must be callable with "fit" and "predict"
    * If list of models is given, list must have same length as number k of combinations
 * Description: Models to regress independent and dependent variables.
 
@@ -293,7 +293,7 @@ To run causal inference a model instance must be initialized with the following 
 
 ><a name="scaler"></a>scaler (optional):
 * Type: Model Object or List of Model Objects
-   * Condition: Models must be callable with "fit", "transform" and "inverse_transform"
+   * Requirement: Models must be callable with "fit", "transform" and "inverse_transform"
    * If list of models is given, list must have same length as number k of combinations
 * Description: Models to scale observations before regression.
 
